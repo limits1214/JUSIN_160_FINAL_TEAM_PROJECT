@@ -942,6 +942,9 @@
     <ClInclude Include="..\Public\TweenComponent.h">
       <Filter>Component\Tween</Filter>
     </ClInclude>
+    <ClInclude Include="..\Public\ILuaScriptRelodable.h">
+      <Filter>Lua</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp">

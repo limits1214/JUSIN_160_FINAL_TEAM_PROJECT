@@ -1,9 +1,10 @@
 #pragma once
 #include "Component.h"
 #include "ResLuaScript.h"
+#include "ILuaScriptRelodable.h"
 NS_BEGIN(Engine)
 
-class ENGINE_DLL CComLuaScript : public CComponent
+class ENGINE_DLL CComLuaScript : public CComponent, public ILuaScriptRelodable
 {
 public:
 	struct DESC : public CComponent::DESC
@@ -31,7 +32,7 @@ public:
 	virtual void Update(_float fTimeDelta);
 	virtual void LateUpdate(_float fTimeDelta);
 public:
-	void Reload(); // 외부(Manager)에서 호출할 리로드 함수
+	void LuaScriptRelod() override; // 외부(Manager)에서 호출할 리로드 함수
 
 protected:
 	void LoadScript(); // 환경 설정 + 실행 + 캐싱을 담당하는 공통 함수

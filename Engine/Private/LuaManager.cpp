@@ -1325,7 +1325,7 @@ void CLuaManager::OnFileChanged(const std::string& path)
 				{
 					for (auto& com : iterCom->second)
 					{
-						com->Reload();
+						com->LuaScriptRelod();
 					}
 				}
 			}
@@ -1334,11 +1334,11 @@ void CLuaManager::OnFileChanged(const std::string& path)
 }
 
 
-void CLuaManager::RegisterComponent(const std::string& path, CComLuaScript* pComp)
+void CLuaManager::RegisterComponent(const std::string& path, ILuaScriptRelodable* pComp)
 {
 	m_scriptRegistry[path].push_back(pComp);
 }
-void CLuaManager::UnregisterComponent(const std::string& path, CComLuaScript* pComp)
+void CLuaManager::UnregisterComponent(const std::string& path, ILuaScriptRelodable* pComp)
 {
 	auto& list = m_scriptRegistry[path];
 	list.erase(std::remove(list.begin(), list.end(), pComp), list.end());

@@ -39,6 +39,7 @@ class CAction_Manager;
 class CPhysXManager;
 class CDbgLineRender;
 class CSerializeManager;
+class ILuaScriptRelodable;
 
 class ENGINE_DLL CGameInstance final : public Singleton<CGameInstance>
 {
@@ -412,8 +413,8 @@ public:
 	void LuaRemoveValue(sol::environment& env, std::string_view name);
 	void LuaEnvDump(const sol::environment& env) const;
 	void LuaEnvClear(sol::environment& env);
-	void LuaRegisterComponent(const std::string& path, CComLuaScript* pComp);
-	void LuaUnregisterComponent(const std::string& path, CComLuaScript* pComp);
+	void LuaRegisterComponent(const std::string& path, ILuaScriptRelodable* pComp);
+	void LuaUnregisterComponent(const std::string& path, ILuaScriptRelodable* pComp);
 	void LuaRegisterExtension(std::function<void(sol::state&)> extensionFunc);
 	template<typename T>
 	void LuaRegisterType() { m_pLuaManager->RegisterType<T>(); }

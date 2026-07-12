@@ -1,5 +1,6 @@
 #pragma once
 #include "Engine_Defines.h"
+#include "ILuaScriptRelodable.h"
 
 NS_BEGIN(Engine)
 class CLuaWatcher;
@@ -177,7 +178,7 @@ public:
 
 private:
 	// 파일 경로를 Key로, 해당 리소스를 참조하는 컴포넌트들을 Value로 관리
-	std::unordered_map<std::string, std::vector<CComLuaScript*>> m_scriptRegistry{};
+	std::unordered_map<std::string, std::vector<ILuaScriptRelodable*>> m_scriptRegistry{};
 
 //public:
 //	void RegistHotReloadScriptResource(WPtr<CResLuaScript> pResLuaScript);
@@ -186,9 +187,9 @@ private:
 
 public:
 	// 컴포넌트가 생성될 때 등록
-	void RegisterComponent(const std::string& path, CComLuaScript* pComp);
+	void RegisterComponent(const std::string& path, ILuaScriptRelodable* pComp);
 	// 삭제될 때 제거
-	void UnregisterComponent(const std::string& path, CComLuaScript* pComp);
+	void UnregisterComponent(const std::string& path, ILuaScriptRelodable* pComp);
 public:
 	static UPtr<CLuaManager> Create();
 };

@@ -394,6 +394,7 @@
     <ClInclude Include="..\Public\Engine_EnumString.h" />
     <ClInclude Include="..\Public\SerializerInterface.h" />
     <ClInclude Include="..\Public\SerDeTestCase.h" />
+    <ClInclude Include="..\Public\ILuaScriptRelodable.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="pch.h" />
   </ItemGroup>

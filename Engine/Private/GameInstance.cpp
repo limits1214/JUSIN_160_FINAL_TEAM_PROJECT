@@ -537,11 +537,11 @@ void CGameInstance::LuaEnvClear(sol::environment& env)
 {
 	m_pLuaManager->EnvClear(env);
 }
-void CGameInstance::LuaRegisterComponent(const std::string& path, CComLuaScript* pComp)
+void CGameInstance::LuaRegisterComponent(const std::string& path, ILuaScriptRelodable* pComp)
 {
 	m_pLuaManager->RegisterComponent(path, pComp);
 }
-void CGameInstance::LuaUnregisterComponent(const std::string& path, CComLuaScript* pComp)
+void CGameInstance::LuaUnregisterComponent(const std::string& path, ILuaScriptRelodable* pComp)
 {
 	m_pLuaManager->UnregisterComponent(path, pComp);
 }

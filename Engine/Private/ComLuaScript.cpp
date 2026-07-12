@@ -60,7 +60,7 @@ void CComLuaScript::LateUpdate(_float fTimeDelta)
 	CGameInstance::Get().LuaCallCacheFunction(m_LateUpdate, fTimeDelta);
 }
 
-void CComLuaScript::Reload()
+void CComLuaScript::LuaScriptRelod()
 {
 	// 환경을 새로 덮어쓰고 다시 로드
 	LoadScript();
