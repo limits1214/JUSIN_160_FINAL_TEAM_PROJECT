@@ -23,35 +23,49 @@ void CRenderer::UpdateGUI()
 
 HRESULT CRenderer::Initialize()
 {
+	
     if (FAILED(InitializeShaderResource()))     return E_FAIL;
+	LogMemoryUsage("CRenderer---InitializeShaderResource");
+
 
     if (FAILED(InitializeBackBuffer()))         return E_FAIL;
+	LogMemoryUsage("CRenderer---InitializeBackBuffer");
 
     if (FAILED(InitializeGFSDK_SSAO()))         return E_FAIL;
+	LogMemoryUsage("CRenderer---InitializeGFSDK_SSAO");
 
     if (FAILED(InitializeOffscreen()))          return E_FAIL;
+	LogMemoryUsage("CRenderer---InitializeOffscreen");
 
     if (FAILED(InitializeShadow()))             return E_FAIL;
+	LogMemoryUsage("CRenderer---InitializeShadow");
 
     if (FAILED(InitializeFullscreen()))         return E_FAIL;
+	LogMemoryUsage("CRenderer---InitializeFullscreen");
 
     if (FAILED(InitializeBaseTarget()))         return E_FAIL;
+	LogMemoryUsage("CRenderer---InitializeBaseTarget");
 
     if (FAILED(InitializeTargetPBR()))          return E_FAIL;
+	LogMemoryUsage("CRenderer---InitializeTargetPBR");
 
     if (FAILED(InitializeBlendTarget()))        return E_FAIL;
+	LogMemoryUsage("CRenderer---InitializeBlendTarget");
 
     if (FAILED(InitilizePostProcess()))         return E_FAIL;
+	LogMemoryUsage("CRenderer---InitilizePostProcess");
 
 	if (FAILED(InitializeBloom()))				return E_FAIL;
+	LogMemoryUsage("CRenderer---InitializeBloom");
 
 #ifdef _DEBUG
     if (FAILED(Initialize_Debugging()))         return E_FAIL;
+	LogMemoryUsage("CRenderer---Initialize_Debugging");
 #endif
 
 	if (FAILED(InitializeHizBuffer()))
 		return E_FAIL;
-
+	LogMemoryUsage("CRenderer---InitializeHizBuffer");
     return S_OK;
 }
 

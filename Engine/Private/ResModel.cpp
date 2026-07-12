@@ -29,6 +29,7 @@ HRESULT CResModel::Load(const std::any& arg)
 	m_eState = STATE::LOADING;
 	XMStoreFloat4x4(&m_PreTransformMatrix, descArg->PreTransformMatrix);
 
+	LogMemoryUsage("CResModel-Load-Start");
 	{
 		if (!std::filesystem::exists(m_sPath))
 			return E_FAIL;
@@ -72,16 +73,20 @@ HRESULT CResModel::Load(const std::any& arg)
 			case CHUNCK_TYPE::CHUNK_BONE:
 				if (FAILED(Ready_Bones(ptr)))
 					return E_FAIL;
+				LogMemoryUsage("CResModel-Ready-BONE");
 				break;
+				
 
 			case CHUNCK_TYPE::CHUNK_MESH:
 				if (FAILED(Ready_Meshes(ptr)))
 					return E_FAIL;
+				LogMemoryUsage("CResModel-Ready-MESH");
 				break;
 
 			case CHUNCK_TYPE::CHUNK_MATERIAL:
 				if (FAILED(Ready_Materials(m_sPath, ptr)))
 					return E_FAIL;
+				LogMemoryUsage("CResModel-Ready-MATERIAL");
 				break;
 			}
 
@@ -89,11 +94,12 @@ HRESULT CResModel::Load(const std::any& arg)
 		}
 
 	}
+	LogMemoryUsage("CResModel-Ready-BONE,MESH,MATERIAL");
 
 
 	if (FAILED(Ready_Animation()))
 		return E_FAIL;
-
+	LogMemoryUsage("CResModel-Ready-ANIMATION");
 	m_eState = STATE::LOADED;
 	return S_OK;
 }

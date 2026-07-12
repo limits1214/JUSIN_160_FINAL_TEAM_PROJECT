@@ -29,6 +29,8 @@ HRESULT CResStaticModel::Load(const std::any& arg)
 		return S_OK;
 	}
 
+	LogMemoryUsage("CResStaticModel_Load_Start");
+
 	m_eState = STATE::LOADING;
 	XMStoreFloat4x4(&m_PreTransformMatrix, descArg->PreTransformMatrix);
 
@@ -78,6 +80,7 @@ HRESULT CResStaticModel::Load(const std::any& arg)
 
 				if (FAILED(Ready_Meshes(meshData)))
 					return E_FAIL;
+				//LogMemoryUsage("CResStaticModel-Ready-MESH");
 
 				ptr += chunk->size;
 			}
@@ -89,7 +92,7 @@ HRESULT CResStaticModel::Load(const std::any& arg)
 
 				if (FAILED(Ready_Materials(m_sPath, matData)))
 					return E_FAIL;
-
+				//LogMemoryUsage("CResStaticModel-Ready-MATERIAL");
 				ptr += chunk->size;
 			}
 			break;
@@ -98,6 +101,8 @@ HRESULT CResStaticModel::Load(const std::any& arg)
 
 
 	}
+
+	LogMemoryUsage("InitializeResources---Static_Load_END");
 	if (ext == ".fbx") {
 		LoadAssimp();
 	}

@@ -1,7 +1,31 @@
 #pragma once
 
+#include "psapi.h"
+
 namespace Engine
 {
+	inline void LogMemoryUsage(const char* tag = "")
+	{
+		PROCESS_MEMORY_COUNTERS_EX pmc{};
+		if (GetProcessMemoryInfo(GetCurrentProcess(), (PROCESS_MEMORY_COUNTERS*)&pmc, sizeof(pmc)))
+		{
+			char buf[512];
+			sprintf_s(buf,
+				"[Memory%s%s] WorkingSet: %.2f MB | PeakWorkingSet: %.2f MB | PrivateUsage: %.2f MB | PageFile: %.2f MB\n",
+				tag[0] ? " - " : "", tag,
+				pmc.WorkingSetSize / (1024.0 * 1024.0),
+				pmc.PeakWorkingSetSize / (1024.0 * 1024.0),
+				pmc.PrivateUsage / (1024.0 * 1024.0),
+				pmc.PagefileUsage / (1024.0 * 1024.0)
+			);
+			OutputDebugStringA(buf);
+		}
+		else
+		{
+			OutputDebugStringA("[Memory] GetProcessMemoryInfo failed\n");
+		}
+	}
+
 	template<class T>
 	constexpr std::string_view MagicEnumToStringView(T&& t)
 	{

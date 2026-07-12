@@ -57,7 +57,7 @@ CGameInstance::~CGameInstance()
 
 HRESULT CGameInstance::InitializeEngine(const ENGINE_DESC& EngineDesc, ComPtr<ID3D11Device>& ppDevice, ComPtr<ID3D11DeviceContext>& ppContext)
 {
-
+	LogMemoryUsage("InitializeEngine Start");
 
 	m_hWnd = EngineDesc.hWnd;
 	m_vClientScreenSize.x = (float)EngineDesc.iWinSizeX;
@@ -69,112 +69,131 @@ HRESULT CGameInstance::InitializeEngine(const ENGINE_DESC& EngineDesc, ComPtr<ID
 	{
 		return E_FAIL;
 	}
+	LogMemoryUsage("CGraphicDevice");
 
 	m_pResourceManager = CResourceManager::Create(ppDevice.Get(), ppContext.Get());
 	if (m_pResourceManager == nullptr)
 	{
 		return E_FAIL;
 	}
+	LogMemoryUsage("CResourceManager");
 
 	m_pSoundManager = CSoundManager::Create();
 	if (m_pSoundManager == nullptr)
 	{
 		return E_FAIL;
 	}
+	LogMemoryUsage("CSoundManager");
 
 	if (FAILED(m_pGraphicDevice->ReadyDevice(EngineDesc.hWnd, EngineDesc.eWinMode, EngineDesc.iWinSizeX, EngineDesc.iWinSizeY)))
 	{
 		return E_FAIL;
 	}
+	LogMemoryUsage("ReadyDevice");
 
 
 	if (FAILED(InitializeResources()))
 	{
 		return E_FAIL;
 	}
+	LogMemoryUsage("InitializeResources");
 
 	m_pPrototypeManager = CPrototypeManager::Create(ppDevice.Get(), ppContext.Get());
 	if (m_pPrototypeManager == nullptr)
 	{
 		return E_FAIL;
 	}
+	LogMemoryUsage("CPrototypeManager");
 
 	if (FAILED(InitializePrototype()))
 	{
 		return E_FAIL;
 	}
+	LogMemoryUsage("InitializePrototype");
 
 	m_pImguiManager = CImguiManager::Create(EngineDesc.hWnd, ppDevice.Get(), ppContext.Get());
 	if (m_pImguiManager == nullptr)
 	{
 		return E_FAIL;
 	}
+	LogMemoryUsage("CImguiManager");
 
 	m_pLevelManager = CLevelManager::Create();
 	if (m_pLevelManager == nullptr)
 	{
 		return E_FAIL;
 	}
+	LogMemoryUsage("CLevelManager");
 
 	m_pDInputManager = CDInputManager::Create(EngineDesc.hInstance, EngineDesc.hWnd);
 	if (m_pDInputManager == nullptr)
 	{
 		return E_FAIL;
 	}
+	LogMemoryUsage("CDInputManager");
 
 	m_pTimeProvider = CTimeProvider::Create();
 	if (m_pTimeProvider == nullptr)
 	{
 		return E_FAIL;
 	}
+	LogMemoryUsage("CTimeProvider");
 
 	m_pWorkerManager = CWorkerManager::Create("Normal", 3);
 	if (m_pWorkerManager == nullptr)
 	{
 		return E_FAIL;
 	}
+	LogMemoryUsage("CWorkerManager");
 
 	m_pGameObjectManager = CGameObjectManager::Create();
 	if (m_pGameObjectManager == nullptr)
 	{
 		return E_FAIL;
 	}
+	LogMemoryUsage("CGameObjectManager");
 
 	m_pRenderer = CRenderer::Create(ppDevice.Get(), ppContext.Get());
 	if (m_pRenderer == nullptr)
 	{
 		return E_FAIL;
 	}
+	LogMemoryUsage("CRenderer");
 
 	m_pHizOcclusionCuller = CHizOcclusionCuller::Create();
 	if (m_pHizOcclusionCuller == nullptr)
 	{
 		return E_FAIL;
 	}
+	LogMemoryUsage("CHizOcclusionCuller");
 
 	m_pCameraManager = CCameraManager::Create();
 	if (m_pCameraManager == nullptr)
 	{
 		return E_FAIL;
 	}
+	LogMemoryUsage("CCameraManager");
 
 	m_pColliderManager = CColliderManager::Create(ppDevice.Get(), ppContext.Get());
 	if (m_pColliderManager == nullptr)
 	{
 		return E_FAIL;
 	}
+	LogMemoryUsage("CColliderManager");
 
 	m_pAnimEdit_Manager = CAnimEdit_Manager::Create();
 	if (m_pAnimEdit_Manager == nullptr)
 	{
 		return E_FAIL;
 	}
+	LogMemoryUsage("CAnimEdit_Manager");
 
 	m_pLightManager = CLightManager::Create(ppDevice.Get(), ppContext.Get());
 	if (m_pLightManager == nullptr)
 	{
 		return E_FAIL;
 	}
+	LogMemoryUsage("CLightManager");
 
 
 	//m_pParticleManager = CParticleManager::Create(ppDevice.Get(), ppContext.Get());
@@ -187,49 +206,61 @@ HRESULT CGameInstance::InitializeEngine(const ENGINE_DESC& EngineDesc, ComPtr<ID
 	{
 		return E_FAIL;
 	}
+	LogMemoryUsage("CParticleManager");
 
 	m_pFontManager = CFontManager::Create(ppDevice.Get(), ppContext.Get());
 	if (m_pFontManager == nullptr)
 	{
 		return E_FAIL;
 	}
+	LogMemoryUsage("CFontManager");
 
 	m_pMapManager = CMapManager::Create();
 	if (m_pMapManager == nullptr)
 	{
 		return E_FAIL;
 	}
+	LogMemoryUsage("CMapManager");
+
 	m_pNavMeshManager = CNavMeshManager::Create();
 	if (m_pNavMeshManager == nullptr)
 	{
 		return E_FAIL;
 	}
+	LogMemoryUsage("CNavMeshManager");
+
 	m_pNodeEditor = CNodeEditor::Create();
 	if (m_pNodeEditor == nullptr)
 	{
 		return E_FAIL;
 	}
+	LogMemoryUsage("CNodeEditor");
+
 	m_pPhysXManager = CPhysXManager::Create();
 	if (m_pPhysXManager == nullptr)
 	{
 		return E_FAIL;
 	}
+	LogMemoryUsage("CPhysXManager");
 
 	m_pActionManager = CAction_Manager::Create();
 	if (m_pActionManager == nullptr)
 		return E_FAIL;
+	LogMemoryUsage("CAction_Manager");
 
 	m_pDbgLineRender = CDbgLineRender::Create(ppDevice.Get(), ppContext.Get());
 	if (m_pDbgLineRender == nullptr)
 	{
 		return E_FAIL;
 	}
+	LogMemoryUsage("CDbgLineRender");
 
 	m_pSerializeManager = CSerializeManager::Create();
 	if (m_pSerializeManager == nullptr)
 	{
 		return E_FAIL;
 	}
+	LogMemoryUsage("CSerializeManager");
 
 	return S_OK;
 }
@@ -502,6 +533,8 @@ HRESULT CGameInstance::InitializeResources()
 			return E_FAIL;
 		}
 	}
+	LogMemoryUsage("InitializeResources---TAG_RES_CBUFFER_PASS");
+
 	if (auto res = AddResourceT(TAG_RES_GRP_PERMANENT_BUFFER, TAG_RES_CBUFFER_OBJECT, E::CResCBuffer::Create()))
 	{
 		if (FAILED(res->Load(E::CResCBuffer::CBUFFER_DESC{ .byteWidth = sizeof(CB_PER_OBJECT) })))
@@ -509,6 +542,9 @@ HRESULT CGameInstance::InitializeResources()
 			return E_FAIL;
 		}
 	}
+	LogMemoryUsage("InitializeResources---TAG_RES_CBUFFER_OBJECT");
+
+
 	if (auto res = AddResourceT(TAG_RES_GRP_PERMANENT_BUFFER, TAG_RES_CBUFFER_PARTICLE, E::CResCBuffer::Create()))
 	{
 		if (FAILED(res->Load(E::CResCBuffer::CBUFFER_DESC{ .byteWidth = sizeof(CB_PER_PARTICLE) })))
@@ -516,6 +552,8 @@ HRESULT CGameInstance::InitializeResources()
 			return E_FAIL;
 		}
 	}
+	LogMemoryUsage("InitializeResources---TAG_RES_CBUFFER_PARTICLE");
+
 	if (auto res = AddResourceT(TAG_RES_GRP_PERMANENT_BUFFER, TAG_RES_CBUFFER_SPAWN_PARTICLE, E::CResCBuffer::Create()))
 	{
 		if (FAILED(res->Load(E::CResCBuffer::CBUFFER_DESC{ .byteWidth = sizeof(CB_PARTICLE_SPAWN) })))
@@ -523,7 +561,7 @@ HRESULT CGameInstance::InitializeResources()
 			return E_FAIL;
 		}
 	}
-
+	LogMemoryUsage("InitializeResources---TAG_RES_CBUFFER_SPAWN_PARTICLE");
 
 	if (auto res = AddResourceT(TAG_RES_GRP_PERMANENT_BUFFER, "CB_PerUI", E::CResCBuffer::Create()))
 	{
@@ -532,6 +570,8 @@ HRESULT CGameInstance::InitializeResources()
 			return E_FAIL;
 		}
 	}
+	LogMemoryUsage("InitializeResources---CB_PerUI");
+
 	if (auto res = CGameInstance::Get().AddResourceT(TAG_RES_GRP_PERMANENT_BUFFER, "CB_MATERIAL", E::CResCBuffer::Create()))
 	{
 		if (FAILED(res->Load(E::CResCBuffer::CBUFFER_DESC{ .byteWidth = sizeof(CB_MATERIAL) })))
@@ -539,6 +579,7 @@ HRESULT CGameInstance::InitializeResources()
 			return E_FAIL;
 		}
 	}
+	LogMemoryUsage("InitializeResources---CB_MATERIAL");
 
 	if (auto res = AddResourceT(TAG_RES_GRP_PERMANENT_BUFFER, TAG_RES_CBUFFER_INIT_PARTICLE, E::CResCBuffer::Create()))
 	{
@@ -547,6 +588,7 @@ HRESULT CGameInstance::InitializeResources()
 			return E_FAIL;
 		}
 	}
+	LogMemoryUsage("InitializeResources---TAG_RES_CBUFFER_INIT_PARTICLE");
 
 	if (auto res = AddResourceT(TAG_RES_GRP_PERMANENT_BUFFER, TAG_RES_CBUFFER_BONE, E::CResCBuffer::Create()))
 	{
@@ -555,6 +597,7 @@ HRESULT CGameInstance::InitializeResources()
 			return E_FAIL;
 		}
 	}
+	LogMemoryUsage("InitializeResources---TAG_RES_CBUFFER_BONE");
 
 	// LinearWrap
 	if (auto res = AddResourceT(TAG_RES_GRP_PERMANENT_STATE, TAG_RES_STATE_SS_LINEAR_WRAP, CResSamplerState::Create()))
@@ -572,6 +615,8 @@ HRESULT CGameInstance::InitializeResources()
 		}
 		GetGraphicDeviceContext()->PSSetSamplers(0, 1, res->GetSamplerState().GetAddressOf());
 	}
+	LogMemoryUsage("InitializeResources---TAG_RES_STATE_SS_LINEAR_WRAP");
+
 	// LinearClamp
 	if (auto res = AddResourceT(TAG_RES_GRP_PERMANENT_STATE, TAG_RES_STATE_SS_LINEAR_CLAMP, CResSamplerState::Create()))
 	{
@@ -588,6 +633,9 @@ HRESULT CGameInstance::InitializeResources()
 		}
 		GetGraphicDeviceContext()->PSSetSamplers(1, 1, res->GetSamplerState().GetAddressOf());
 	}
+	LogMemoryUsage("InitializeResources---TAG_RES_STATE_SS_LINEAR_CLAMP");
+
+
 	// PointWrap
 	if (auto res = AddResourceT(TAG_RES_GRP_PERMANENT_STATE, TAG_RES_STATE_SS_POINT_WRAP, CResSamplerState::Create()))
 	{
@@ -608,6 +656,9 @@ HRESULT CGameInstance::InitializeResources()
 		}
 		GetGraphicDeviceContext()->PSSetSamplers(2, 1, res->GetSamplerState().GetAddressOf());
 	}
+	LogMemoryUsage("InitializeResources---TAG_RES_STATE_SS_POINT_WRAP");
+
+
 	// PointClamp
 	if (auto res = AddResourceT(TAG_RES_GRP_PERMANENT_STATE, TAG_RES_STATE_SS_POINT_CLAMP, CResSamplerState::Create()))
 	{
@@ -624,6 +675,8 @@ HRESULT CGameInstance::InitializeResources()
 		}
 		GetGraphicDeviceContext()->PSSetSamplers(3, 1, res->GetSamplerState().GetAddressOf());
 	}
+	LogMemoryUsage("InitializeResources---TAG_RES_STATE_SS_POINT_CLAMP");
+
 	// PointWrapNoMip
 	if (auto res = AddResourceT(TAG_RES_GRP_PERMANENT_STATE, TAG_RES_STATE_SS_POINT_WRAP_NOMIP, CResSamplerState::Create()))
 	{
@@ -640,6 +693,9 @@ HRESULT CGameInstance::InitializeResources()
 		}
 		GetGraphicDeviceContext()->PSSetSamplers(4, 1, res->GetSamplerState().GetAddressOf());
 	}
+	LogMemoryUsage("InitializeResources---TAG_RES_STATE_SS_POINT_WRAP_NOMIP");
+
+
 	// AnisotropicWrap
 	if (auto res = AddResourceT(TAG_RES_GRP_PERMANENT_STATE, TAG_RES_STATE_SS_ANISOTROPIC_WRAP, CResSamplerState::Create()))
 	{
@@ -658,6 +714,8 @@ HRESULT CGameInstance::InitializeResources()
 		}
 		GetGraphicDeviceContext()->PSSetSamplers(5, 1, res->GetSamplerState().GetAddressOf());
 	}
+	LogMemoryUsage("InitializeResources---TAG_RES_STATE_SS_ANISOTROPIC_WRAP");
+
 	// ShadowSampler
 	if (auto res = AddResourceT(TAG_RES_GRP_PERMANENT_STATE, TAG_RES_STATE_SS_SAHDOW, CResSamplerState::Create()))
 	{
@@ -680,6 +738,7 @@ HRESULT CGameInstance::InitializeResources()
 
 		GetGraphicDeviceContext()->PSSetSamplers(6, 1, res->GetSamplerState().GetAddressOf());
 	}
+	LogMemoryUsage("InitializeResources---TAG_RES_STATE_SS_SAHDOW");
 	
 	
 
@@ -691,6 +750,8 @@ HRESULT CGameInstance::InitializeResources()
 			return E_FAIL;
 		}
 	}
+	LogMemoryUsage("InitializeResources---VS_QuadTex");
+
 	if (auto res = AddResourceT<E::CResPixelShader>(TAG_RES_GRP_PERMANENT_SHADER, "PS_QuadTex", "./ShaderFiles/QuadTex/QuadTex.hlsl"))
 	{
 		if (FAILED(res->Load()))
@@ -698,6 +759,8 @@ HRESULT CGameInstance::InitializeResources()
 			return E_FAIL;
 		}
 	}
+	LogMemoryUsage("InitializeResources---PS_QuadTex");
+
 	if (auto res = AddResourceT<E::CResVertexShader>(TAG_RES_GRP_PERMANENT_SHADER, "VS_QuadTexUI", "./ShaderFiles/UI/QuadTexUI.hlsl"))
 	{
 		if (FAILED(res->Load()))
@@ -705,6 +768,8 @@ HRESULT CGameInstance::InitializeResources()
 			return E_FAIL;
 		}
 	}
+	LogMemoryUsage("InitializeResources---VS_QuadTexUI");
+
 	if (auto res = AddResourceT<E::CResPixelShader>(TAG_RES_GRP_PERMANENT_SHADER, "PS_QuadTexUI", "./ShaderFiles/UI/QuadTexUI.hlsl"))
 	{
 		if (FAILED(res->Load()))
@@ -712,6 +777,8 @@ HRESULT CGameInstance::InitializeResources()
 			return E_FAIL;
 		}
 	}
+	LogMemoryUsage("InitializeResources---PS_QuadTexUI");
+
 	if (auto res = AddResourceT<E::CResVertexShader>(TAG_RES_GRP_PERMANENT_SHADER, "VS_QuadTexFlipBook", "./ShaderFiles/UI/QuadTexFlipBook.hlsl"))
 	{
 		if (FAILED(res->Load()))
@@ -719,6 +786,8 @@ HRESULT CGameInstance::InitializeResources()
 			return E_FAIL;
 		}
 	}
+	LogMemoryUsage("InitializeResources---VS_QuadTexFlipBook");
+
 	if (auto res = AddResourceT<E::CResPixelShader>(TAG_RES_GRP_PERMANENT_SHADER, "PS_QuadTexFlipBook", "./ShaderFiles/UI/QuadTexFlipBook.hlsl"))
 	{
 		if (FAILED(res->Load()))
@@ -726,6 +795,8 @@ HRESULT CGameInstance::InitializeResources()
 			return E_FAIL;
 		}
 	}
+	LogMemoryUsage("InitializeResources---PS_QuadTexFlipBook");
+
 	if (auto res = AddResourceT<E::CResVertexShader>(TAG_RES_GRP_PERMANENT_SHADER, "VS_QuadCol", "./ShaderFiles/QuadCol/QuadCol.hlsl"))
 	{
 		if (FAILED(res->Load()))
@@ -733,6 +804,8 @@ HRESULT CGameInstance::InitializeResources()
 			return E_FAIL;
 		}
 	}
+	LogMemoryUsage("InitializeResources---VS_QuadCol");
+
 	if (auto res = AddResourceT<E::CResPixelShader>(TAG_RES_GRP_PERMANENT_SHADER, "PS_QuadCol", "./ShaderFiles/QuadCol/QuadCol.hlsl"))
 	{
 		if (FAILED(res->Load()))
@@ -740,6 +813,8 @@ HRESULT CGameInstance::InitializeResources()
 			return E_FAIL;
 		}
 	}
+	LogMemoryUsage("InitializeResources---PS_QuadCol");
+
 	if (auto res = AddResourceT<E::CResComputeShader>(TAG_RES_GRP_PERMANENT_SHADER, "CS_UpdateParticle", "./ShaderFiles/Particle/Shader_Particle_Compute.hlsl"))
 	{
 		if (FAILED(res->Load()))
@@ -747,6 +822,8 @@ HRESULT CGameInstance::InitializeResources()
 			return E_FAIL;
 		}
 	}
+	LogMemoryUsage("InitializeResources---CS_UpdateParticle");
+
 	if (auto res = AddResourceT<E::CResComputeShader>(TAG_RES_GRP_PERMANENT_SHADER, "CS_SpawnParticle", "./ShaderFiles/Particle/Shader_Particle_Spawn_Compute.hlsl"))
 	{
 		if (FAILED(res->Load()))
@@ -754,6 +831,8 @@ HRESULT CGameInstance::InitializeResources()
 			return E_FAIL;
 		}
 	}
+	LogMemoryUsage("InitializeResources---CS_SpawnParticle");
+
 	if (auto res = AddResourceT<E::CResComputeShader>(TAG_RES_GRP_PERMANENT_SHADER, "CS_InitParticle", "./ShaderFiles/Particle/Shader_CS_Init.hlsl"))
 	{
 		if (FAILED(res->Load()))
@@ -761,6 +840,8 @@ HRESULT CGameInstance::InitializeResources()
 			return E_FAIL;
 		}
 	}
+	LogMemoryUsage("InitializeResources---CS_InitParticle");
+
 	if (auto res = AddResourceT<E::CResComputeShader>(TAG_RES_GRP_PERMANENT_SHADER, "CS_HizCopyDepth", "./ShaderFiles/Hiz/Shader_CS_HizCopyDepth.hlsl"))
 	{
 		if (FAILED(res->Load()))
@@ -768,6 +849,8 @@ HRESULT CGameInstance::InitializeResources()
 			return E_FAIL;
 		}
 	}
+	LogMemoryUsage("InitializeResources---CS_HizCopyDepth");
+
 	if (auto res = AddResourceT<E::CResComputeShader>(TAG_RES_GRP_PERMANENT_SHADER, "CS_HizMipPyramid", "./ShaderFiles/Hiz/Shader_CS_HizMipPyramid.hlsl"))
 	{
 		if (FAILED(res->Load()))
@@ -775,6 +858,8 @@ HRESULT CGameInstance::InitializeResources()
 			return E_FAIL;
 		}
 	}
+	LogMemoryUsage("InitializeResources---CS_HizMipPyramid");
+
 	if (auto res = AddResourceT<E::CResComputeShader>(TAG_RES_GRP_PERMANENT_SHADER, "CS_MapMeshGpuCull", "./ShaderFiles/Hiz/Shader_CS_MapMeshGpuCull.hlsl"))
 	{
 		if (FAILED(res->Load()))
@@ -782,6 +867,7 @@ HRESULT CGameInstance::InitializeResources()
 			return E_FAIL;
 		}
 	}
+	LogMemoryUsage("InitializeResources---CS_MapMeshGpuCull");
 
 	if (auto res = AddResource(TAG_RES_GRP_PERMANENT_BUFFER, "VIBuffer_QuadTex", E::CResQuadTexBuffer::Create()))
 	{
@@ -790,6 +876,7 @@ HRESULT CGameInstance::InitializeResources()
 			return E_FAIL;
 		}
 	}
+	LogMemoryUsage("InitializeResources---VIBuffer_QuadTex");
 
 
 	if (auto res = AddResource(TAG_RES_GRP_PERMANENT_STATE, TAG_RES_STATE_RS_SOLID_BACKCULL, E::CResRasterizerState::Create()))
@@ -800,6 +887,8 @@ HRESULT CGameInstance::InitializeResources()
 		desc.DepthClipEnable = TRUE;
 		res->Load(desc);
 	}
+	LogMemoryUsage("InitializeResources---TAG_RES_STATE_RS_SOLID_BACKCULL");
+
 	if (auto res = AddResource(TAG_RES_GRP_PERMANENT_STATE, TAG_RES_STATE_RS_SOLID_FRONTCULL, E::CResRasterizerState::Create()))
 	{
 		D3D11_RASTERIZER_DESC desc{};
@@ -808,6 +897,8 @@ HRESULT CGameInstance::InitializeResources()
 		desc.DepthClipEnable = TRUE;
 		res->Load(desc);
 	}
+	LogMemoryUsage("InitializeResources---TAG_RES_STATE_RS_SOLID_FRONTCULL");
+
 	if (auto res = AddResource(TAG_RES_GRP_PERMANENT_STATE, TAG_RES_STATE_RS_SOLID_NOCULL, E::CResRasterizerState::Create()))
 	{
 		D3D11_RASTERIZER_DESC desc{};
@@ -819,6 +910,8 @@ HRESULT CGameInstance::InitializeResources()
 		desc.DepthBiasClamp = 0.0f;
 		res->Load(desc);
 	}
+	LogMemoryUsage("InitializeResources---TAG_RES_STATE_RS_SOLID_NOCULL");
+
 	if (auto res = AddResource(TAG_RES_GRP_PERMANENT_STATE, TAG_RES_STATE_RS_WIREFRAME_NOCULL, E::CResRasterizerState::Create()))
 	{
 		D3D11_RASTERIZER_DESC desc{};
@@ -828,6 +921,8 @@ HRESULT CGameInstance::InitializeResources()
 
 		res->Load(desc);
 	}
+	LogMemoryUsage("InitializeResources---TAG_RES_STATE_RS_WIREFRAME_NOCULL");
+
 	if (auto res = AddResource(TAG_RES_GRP_PERMANENT_STATE, "RS_SOLID_BACKCULL_DEPTHBIAS", E::CResRasterizerState::Create()))
 	{
 		D3D11_RASTERIZER_DESC desc{};
@@ -839,6 +934,7 @@ HRESULT CGameInstance::InitializeResources()
 		desc.DepthBiasClamp = 0.0f;
 		res->Load(desc);
 	}
+	LogMemoryUsage("InitializeResources---RS_SOLID_BACKCULL_DEPTHBIAS");
 
 	if (auto res = AddResource(TAG_RES_GRP_PERMANENT_STATE, "RS_SOLID_BLOCK_VOXEL_SHADOW", E::CResRasterizerState::Create()))
 	{
@@ -848,6 +944,7 @@ HRESULT CGameInstance::InitializeResources()
 		desc.DepthClipEnable = TRUE;
 		res->Load(desc);
 	}
+	LogMemoryUsage("InitializeResources---RS_SOLID_BLOCK_VOXEL_SHADOW");
 
 	if (auto res = AddResource(TAG_RES_GRP_PERMANENT_STATE, "RS_ALPHATEST_BLOCK_VOXEL_SHADOW", E::CResRasterizerState::Create()))
 	{
@@ -860,6 +957,7 @@ HRESULT CGameInstance::InitializeResources()
 		desc.DepthBiasClamp = 0.0f;
 		res->Load(desc);
 	}
+	LogMemoryUsage("InitializeResources---RS_ALPHATEST_BLOCK_VOXEL_SHADOW");
 
 
 	if (auto res = AddResource(TAG_RES_GRP_PERMANENT_STATE, "BS_ALPHA_BLEND", E::CResBlendState::Create()))
@@ -877,6 +975,8 @@ HRESULT CGameInstance::InitializeResources()
 		blendDesc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
 		res->Load(blendDesc);
 	}
+	LogMemoryUsage("InitializeResources---BS_ALPHA_BLEND");
+
 	if (auto res = AddResource(TAG_RES_GRP_PERMANENT_STATE, "BS_BLEND_NONE", E::CResBlendState::Create()))
 	{
 		D3D11_BLEND_DESC blendDesc{};
@@ -893,6 +993,8 @@ HRESULT CGameInstance::InitializeResources()
 
 		res->Load(blendDesc);
 	}
+	LogMemoryUsage("InitializeResources---BS_BLEND_NONE");
+
 	if (auto res = AddResource(TAG_RES_GRP_PERMANENT_STATE, "BS_ALPHA_BLEND", E::CResBlendState::Create()))
 	{
 		D3D11_BLEND_DESC blendDesc{};
@@ -908,6 +1010,8 @@ HRESULT CGameInstance::InitializeResources()
 		blendDesc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
 		res->Load(blendDesc);
 	}
+	LogMemoryUsage("InitializeResources---BS_ALPHA_BLEND");
+
 	if (auto res = AddResource(TAG_RES_GRP_PERMANENT_STATE, "BS_ALPHA_BLEND_ADD", E::CResBlendState::Create()))
 	{
 		D3D11_BLEND_DESC blendDesc{};
@@ -923,6 +1027,7 @@ HRESULT CGameInstance::InitializeResources()
 		blendDesc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
 		res->Load(blendDesc);
 	}
+	LogMemoryUsage("InitializeResources---BS_ALPHA_BLEND_ADD");
 
 	if (auto res = AddResource(TAG_RES_GRP_PERMANENT_STATE, "DS_NO_DEPTHWRITE", E::CResDepthStencilState::Create()))
 	{
@@ -932,6 +1037,8 @@ HRESULT CGameInstance::InitializeResources()
 		depthDesc.DepthFunc = D3D11_COMPARISON_LESS;
 		res->Load(depthDesc);
 	}
+	LogMemoryUsage("InitializeResources---DS_NO_DEPTHWRITE");
+
 	if (auto res = AddResource(TAG_RES_GRP_PERMANENT_STATE, "DS_DEPTHWRITE", E::CResDepthStencilState::Create()))
 	{
 		D3D11_DEPTH_STENCIL_DESC depthDesc{};
@@ -943,6 +1050,8 @@ HRESULT CGameInstance::InitializeResources()
 		depthDesc.StencilWriteMask = D3D11_DEFAULT_STENCIL_WRITE_MASK;
 		res->Load(depthDesc);
 	}
+	LogMemoryUsage("InitializeResources---DS_DEPTHWRITE");
+
 	if (auto res = AddResource(TAG_RES_GRP_PERMANENT_STATE, "DS_DEPTHREAD", E::CResDepthStencilState::Create()))
 	{
 		D3D11_DEPTH_STENCIL_DESC depthDesc{};
@@ -954,6 +1063,7 @@ HRESULT CGameInstance::InitializeResources()
 		depthDesc.StencilWriteMask = D3D11_DEFAULT_STENCIL_WRITE_MASK;
 		res->Load(depthDesc);
 	}
+	LogMemoryUsage("InitializeResources---DS_DEPTHREAD");
 
 	if (auto res = AddResource(TAG_RES_GRP_PERMANENT_STATE, "DS_NO_DEPTHSTENCIL", E::CResDepthStencilState::Create()))
 	{
@@ -964,6 +1074,7 @@ HRESULT CGameInstance::InitializeResources()
 		depthDesc.StencilEnable = FALSE;
 		res->Load(depthDesc);
 	}
+	LogMemoryUsage("InitializeResources---DS_NO_DEPTHSTENCIL");
 
 	// Test Model Load
 	// 오류나서 제거
@@ -983,6 +1094,7 @@ HRESULT CGameInstance::InitializeResources()
 				return E_FAIL;
 			}
 		}
+		LogMemoryUsage("InitializeResources---VS_TestModelNonAnim");
 
 		if (auto res = AddResourceT<E::CResPixelShader>(TAG_RES_GRP_PERMANENT_SHADER, "PS_TestModelNonAnim", "./ShaderFiles/TestModel/Shader_VtxMesh_Instanced.hlsl"))
 		{
@@ -991,6 +1103,7 @@ HRESULT CGameInstance::InitializeResources()
 				return E_FAIL;
 			}
 		}
+		LogMemoryUsage("InitializeResources---PS_TestModelNonAnim");
 
 		if (auto res = AddResourceT<E::CResVertexShader>(TAG_RES_GRP_PERMANENT_SHADER, "VS_TestModelNonAnim_Instanced", "./ShaderFiles/TestModel/Shader_VtxMesh_Instanced.hlsl"))
 		{
@@ -999,6 +1112,9 @@ HRESULT CGameInstance::InitializeResources()
 				return E_FAIL;
 			}
 		}
+		LogMemoryUsage("InitializeResources---VS_TestModelNonAnim_Instanced");
+
+
 		if (auto res = AddResourceT<E::CResPixelShader>(TAG_RES_GRP_PERMANENT_SHADER, "PS_TestModelNonAnim_Instanced", "./ShaderFiles/TestModel/Shader_VtxMesh_Instanced.hlsl"))
 		{
 			if (FAILED(res->Load()))
@@ -1006,6 +1122,7 @@ HRESULT CGameInstance::InitializeResources()
 				return E_FAIL;
 			}
 		}
+		LogMemoryUsage("InitializeResources---PS_TestModelNonAnim_Instanced");
 
 
 		if (auto res = AddResourceT<E::CResVertexShader>(TAG_RES_GRP_PERMANENT_SHADER, "VS_TestModelAnim", "./ShaderFiles/TestModel/Shader_VtxAnimMesh.hlsl"))
@@ -1015,6 +1132,8 @@ HRESULT CGameInstance::InitializeResources()
 				return E_FAIL;
 			}
 		}
+		LogMemoryUsage("InitializeResources---VS_TestModelAnim");
+
 		if (auto res = AddResourceT<E::CResPixelShader>(TAG_RES_GRP_PERMANENT_SHADER, "PS_TestModelAnim", "./ShaderFiles/TestModel/Shader_VtxAnimMesh.hlsl"))
 		{
 			if (FAILED(res->Load()))
@@ -1022,6 +1141,7 @@ HRESULT CGameInstance::InitializeResources()
 				return E_FAIL;
 			}
 		}
+		LogMemoryUsage("InitializeResources---PS_TestModelAnim");
 	}
 
 
@@ -1031,22 +1151,27 @@ HRESULT CGameInstance::InitializeResources()
 		{
 			res->Load();
 		}
+		LogMemoryUsage("InitializeResources---PS_TestModelAnim");
 		if (auto res = E::CGameInstance::Get().AddResource("DEFAULT_TEXTURE", "TEX_DEFAULT_NORMAL", E::CResTexture2D::Create("./Resources/Engine/Texture/DefaultTexture/DefaultTex_Normal.png")))
 		{
 			res->Load();
 		}
+		LogMemoryUsage("InitializeResources---TEX_DEFAULT_NORMAL");
 		if (auto res = E::CGameInstance::Get().AddResource("DEFAULT_TEXTURE", "TEX_DEFAULT_SMRO", E::CResTexture2D::Create("./Resources/Engine/Texture/DefaultTexture/DefaultTex_SMRO.png")))
 		{
 			res->Load();
 		}
+		LogMemoryUsage("InitializeResources---TEX_DEFAULT_SMRO");
 		if (auto res = E::CGameInstance::Get().AddResource("DEFAULT_TEXTURE", "TEX_DEFAULT_EMISSIVE", E::CResTexture2D::Create("./Resources/Engine/Texture/DefaultTexture/DefaultTex_Emissive.png")))
 		{
 			res->Load();
 		}
+		LogMemoryUsage("InitializeResources---TEX_DEFAULT_EMISSIVE");
 		if (auto res = E::CGameInstance::Get().AddResource("DEFAULT_TEXTURE", "TEX_DEFAULT_WHITE", E::CResTexture2D::Create("./Resources/Engine/Texture/DefaultTexture/DefaultTex_White.png")))
 		{
 			res->Load();
 		}
+		LogMemoryUsage("InitializeResources---TEX_DEFAULT_WHITE");
 	}
 
 
@@ -1063,6 +1188,7 @@ HRESULT CGameInstance::InitializeResources()
 			return E_FAIL;
 		}
 	}
+	LogMemoryUsage("InitializeResources---Model_Resource");
 
 	/*if (auto res = AddResourceT<E::CResStaticModel>("TEST", "Static_Model_Resource",
 		CResStaticModel::Create("./Resources/SampleClient/Models/OriginData/Static/HorseStatue.fbx"))) {
@@ -1086,6 +1212,8 @@ HRESULT CGameInstance::InitializeResources()
 			return E_FAIL;
 		}
 	}
+	LogMemoryUsage("InitializeResources---Static_Model_Resource");
+
 	if (auto res = AddResourceT<E::CResStaticModel>(TAG_RES_GRP_MAPEDITOR_STATIC_MODEL, TAG_RES_MAPEDITOR_DEFAULT_STATIC_MODEL,
 		CResStaticModel::Create("./Resources/SampleClient/Models/Static/SM_HorseStatue.bin"))) {
 
@@ -1097,6 +1225,7 @@ HRESULT CGameInstance::InitializeResources()
 			return E_FAIL;
 		}
 	}
+	LogMemoryUsage("InitializeResources---TAG_RES_MAPEDITOR_DEFAULT_STATIC_MODEL");
 
 	return S_OK;
 }

@@ -1,5 +1,7 @@
 #include "pch.h"
 
+#include "Engine_Defines.h"
+
 #include "MainApp.h"
 #include "GameInstance.h"
 #include "LevelLoading.h"
@@ -11,7 +13,7 @@
 #include "Trail_Example.h"
 #include "Particle_Fire_GPU.h"
 #include "BTHeader_Definse.h"
-
+#include <dxgi1_6.h>
 
 NS_USING(Client)
 
@@ -36,6 +38,34 @@ HRESULT CMainApp::Initialize()
 	{
 		return E_FAIL;
 	}
+
+	
+
+	if (true)
+	{
+		ComPtr<IDXGIDevice> dxgiDevice = nullptr;
+		CGameInstance::Get().GetGraphicDevice()->QueryInterface(__uuidof(IDXGIDevice), (void**)&dxgiDevice);
+		
+		ComPtr<IDXGIAdapter> adapter = nullptr;
+		dxgiDevice->GetAdapter(&adapter);
+
+		ComPtr<IDXGIAdapter3> adapter3 = nullptr;
+		adapter->QueryInterface(__uuidof(IDXGIAdapter3), (void**)&adapter3);
+
+		DXGI_QUERY_VIDEO_MEMORY_INFO info{};
+		adapter3->QueryVideoMemoryInfo(
+			0,
+			DXGI_MEMORY_SEGMENT_GROUP_LOCAL,
+			&info);
+
+		wchar_t buffer[256];
+		swprintf_s(buffer, L"VRAM Usage : %.2f MB\n",
+			info.CurrentUsage / 1024.0 / 1024.0);
+
+		OutputDebugStringW(buffer);
+
+	}
+	LogMemoryUsage("AfterEngineInitialize");
 
 	if (CBaseApp::StartLevel(CLevelLoading::Create(m_pDevice, m_pContext, LEVEL::LOGO)))
 	{
