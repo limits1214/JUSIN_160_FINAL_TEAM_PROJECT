@@ -6,6 +6,10 @@
 #include "Client_Resources.h"
 #include "ComConstantBuffer.h"
 #include "Resources.h"
+#include "Client_Defines.h"
+#include "UIManager.h"
+#include "MouseComponent.h"
+#include "TweenComponent.h"
 
 NS_USING(Client)
 
@@ -17,6 +21,11 @@ CEffectUI::~CEffectUI()
 {
 }
 
+HRESULT CEffectUI::InitializePrototype(void* pArg)
+{
+	return S_OK;
+}
+
 HRESULT CEffectUI::Initialize(void* pArg)
 {
 	auto		pDesc = static_cast<CFlipbookUI::FLIPBOOK_DESC*>(pArg);
@@ -24,10 +33,21 @@ HRESULT CEffectUI::Initialize(void* pArg)
 	if (FAILED(CFlipbookUI::Initialize(pDesc)))
 		return E_FAIL;
 
+
 	{
+		/* Buffer */
 		CComConstantBuffer::DESC Desc{};
 		Desc.cBufferId = { TAG_RES_GRP_PERMANENT_BUFFER, "CB_PerUI" };
 		if (FAILED(AddComponentFromProto("PERMANENT", "Prototype_Component_ConstantBuffer", "ComCBufferPerUI", &Desc, &m_pComCBufferPerUI)))
+		{
+			return E_FAIL;
+		};
+
+		/* Component */
+		CComponent::DESC CDesc{};
+		Desc.pGameObject = this;
+
+		if (FAILED(AddComponentFromProto(ES_EngineProtoMajorType::UI, "Prototype_Component_Tween", "Com_Tween", &CDesc, &m_pComTween)))
 		{
 			return E_FAIL;
 		};
@@ -44,11 +64,17 @@ void CEffectUI::PriorityUpdate(E::_float fTimeDelta)
 
 void CEffectUI::Update(E::_float fTimeDelta)
 {
+	if (!m_isActive)
+		return;
+
 	CFlipbookUI::Update(fTimeDelta);
 }
 
 void CEffectUI::LateUpdate(E::_float fTimeDelta)
 {
+	if (!m_isActive)
+		return;
+
 	E::CGameInstance::Get().AddRenderObject(E::RENDERGROUP::UI, this);
 	GetTransform().Update();
 }
@@ -83,7 +109,7 @@ HRESULT CEffectUI::Render(ID3D11DeviceContext* pContext, const E::RENDER_CTX& ct
 		E::CB_PER_UI perUI{};
 		perUI.texCoord = m_texcoord;
 		perUI.uvSize = m_uvSize;
-		perUI.color = { m_vColor.x, m_vColor.y, m_vColor.z, m_fAlpha };
+		perUI.color = { m_UIINFO.Color.x, m_UIINFO.Color.y, m_UIINFO.Color.z, m_UIINFO.Alpha };
 
 		if (FAILED(m_pComCBufferPerUI->MapDiscard(pContext, &perUI, sizeof(perUI))))
 		{
@@ -114,7 +140,7 @@ HRESULT CEffectUI::Render(ID3D11DeviceContext* pContext, const E::RENDER_CTX& ct
 	}
 
 	{
-		const auto& srv = E::CGameInstance::GetConst().GetResourceFirst<E::CResTexture2D>(currentLevel, m_sRestag);
+		const auto& srv = E::CGameInstance::GetConst().GetResourceFirst<E::CResTexture2D>(currentLevel, m_UIINFO.Restag);
 		pContext->PSSetShaderResources(0, 1, srv->GetSRV().GetAddressOf());
 
 		const auto& sampler = E::CGameInstance::GetConst().GetResourceFirst<E::CResSamplerState>(TAG_RES_GRP_PERMANENT_STATE, TAG_RES_STATE_SS_LINEAR_WRAP);
@@ -126,6 +152,16 @@ HRESULT CEffectUI::Render(ID3D11DeviceContext* pContext, const E::RENDER_CTX& ct
 
 
 	return S_OK;
+}
+
+void CEffectUI::PlayEffect(uint32_t uiState)
+{
+	switch (uiState)
+	{
+	case ETOUI(UI_STATE::HOVERED):
+		std::optional<CHandle> effect = GET_SINGLE(UIManager)->LoadPrefab("Magic");
+		break;
+	}
 }
 
 E::UPtr<CEffectUI> CEffectUI::Create()

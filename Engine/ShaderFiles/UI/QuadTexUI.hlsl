@@ -36,5 +36,13 @@ float4 PSMain(PS_IN input) : SV_Target
         discard;
     }
 
+    float brightness = dot(texColor.rgb, float3(0.299, 0.587, 0.114));
+    brightness = pow(brightness, 1.f);
+
+    if (max(g_ui_color.r, max(g_ui_color.g, g_ui_color.b)) > 0.0f)
+    {
+        texColor.rgb = g_ui_color.rgb * brightness;
+    }
+
     return float4(texColor.rgb, texColor.a * g_ui_color.a);
 }

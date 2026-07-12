@@ -2,7 +2,7 @@
 #include "LevelUIEditor.h"
 #include "GameInstance.h"
 #include "LevelLoading.h"
-
+#include "Client_Defines.h"
 #include "FlyCamera.h"
 #include "UiCamera.h"
 #include "ResCBuffer.h"
@@ -11,7 +11,14 @@
 #include "UIObject.h"
 #include "FlipBook.h"
 #include <fstream>
-#include "UI_Item.h"
+#include "TextureUI.h"
+#include "TextBox.h"
+#include "TextUI.h"
+#include "FlipbookUI.h"
+#include "TextUI.h"
+#include "EffectUI.h"
+#include "UIManager.h"
+
 
 namespace fs = std::filesystem;
 
@@ -55,12 +62,13 @@ HRESULT CLevelUIEditor::Initialize()
 
 	if (std::nullopt == Target_UI)
 	{
-		m_fX		= clientSize.x * 0.5f;
-		m_fY		= clientSize.y * 0.5f;
-		m_fSizeX	= 100.f;
-		m_fSizeY	= 100.f;
-		m_fAlpha	= 1.f;
-		m_iWeight	= 0;
+		m_UIINFO.fX		= clientSize.x * 0.5f;
+		m_UIINFO.fY = clientSize.y * 0.5f;
+		m_UIINFO.SizeX = 100.f;
+		m_UIINFO.SizeY = 100.f;
+		m_UIINFO.Alpha = 1.f;
+		m_UIINFO.Weight	= 0;
+		m_UIINFO.Name = "Name";
 		strcpy_s(m_cName, "Name");
 	}
 
@@ -166,6 +174,8 @@ HRESULT CLevelUIEditor::Initialize()
 		}
 	}
 
+	GET_SINGLE(UIManager)->InitializeActions();
+
 	return S_OK;
 }
 
@@ -174,12 +184,15 @@ void CLevelUIEditor::Update(E::_float fTimeDelta)
 	auto clientSize = CGameInstance::Get().GetClientScreenSize();
 
 	_bool bP = CGameInstance::Get().KeyDown(DIK_P);
-	_bool bC = CGameInstance::Get().KeyPressing(DIK_C);
-	_bool bV = CGameInstance::Get().KeyPressing(DIK_V);
+	_bool bLShift = CGameInstance::Get().KeyPressing(DIK_LSHIFT);
 	_bool bDelete = CGameInstance::Get().KeyDown(DIK_DELETE);
 
-	const _tchar* text = L"Test";
-	CGameInstance::Get().FontAddLateDraw(RENDERGROUP::UI, "NeoDGM_15px", text, { clientSize.x * 0.5f, clientSize.y * 0.5f });
+	_bool bCreate = false;
+	if (std::nullopt != m_oSelectHandle)
+		bCreate = true;
+
+	//const _tchar* text = L"Test";
+	//CGameInstance::Get().FontAddLateDraw(RENDERGROUP::UI, "NeoDGM_15px", text, { clientSize.x * 0.5f, clientSize.y * 0.5f });
 
 	if (bP)
 	{
@@ -198,7 +211,7 @@ void CLevelUIEditor::Update(E::_float fTimeDelta)
 			Desc.ResWeight = count;
 			Desc.UIType = ETOUI(UI_TYPE::TEXUI);
 
-			std::optional<CHandle> handle = E::CGameInstance::Get().AddGameObjectToLayer("LEVEL_UIEDITOR", "Prototype_GameObject_UI_Item", "Layer_UI", &Desc);
+			std::optional<CHandle> handle = E::CGameInstance::Get().AddGameObjectToLayer("LEVEL_UIEDITOR", "Prototype_GameObject_TextureUI", "Layer_UI", &Desc);
 		}
 
 		if (false)
@@ -215,10 +228,25 @@ void CLevelUIEditor::Update(E::_float fTimeDelta)
 			Desc.ResWeight = count;
 			Desc.UIType = ETOUI(UI_TYPE::TEXUI);
 
-			std::optional<CHandle> handle = E::CGameInstance::Get().AddGameObjectToLayer("LEVEL_UIEDITOR", "Prototype_GameObject_UI_Item", "Layer_UI", &Desc);
+			std::optional<CHandle> handle = E::CGameInstance::Get().AddGameObjectToLayer("LEVEL_UIEDITOR", "Prototype_GameObject_TextureUI", "Layer_UI", &Desc);
+		}
+
+		if (true)
+		{
+			count++;
+			CTextUI::TEXT_DESC desc{};
+
+			desc.fSizeX = 2.f;
+			desc.fSizeY = 2.f;
+			desc.fX = clientSize.x * 0.5f;
+			desc.fY = clientSize.y * 0.5f;
+			desc.fAlpha = 0.05f;
+			desc.Text = L"Test";
+
+			std::optional<CHandle> handle = E::CGameInstance::Get().AddGameObjectToLayer("LEVEL_UIEDITOR", "Prototype_GameObject_TextBox", "Layer_UI", &desc);
 		}
 	}
-	if (bV)
+	if (bLShift)
 	{
 		if (std::nullopt != m_oSelectHandle)
 		{
@@ -229,7 +257,7 @@ void CLevelUIEditor::Update(E::_float fTimeDelta)
 		}
 		m_iButtonMode = ETOUI(UiButtonMode::SELECT);
 	}
-	else if (bC)
+	else if (bCreate)
 	{
 		Target_UI = std::nullopt;
 		m_iButtonMode = ETOUI(UiButtonMode::CREATE);
@@ -259,26 +287,44 @@ void CLevelUIEditor::Update(E::_float fTimeDelta)
 	if (std::nullopt != m_oSelectHandle)
 	{
 		Engine::CUIObject* selectUI = E::CGameInstance::Get().GetGameObjectByHandleT<Engine::CUIObject>(*m_oSelectHandle);
-		selectUI->SetSize({ m_fSizeX, m_fSizeY });
-		//selectUI->SetAlpha(m_fAlpha);
+
+		if (selectUI == nullptr)
+			return;
+
+		UI_INFO& selectInfo = selectUI->GetUIInfo();
+		selectInfo.SizeX = m_UIINFO.SizeX;
+		selectInfo.SizeY = m_UIINFO.SizeY;
+		selectUI->CalcUICoord();
 	}
 
 	if (std::nullopt != Target_UI)
 	{
 		Engine::CUIObject* selectUI = E::CGameInstance::Get().GetGameObjectByHandleT<Engine::CUIObject>(*Target_UI);
-		selectUI->SetOrigin({ m_fX, m_fY });
-		selectUI->SetSize({ m_fSizeX, m_fSizeY });
-		selectUI->SetAlpha(m_fAlpha);
-		selectUI->SetWeight(m_iWeight);
-		selectUI->SetName(m_cName);
+		UI_INFO& selectInfo = selectUI->GetUIInfo();
 
-		if (ETOUI(UI_TYPE::FLIPBOOK) == selectUI->GetUIType())
+		selectInfo.fX = m_UIINFO.fX;
+		selectInfo.fY = m_UIINFO.fY;
+		selectInfo.SizeX = m_UIINFO.SizeX;
+		selectInfo.SizeY = m_UIINFO.SizeY;
+		selectInfo.Alpha = m_UIINFO.Alpha;
+		selectInfo.Weight = m_UIINFO.Weight;
+		selectInfo.Name = m_cName;
+		selectInfo.Color = m_UIINFO.Color;
+		selectInfo.UIType = m_UIINFO.UIType;
+		selectInfo.EffectType = m_UIINFO.EffectType;
+
+		if (ETOUI(UI_TYPE::FLIPBOOK) == *selectUI->GetUIType())
 		{
-			m_fCellSize = static_cast<CFlipBook*>(selectUI)->GetCellSize();
-			m_fDuration = static_cast<CFlipBook*>(selectUI)->GetDuration();
-			m_iTotalFrame = static_cast<CFlipBook*>(selectUI)->GetTotalFrame();
+			FLIP_INFO& flipInfo = static_cast<CFlipbookUI*>(selectUI)->GetFlipInfo();
+
+			m_FLIPINFO.cellsize = flipInfo.cellsize;
+			m_FLIPINFO.Duration = flipInfo.Duration;
+			m_FLIPINFO.TotalFrame = flipInfo.TotalFrame;
+			m_FLIPINFO.Padding = flipInfo.Padding;
 		}
+		selectUI->CalcUICoord();
 	}
+
 	switch (m_iButtonMode)
 	{
 	case ETOUI(UiButtonMode::DEFAULT):
@@ -330,24 +376,25 @@ void CLevelUIEditor::CreateMode()
 	{
 		if (MouseLB)
 		{
-			CTexUI* selectUI = E::CGameInstance::Get().GetGameObjectByHandleT<CTexUI>(*m_oSelectHandle);
-			_float2 size = selectUI->GetSize();
+			CTextureUI* selectUI = E::CGameInstance::Get().GetGameObjectByHandleT<CTextureUI>(*m_oSelectHandle);
+			const UI_INFO& selectInfo = selectUI->GetUIInfo();
 			_float2 mousePos = E::CGameInstance::Get().GetMousePos();
-			
-			count++;
 
-			CTexUI::UIOBJECT_DESC Desc{};
+			CTextureUI::UIOBJECT_DESC Desc{};
+
+			count++;
 			Desc.sObjectTag = "UI_" + std::to_string(count);
-			Desc.fSizeX = m_fSizeX;
-			Desc.fSizeY = m_fSizeY;
+			Desc.Name = "UI_" + std::to_string(count);
+			Desc.fSizeX = selectInfo.SizeX;
+			Desc.fSizeY = selectInfo.SizeY;
 			Desc.fX = mousePos.x;
 			Desc.fY = mousePos.y;
-			Desc.fAlpha = m_fAlpha;
-			Desc.ResTag = selectUI->Get_ResTag();
-			Desc.ResWeight = count;
+			Desc.fAlpha = 1.f;
+			Desc.ResTag = selectInfo.Restag;
 			Desc.UIType = ETOUI(UI_TYPE::TEXUI);
+			Desc.ResWeight = count;
 
-			E::CGameInstance::Get().AddGameObjectToLayer("LEVEL_UIEDITOR", "Prototype_GameObject_TexUI", "Layer_UI", &Desc);
+			E::CGameInstance::Get().AddGameObjectToLayer("LEVEL_UIEDITOR", "Prototype_GameObject_TextureUI", "Layer_UI", &Desc);
 		}
 	}
 }
@@ -369,21 +416,27 @@ void CLevelUIEditor::SelectMode()
 	if (MouseLBPressing && std::nullopt != Target_UI)
 	{
 		Engine::CUIObject* selectUI = E::CGameInstance::Get().GetGameObjectByHandleT<Engine::CUIObject>(*Target_UI);
+		UI_INFO& selectInfo = selectUI->GetUIInfo();
 
 		_float2 mousePos = CGameInstance::Get().GetMousePos();
 
-		m_fX = mousePos.x - m_vDragOffset.x;
-		m_fY = mousePos.y - m_vDragOffset.y;
+		m_UIINFO.fX = mousePos.x - m_vDragOffset.x;
+		m_UIINFO.fY = mousePos.y - m_vDragOffset.y;
 
 		if (std::nullopt != selectUI->GetParent())
 		{
 			Engine::CUIObject* parentUI = E::CGameInstance::Get().GetGameObjectByHandleT<Engine::CUIObject>(*selectUI->GetParent());
+			UI_INFO& parentInfo = parentUI->GetUIInfo();
 
-			selectUI->SetLocalX(m_fX - parentUI->GetOrigin().x);
-			selectUI->SetLocalY(m_fY - parentUI->GetOrigin().y);
+			selectInfo.LocalX = m_UIINFO.fX - parentInfo.fX;
+			selectInfo.LocalY = m_UIINFO.fY - parentInfo.fY;
 		}
 		else
-			selectUI->SetOrigin({ m_fX, m_fY });
+		{
+			selectInfo.fX = m_UIINFO.fX;
+			selectInfo.fY = m_UIINFO.fY;
+		}
+		selectUI->CalcUICoord();
 	}
 }
 
@@ -436,17 +489,17 @@ void CLevelUIEditor::ArrangeMode()
 	ImGui::TextColored(ImVec4(0, 1, 1, 1), "Target_State");
 	ImGui::Separator();
 
-	ImGui::Text("PosX  : %.2f  ", m_fX);
+	ImGui::Text("PosX  : %.2f  ", m_UIINFO.fX);
 	ImGui::SameLine(150);
-	ImGui::Text("PosY   : %.2f", m_fY);
+	ImGui::Text("PosY   : %.2f", m_UIINFO.fY);
 
-	ImGui::Text("SizeX : %.2f  ", m_fSizeX);
+	ImGui::Text("SizeX : %.2f  ", m_UIINFO.SizeX);
 	ImGui::SameLine(150);
-	ImGui::Text("SizeY  : %.2f", m_fSizeY);
+	ImGui::Text("SizeY  : %.2f", m_UIINFO.SizeY);
 
-	ImGui::Text("Alpha : %.2f", m_fAlpha);
+	ImGui::Text("Alpha : %.2f", m_UIINFO.Alpha);
 	ImGui::SameLine(150);
-	ImGui::Text("Weight : %.d", m_iWeight);
+	ImGui::Text("Weight : %.d", m_UIINFO.Weight);
 
 	ImGui::Text("Name : %s", m_cName);
 
@@ -455,22 +508,22 @@ void CLevelUIEditor::ArrangeMode()
 	ImGui::Separator();
 
 	ImGui::SetNextItemWidth(80);
-	ImGui::DragFloat("fx", &m_fX, 0.1f, 0.0f, clientSize.x);
+	ImGui::DragFloat("fx", &m_UIINFO.fX, 0.1f, 0.0f, clientSize.x);
 	ImGui::SameLine(150);
 	ImGui::SetNextItemWidth(80);
-	ImGui::DragFloat("fy", &m_fY, 0.1f, 0.0f, clientSize.y);
+	ImGui::DragFloat("fy", &m_UIINFO.fY, 0.1f, 0.0f, clientSize.y);
 
 	ImGui::SetNextItemWidth(80);
-	ImGui::DragFloat("fSizeX", &m_fSizeX, 0.1f, 0.0f, clientSize.x);
+	ImGui::DragFloat("fSizeX", &m_UIINFO.SizeX, 0.1f, 0.0f, clientSize.x);
 	ImGui::SameLine(150);
 	ImGui::SetNextItemWidth(80);
-	ImGui::DragFloat("fSizeY", &m_fSizeY, 0.1f, 0.0f, clientSize.y);
+	ImGui::DragFloat("fSizeY", &m_UIINFO.SizeY, 0.1f, 0.0f, clientSize.y);
 
 	ImGui::SetNextItemWidth(80);
-	ImGui::DragFloat("fAlpha", &m_fAlpha, 0.001f, 0.0f, 1.f);
+	ImGui::DragFloat("fAlpha", &m_UIINFO.Alpha, 0.001f, 0.0f, 1.f);
 	ImGui::SameLine(150);
 	ImGui::SetNextItemWidth(80);
-	ImGui::DragInt("iWeight", &m_iWeight, 1.f, 0.0f, 100);
+	ImGui::DragInt("iWeight", &m_UIINFO.Weight, 1.f, 0.0f, 100);
 
 	ImGui::SetNextItemWidth(80);
 	ImGui::InputText("Name", m_cName, sizeof(m_cName));
@@ -498,25 +551,26 @@ void CLevelUIEditor::ArrangeMode()
 			{
 				if (std::nullopt != m_oSelectHandle)
 				{
-					CTexUI* selectUI = E::CGameInstance::Get().GetGameObjectByHandleT<CTexUI>(*m_oSelectHandle);
+					CUIObject* selectUI = E::CGameInstance::Get().GetGameObjectByHandleT<CUIObject>(*m_oSelectHandle);
 					selectUI->SetPendingDestroyCascade();
 
 					m_oSelectHandle = std::nullopt;
 				}
 
-				CTexUI::UIOBJECT_DESC Desc{};
+				CTextureUI::UIOBJECT_DESC Desc{};
+
 				Desc.sObjectTag = "Select_Image";
-				Desc.fSizeX = m_fSizeX;
-				Desc.fSizeY = m_fSizeY;
+				Desc.fSizeX = m_UIINFO.SizeX;
+				Desc.fSizeY = m_UIINFO.SizeY;
 				Desc.fX = g_iWinSizeX * 0.5f;
 				Desc.fY = g_iWinSizeY * 0.5f;
-				Desc.fAlpha = m_fAlpha * 0.3f;
+				Desc.fAlpha = m_UIINFO.Alpha * 0.3f;
 				Desc.ResTag = m_vResTag[i];
 				Desc.UIType = ETOUI(UI_TYPE::TEXUI);
 				Desc.ResWeight = 10000;
 
-				m_oSelectHandle = E::CGameInstance::Get().AddGameObjectToLayer("LEVEL_UIEDITOR", "Prototype_GameObject_TexUI","Layer_UI_Texture", &Desc);
-				CTexUI* selectUI = E::CGameInstance::Get().GetGameObjectByHandleT<CTexUI>(*m_oSelectHandle);
+				m_oSelectHandle = E::CGameInstance::Get().AddGameObjectToLayer("LEVEL_UIEDITOR", "Prototype_GameObject_TextureUI","Layer_UI_Texture", &Desc);
+				CTextureUI* selectUI = E::CGameInstance::Get().GetGameObjectByHandleT<CTextureUI>(*m_oSelectHandle);
 				selectUI->SetMouseTracking(true);
 			}
 
@@ -532,281 +586,398 @@ void CLevelUIEditor::ArrangeMode()
 void CLevelUIEditor::PrefabMode()
 {
 	auto clientSize = CGameInstance::Get().GetClientScreenSize();
-
 	_float2 mousePos = CGameInstance::Get().GetMousePos();
-
+	
 	DrawJsonFileLoader(m_iEditorMode);
-
-	ImGui::Begin("EDITOR_MODE: ARRANGE_MODE");
-
-	ImGui::TextColored(ImVec4(0, 1, 1, 1), "Save / Load");
-	ImGui::Separator();
 	
-	if (ImGui::Button("Save"))
-		PrefabSave();
+	// 윈도우 여백 및 패딩 약간 조절
+	ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(10, 10));
+	ImGui::Begin("UI Editor", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
 	
-	ImGui::SameLine();
+	// ---------------------------------------------------------
+	// 1. File & Mode Settings
+	// ---------------------------------------------------------
+	if (ImGui::CollapsingHeader("File & Mode Settings", ImGuiTreeNodeFlags_DefaultOpen))
+	{
+		ImGui::AlignTextToFramePadding();
+		ImGui::Text("Prefab Name:");
+		ImGui::SameLine();
+		ImGui::SetNextItemWidth(200);
+		ImGui::InputText("##PrefabName", m_cPrefabName, sizeof(m_cPrefabName));
 	
-	if (ImGui::Button("Load"))
-		PrefabLoad();
-
-	ImGui::SetNextItemWidth(100);
-	ImGui::InputText("PrefabName", m_cPrefabName, sizeof(m_cPrefabName));
-
-	ImGui::TextColored(ImVec4(0, 1, 1, 1), "Select_Mode");
-	ImGui::Separator();
-
-	if (ImGui::Button("ARRAGE_MODE"))
-	{
-		m_iEditorMode = ETOUI(UiEditorMode::ARRANGE);
-		RefreshJsonFileList();
+		if (ImGui::Button("Save Prefab", ImVec2(120, 0)))
+			PrefabSave();
+	
+		ImGui::SameLine();
+	
+		if (ImGui::Button("Load Prefab", ImVec2(120, 0)))
+			GET_SINGLE(UIManager)->LoadPrefab(m_cPrefabName, g_PrefabPath);
+	
+		ImGui::Spacing();
+		ImGui::TextColored(ImVec4(1.0f, 0.8f, 0.0f, 1.0f), "[ Editor Mode ]");
+	
+		// 라디오 버튼 형태나 그룹화된 버튼으로 모드 전환을 직관적으로 변경
+		if (ImGui::Button("ARRANGE", ImVec2(90, 0))) {
+			m_iEditorMode = ETOUI(UiEditorMode::ARRANGE);
+			RefreshJsonFileList();
+		}
+		ImGui::SameLine();
+		if (ImGui::Button("PREFAB", ImVec2(90, 0))) {
+			m_iEditorMode = ETOUI(UiEditorMode::PREFAB);
+			RefreshJsonFileList();
+		}
+		ImGui::SameLine();
+		if (ImGui::Button("FLIPBOOK", ImVec2(90, 0))) {
+			m_iEditorMode = ETOUI(UiEditorMode::FLIPBOOK);
+			RefreshJsonFileList();
+		}
 	}
-	ImGui::SameLine();
-	if (ImGui::Button("PREFAB_MODE"))
-	{
-		m_iEditorMode = ETOUI(UiEditorMode::PREFAB);
-		RefreshJsonFileList();
-	}
-	ImGui::SameLine();
-	if (ImGui::Button("FLIPBOOK_MODE"))
-	{
-		m_iEditorMode = ETOUI(UiEditorMode::FLIPBOOK);
-		RefreshJsonFileList();
-	}
-
+	
+	// ---------------------------------------------------------
+	// 2. Hierarchy / Parent Setting
+	// ---------------------------------------------------------
 	if (std::nullopt != Target_UI)
 	{
 		Engine::CUIObject* targetUI = E::CGameInstance::Get().GetGameObjectByHandleT<Engine::CUIObject>(*Target_UI);
-		
+		m_UIINFO.Name = targetUI->GetName();
+		strcpy_s(m_cName, sizeof(m_cName), m_UIINFO.Name.c_str());
+	
+		if (nullptr != CGameInstance::Get().GetGameObjectLayer("Layer_UI"))
+		{
+			if (ImGui::CollapsingHeader("Hierarchy Settings", ImGuiTreeNodeFlags_DefaultOpen))
+			{
+				std::vector<Engine::CUIObject*> uiList;
+				std::vector<CHandle> uiHandles = *CGameInstance::Get().GetGameObjectLayer("Layer_UI");
+	
+				for (auto ui : uiHandles)
+				{
+					Engine::CUIObject* checkUI = E::CGameInstance::Get().GetGameObjectByHandleT<Engine::CUIObject>(ui);
+					if (checkUI && ui != Target_UI) // 자기 자신 제외
+						uiList.push_back(checkUI);
+				}
+	
+				const char* preview = (selectedParent >= 0 && selectedParent < uiList.size()) ? uiList[selectedParent]->GetName() : "None";
+	
+				ImGui::SetNextItemWidth(250);
+				if (ImGui::BeginCombo("Parent UI", preview))
+				{
+					if (ImGui::Selectable("None", selectedParent == -1))
+					{
+						selectedParent = -1;
+						targetUI->SetParent(std::nullopt);
+					}
+	
+					for (int i = 0; i < uiList.size(); ++i)
+					{
+						bool isSelected = (selectedParent == i);
+						if (ImGui::Selectable(uiList[i]->GetName(), isSelected))
+						{
+							selectedParent = i;
+							targetUI->SetParent(uiList[i]->GetHandle());
+	
+							Engine::CUIObject* parentUI = E::CGameInstance::Get().GetGameObjectByHandleT<Engine::CUIObject>(uiList[i]->GetHandle());
+							parentUI->AddChildren(*Target_UI);
+	
+							UI_INFO& targetInfo = targetUI->GetUIInfo();
+							UI_INFO& parentInfo = parentUI->GetUIInfo();
+	
+							targetInfo.LocalX = m_UIINFO.fX - parentInfo.fX;
+							targetInfo.LocalY = m_UIINFO.fY - parentInfo.fY;
+							targetUI->CalcUICoord();
+						}
+						if (isSelected) ImGui::SetItemDefaultFocus();
+					}
+					ImGui::EndCombo();
+				}
+			}
+		}
+	
+		// ---------------------------------------------------------
+		// 3. Properties
+		// ---------------------------------------------------------
 		if (std::nullopt != targetUI->GetParent())
 			LocalStateView();
 		else
 			StateView();
 	}
 	else
+	{
 		StateView();
+	}
 	
-	std::vector<Engine::CUIObject*> uiList;
-
-	if (nullptr != CGameInstance::Get().GetGameObjectLayer("Layer_UI") && (std::nullopt != Target_UI))
+	// ---------------------------------------------------------
+	// 4. Resource / Image Selector
+	// ---------------------------------------------------------
+	if (ImGui::CollapsingHeader("Texture Resources"))
 	{
-		ImGui::Spacing();
-		ImGui::TextColored(ImVec4(0, 1, 1, 1), "Set_Parent");
-		ImGui::Separator();
+		// 가로 패딩을 15로 증가 (기존은 기본값 8)
+		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(15, 10));
 
-		std::vector<CHandle> uiHandles = *CGameInstance::Get().GetGameObjectLayer("Layer_UI");
-
-		for (auto ui : uiHandles)
+		// 스크롤 가능한 차일드 영역 부여
+		ImGui::BeginChild("TextureView", ImVec2(0, 300), true);
+		if (ImGui::BeginTable("TextureTable", 4)) // 컬럼 수를 늘려서 한 줄에 여러 이미지 배치
 		{
-			Engine::CUIObject* checkUI = E::CGameInstance::Get().GetGameObjectByHandleT<Engine::CUIObject>(ui);
-
-			if (nullptr == checkUI)
-				continue;
-
-			if (ui == Target_UI)   // 자기 자신은 Parent가 될 수 없음
-				continue;
-
-			uiList.push_back(checkUI);
-		}
-		const char* preview = "None";
-
-		Engine::CUIObject* targetUI = E::CGameInstance::Get().GetGameObjectByHandleT<Engine::CUIObject>(*Target_UI);
-
-		if (selectedParent >= 0)
-			preview = uiList[selectedParent]->GetName();
-
-		if (ImGui::BeginCombo("Parent", preview))
-		{
-			bool selected = (selectedParent == -1);
-
-			if (ImGui::Selectable("None", selected))
+			for (size_t i = 0; i < m_vResTag.size(); ++i)
 			{
-				selectedParent = -1;
-				targetUI->SetParent(std::nullopt);
-			}
-
-			for (int i = 0; i < uiList.size(); ++i)
-			{
-				bool isSelected = (selectedParent == i);
-
-				if (ImGui::Selectable(uiList[i]->GetName(), isSelected))
+				ImGui::TableNextColumn();
+				ImGui::PushID((int)i);
+	
+				const auto& srv = E::CGameInstance::GetConst().GetResourceFirst<E::CResTexture2D>("LEVEL_UIEDITOR", m_vResTag[i]);
+	
+				// 텍스처 툴팁 기능 추가 (Hover 시 크게 보기 등 가능)
+				if (ImGui::ImageButton((ImTextureID)srv->GetSRV().Get(), ImVec2(60, 60)))
 				{
-					selectedParent = i;
-
-					targetUI->SetParent(uiList[i]->GetHandle());
-
-					Engine::CUIObject* parentUI = E::CGameInstance::Get().GetGameObjectByHandleT<Engine::CUIObject>(uiList[i]->GetHandle());
-					parentUI->AddChildren(*Target_UI);
-
-					targetUI->SetLocalX(m_fX - parentUI->GetOrigin().x);
-					targetUI->SetLocalY(m_fY - parentUI->GetOrigin().y);
+					if (std::nullopt != m_oSelectHandle)
+					{
+						CUIObject* selectUI = E::CGameInstance::Get().GetGameObjectByHandleT<CUIObject>(*m_oSelectHandle);
+						selectUI->SetPendingDestroyCascade();
+						m_oSelectHandle = std::nullopt;
+					}
+	
+					CTextureUI::UIOBJECT_DESC Desc{};
+					Desc.sObjectTag = "Select_Image";
+					Desc.fSizeX = m_UIINFO.SizeX;
+					Desc.fSizeY = m_UIINFO.SizeY;
+					Desc.fX = g_iWinSizeX * 0.5f;
+					Desc.fY = g_iWinSizeY * 0.5f;
+					Desc.fAlpha = m_UIINFO.Alpha * 0.3f;
+					Desc.ResTag = m_vResTag[i];
+					Desc.UIType = ETOUI(UI_TYPE::TEXUI);
+					Desc.ResWeight = 10000;
+	
+					m_oSelectHandle = E::CGameInstance::Get().AddGameObjectToLayer("LEVEL_UIEDITOR", "Prototype_GameObject_TextureUI", "Layer_UI_Texture", &Desc);
+					CTextureUI* selectUI = E::CGameInstance::Get().GetGameObjectByHandleT<CTextureUI>(*m_oSelectHandle);
+					selectUI->SetMouseTracking(true);
 				}
 
-				if (isSelected)
-					ImGui::SetItemDefaultFocus();
-			}
-
-			ImGui::EndCombo();
-		}
-	}
-
-	ImGui::Spacing();
-	ImGui::TextColored(ImVec4(0, 1, 1, 1), "Select_Images");
-	ImGui::Separator();
-
-	if (ImGui::BeginTable("TextureTable", 2))
-	{
-		for (size_t i = 0; i < m_vResTag.size(); ++i)
-		{
-			ImGui::TableNextColumn();
-
-			ImGui::PushID((int)i);
-
-			const auto& srv = E::CGameInstance::GetConst()
-				.GetResourceFirst<E::CResTexture2D>("LEVEL_UIEDITOR", m_vResTag[i]);
-
-			if (ImGui::ImageButton((ImTextureID)srv->GetSRV().Get(), ImVec2(100, 100)))
-			{
-				if (std::nullopt != m_oSelectHandle)
+				if (ImGui::IsItemHovered())
 				{
-					CTexUI* selectUI = E::CGameInstance::Get().GetGameObjectByHandleT<CTexUI>(*m_oSelectHandle);
-					selectUI->SetPendingDestroyCascade();
+					ImGui::BeginTooltip();
 
-					m_oSelectHandle = std::nullopt;
+					// 텍스처 이름(태그) 표시 (선택 사항)
+					ImGui::Text("ResTag: %s", m_vResTag[i].c_str()); 
+
+					// 크게 보여줄 이미지 사이즈 지정 (예: 256x256)
+					ImGui::Image((ImTextureID)srv->GetSRV().Get(), ImVec2(256, 256));
+
+					ImGui::EndTooltip();
 				}
 
-				Engine::CUIObject::UIOBJECT_DESC Desc{};
-				Desc.sObjectTag = "Select_Image";
-				Desc.fSizeX = m_fSizeX;
-				Desc.fSizeY = m_fSizeY;
-				Desc.fX = g_iWinSizeX * 0.5f;
-				Desc.fY = g_iWinSizeY * 0.5f;
-				Desc.fAlpha = m_fAlpha * 0.3f;
-				Desc.UIType = ETOUI(UI_TYPE::TEXUI);
-				Desc.ResTag = m_vResTag[i];
-
-				m_oSelectHandle = E::CGameInstance::Get().AddGameObjectToLayer("LEVEL_UIEDITOR", "Prototype_GameObject_TexUI", "Layer_UI_Texture", &Desc);
-				CTexUI* selectUI = E::CGameInstance::Get().GetGameObjectByHandleT<CTexUI>(*m_oSelectHandle);
-				selectUI->SetMouseTracking(true);
+				ImGui::PopID();
 			}
-
-			ImGui::PopID();
+			ImGui::EndTable();
 		}
+		ImGui::EndChild();
 
-		ImGui::EndTable();
+		ImGui::PopStyleVar();
 	}
-
+	
 	ImGui::End();
+	ImGui::PopStyleVar();
 }
 
 void CLevelUIEditor::FlipbookMode()
 {
 	auto clientSize = CGameInstance::Get().GetClientScreenSize();
-
 	_float2 mousePos = CGameInstance::Get().GetMousePos();
-
+	
 	DrawJsonFileLoader(m_iEditorMode);
-
-	ImGui::Begin("EDITOR_MODE: ARRANGE_MODE");
-
-	//if (ImGui::Button("Save"))
-	//	PrefabSave();
-	//
-	//ImGui::SameLine();
-	//
-	//if (ImGui::Button("Load"))
-	//	PrefabLoad();
-
-	ImGui::TextColored(ImVec4(0, 1, 1, 1), "Select_Mode");
-	ImGui::Separator();
-
-	if (ImGui::Button("ARRAGE_MODE"))
+	
+	// 전체 윈도우 패딩 적용
+	ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(10, 10));
+	ImGui::Begin("Flipbook Editor", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
+	
+	// ---------------------------------------------------------
+	// 1. File & Mode Settings
+	// ---------------------------------------------------------
+	if (ImGui::CollapsingHeader("File & Mode Settings", ImGuiTreeNodeFlags_DefaultOpen))
 	{
-		m_iEditorMode = ETOUI(UiEditorMode::ARRANGE);
-		RefreshJsonFileList();
+		ImGui::TextColored(ImVec4(1.0f, 0.8f, 0.0f, 1.0f), "[ Editor Mode ]");
+	
+		if (ImGui::Button("ARRANGE", ImVec2(90, 0))) {
+			m_iEditorMode = ETOUI(UiEditorMode::ARRANGE);
+			RefreshJsonFileList();
+		}
+		ImGui::SameLine();
+		if (ImGui::Button("PREFAB", ImVec2(90, 0))) {
+			m_iEditorMode = ETOUI(UiEditorMode::PREFAB);
+			RefreshJsonFileList();
+		}
+		ImGui::SameLine();
+		if (ImGui::Button("FLIPBOOK", ImVec2(90, 0))) {
+			m_iEditorMode = ETOUI(UiEditorMode::FLIPBOOK);
+			RefreshJsonFileList();
+		}
+	
+		ImGui::Spacing();
+		ImGui::AlignTextToFramePadding();
+		ImGui::Text("Flipbook Name:");
+		ImGui::SameLine();
+		ImGui::SetNextItemWidth(200);
+		ImGui::InputText("##FlipbookName", m_cPrefabName, sizeof(m_cPrefabName));
+	
+		if (ImGui::Button("Make Flipbook", ImVec2(120, 0)))
+			FlipBookMake();
+		ImGui::SameLine();
+		if (ImGui::Button("Save Flipbook", ImVec2(120, 0)))
+			PrefabSave();
 	}
-	ImGui::SameLine();
-	if (ImGui::Button("PREFAB_MODE"))
+	
+	// ---------------------------------------------------------
+	// 2. Animation Properties
+	// ---------------------------------------------------------
+	if (ImGui::CollapsingHeader("Animation Settings", ImGuiTreeNodeFlags_DefaultOpen))
 	{
-		m_iEditorMode = ETOUI(UiEditorMode::PREFAB);
-		RefreshJsonFileList();
+		if (ImGui::BeginTable("AnimSettingsTable", 2, ImGuiTableFlags_BordersInnerH | ImGuiTableFlags_Resizable))
+		{
+			ImGui::TableSetupColumn("Property", ImGuiTableColumnFlags_WidthFixed, 100.0f);
+			ImGui::TableSetupColumn("Value", ImGuiTableColumnFlags_WidthStretch);
+
+			ImGui::TableNextRow(); ImGui::TableNextColumn(); ImGui::AlignTextToFramePadding();
+			ImGui::Text("ResTag"); ImGui::TableNextColumn();
+			// m_UIINFO.Restag가 할당되지 않았을 경우를 대비해 처리
+			if (m_UIINFO.Restag.empty())
+				ImGui::TextColored(ImVec4(0.5f, 0.5f, 0.5f, 1.0f), "None");
+			else
+				ImGui::TextColored(ImVec4(0.4f, 0.8f, 1.0f, 1.0f), "%s", m_UIINFO.Restag.c_str());
+	
+			int cellsize = m_FLIPINFO.cellsize;
+			int TotalFrame = m_FLIPINFO.TotalFrame;
+			int Padding = m_FLIPINFO.Padding;
+
+			ImGui::TableNextRow(); ImGui::TableNextColumn(); ImGui::AlignTextToFramePadding();
+			ImGui::Text("Cell Size"); ImGui::TableNextColumn();
+			ImGui::SetNextItemWidth(100);
+			ImGui::InputInt("##CellSize", &cellsize);
+			m_FLIPINFO.cellsize = cellsize;
+	
+			ImGui::TableNextRow(); ImGui::TableNextColumn(); ImGui::AlignTextToFramePadding();
+			ImGui::Text("Total Frame"); ImGui::TableNextColumn();
+			ImGui::SetNextItemWidth(100);
+			ImGui::InputInt("##TotalFrame", &TotalFrame);
+			m_FLIPINFO.TotalFrame = TotalFrame;
+	
+			ImGui::TableNextRow(); ImGui::TableNextColumn(); ImGui::AlignTextToFramePadding();
+			ImGui::Text("Padding"); ImGui::TableNextColumn();
+			ImGui::SetNextItemWidth(100);
+			ImGui::InputInt("##Padding", &Padding);
+			m_FLIPINFO.Padding = Padding;
+	
+			ImGui::TableNextRow(); ImGui::TableNextColumn(); ImGui::AlignTextToFramePadding();
+			ImGui::Text("Duration"); ImGui::TableNextColumn();
+			ImGui::SetNextItemWidth(100);
+			ImGui::InputFloat("##Duration", &m_FLIPINFO.Duration);
+	
+			ImGui::EndTable();
+		}
 	}
-	ImGui::SameLine();
-	if (ImGui::Button("FLIPBOOK_MODE"))
-	{
-		m_iEditorMode = ETOUI(UiEditorMode::FLIPBOOK);
-		RefreshJsonFileList();
-	}
-		
-
-	ImGui::TextColored(ImVec4(0, 1, 1, 1), "Save FlipBook");
-	ImGui::Separator();
-
-	ImGui::SetNextItemWidth(100);
-	ImGui::InputText("Save_FlipbookName", m_cPrefabName, sizeof(m_cPrefabName));
-
-	if (ImGui::Button("Save_Flipbook"))
-		PrefabSave();
-
-	ImGui::TextColored(ImVec4(0, 1, 1, 1), "Make FlipBook");
-	ImGui::Separator();
-
-	ImGui::SetNextItemWidth(100);
-	ImGui::InputText("FlipbookName", m_cPrefabName, sizeof(m_cPrefabName));
-
-	if (ImGui::Button("Make_Flipbook"))
-	{
-		FlipBookMake();
-	}
-
-	ImGui::TextColored(ImVec4(0, 1, 1, 1), "Animation_Value");
-	ImGui::Separator();
-
-	ImGui::SetNextItemWidth(80);
-	ImGui::InputFloat("CellSize", &m_fCellSize);
-	ImGui::SetNextItemWidth(80);
-	ImGui::InputFloat("Duration", &m_fDuration);
-	ImGui::SetNextItemWidth(80);
-	ImGui::InputInt("TotalFrame", &m_iTotalFrame);
-
+	
+	// ---------------------------------------------------------
+	// 3. Target State Update & View
+	// ---------------------------------------------------------
 	if (std::nullopt != Target_UI)
 	{
 		Engine::CUIObject* selectUI = E::CGameInstance::Get().GetGameObjectByHandleT<Engine::CUIObject>(*Target_UI);
-
-		static_cast<CFlipBook*>(selectUI)->SetCellSize(m_fCellSize);
-		static_cast<CFlipBook*>(selectUI)->SetDuration(m_fDuration);
-		static_cast<CFlipBook*>(selectUI)->SetTotalFrame(m_iTotalFrame);
-
-		if (std::nullopt != selectUI->GetParent())
-			LocalStateView();
+	
+		if (selectUI != nullptr && (ETOUI(UI_TYPE::FLIPBOOK) == *selectUI->GetUIType()))
+		{
+			// 실시간으로 입력값 동기화
+			FLIP_INFO& flipInfo = static_cast<CFlipbookUI*>(selectUI)->GetFlipInfo();
+			flipInfo.cellsize = m_FLIPINFO.cellsize;
+			flipInfo.TotalFrame = m_FLIPINFO.TotalFrame;
+			flipInfo.Padding = m_FLIPINFO.Padding;
+			flipInfo.Duration = m_FLIPINFO.Duration;
+	
+			if (std::nullopt != selectUI->GetParent())
+				LocalStateView();
+			else
+				StateView();
+		}
 		else
+		{
 			StateView();
+		}
 	}
 	else
-		StateView();
-
-	ImGui::Spacing();
-	ImGui::TextColored(ImVec4(0, 1, 1, 1), "Select_Images");
-	ImGui::Separator();
-
-	if (ImGui::BeginTable("TextureTable", 2))
 	{
-		for (size_t i = 0; i < m_vFlipBookResTag.size(); ++i)
+		StateView();
+	}
+	
+	// ---------------------------------------------------------
+	// 4. Texture Resources
+	// ---------------------------------------------------------
+	if (ImGui::CollapsingHeader("Texture Resources", ImGuiTreeNodeFlags_DefaultOpen))
+	{
+		// 잘림 방지용 내부 패딩
+		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(15, 10));
+	
+		// 스크롤 가능한 차일드 영역
+		ImGui::BeginChild("TextureView", ImVec2(0, 300), true);
+	
+		// 4개의 열(Column)로 이미지 나열
+		if (ImGui::BeginTable("TextureTable", 4))
 		{
-			ImGui::TableNextColumn();
-
-			ImGui::PushID((int)i);
-
-			const auto& srv = E::CGameInstance::GetConst()
-				.GetResourceFirst<E::CResTexture2D>("LEVEL_UIEDITOR", m_vFlipBookResTag[i]);
-
-			if (ImGui::ImageButton((ImTextureID)srv->GetSRV().Get(), ImVec2(100, 100)))
+			for (size_t i = 0; i < m_vFlipBookResTag.size(); ++i)
 			{
-				strcpy_s(m_cResTag, sizeof(m_cResTag), m_vFlipBookResTag[i].c_str());
+				ImGui::TableNextColumn();
+				ImGui::PushID((int)i);
+	
+				const auto& srv = E::CGameInstance::GetConst().GetResourceFirst<E::CResTexture2D>("LEVEL_UIEDITOR", m_vFlipBookResTag[i]);
+	
+				if (ImGui::ImageButton((ImTextureID)srv->GetSRV().Get(), ImVec2(60, 60)))
+				{
+					m_UIINFO.Restag = m_vFlipBookResTag[i].c_str();
+				}
+	
+				// 호버 시 크게 보기 툴팁 추가
+				if (ImGui::IsItemHovered())
+				{
+					ImGui::BeginTooltip();
+					ImGui::Text("Tag: %s", m_vFlipBookResTag[i].c_str());
+					ImGui::Image((ImTextureID)srv->GetSRV().Get(), ImVec2(256, 256));
+					ImGui::EndTooltip();
+				}
+	
+				ImGui::PopID();
 			}
-			ImGui::PopID();
+			ImGui::EndTable();
 		}
-		ImGui::EndTable();
+		ImGui::EndChild();
+	
+		ImGui::PopStyleVar(); // 패딩 스타일 복원
+	}
+	
+	ImGui::End();
+	ImGui::PopStyleVar(); // 메인 윈도우 스타일 복원
+}
+
+void CLevelUIEditor::AnimationMode()
+{
+	ImGui::Begin("UI Animation Tool");
+	
+	// ... 클립 이름 입력 및 JSON 로드/저장 로직 ...
+	
+	if (ImGui::Button("Add Track"))
+	{
+		//m_CurrentClip.Tracks.push_back(FUITweenTrack());
+	}
+	
+	for (int i = 0; i < m_CurrentClip.Tracks.size(); ++i)
+	{
+		ImGui::PushID(i);
+		auto& track = m_CurrentClip.Tracks[i];
+	
+		const char* targetNames[] = { "SCALE", "EFFECT_ALPHA", "POSITION_X", "POSITION_Y" };
+		ImGui::Combo("Target", (int*)&track.TargetType, targetNames, IM_ARRAYSIZE(targetNames));
+	
+		ImGui::Checkbox("Use Current Start", &track.bUseCurrentStart);
+		if (!track.bUseCurrentStart)
+			ImGui::DragFloat("Start Value", &track.fStartValue, 0.01f);
+	
+		ImGui::DragFloat("End Value", &track.fEndValue, 0.01f);
+		ImGui::DragFloat("Duration", &track.fDuration, 0.01f);
+	
+		ImGui::PopID();
 	}
 	ImGui::End();
 }
@@ -829,11 +1000,10 @@ void CLevelUIEditor::Picking()
 			continue;
 
 		Engine::CUIObject* selectUI = E::CGameInstance::Get().GetGameObjectByHandleT<Engine::CUIObject>(ui);
-		selectUI->GetOrigin(); // _float2 위치
-		selectUI->GetSize(); // _float2 사이즈
+		const UI_INFO& selectInfo = selectUI->GetUIInfo();
 
-		_float2 origin = selectUI->GetOrigin(); 
-		_float2 size = selectUI->GetSize();
+		_float2 origin = { selectInfo.fX, selectInfo.fY };
+		_float2 size = { selectInfo.SizeX, selectInfo.SizeY };
 
 		_float2 minPos =
 		{
@@ -852,14 +1022,14 @@ void CLevelUIEditor::Picking()
 			mousePos.y >= minPos.y &&
 			mousePos.y <= maxPos.y)
 		{
-			uint32_t curWeight = selectUI->GetWeight();
-			if (curWeight > maxWeight)
+			uint32_t curWeight = selectInfo.Weight;
+			if (curWeight >= maxWeight)
 			{
 				maxWeight = curWeight;
 				Target_UI = ui;
 
-				m_vDragOffset = { CGameInstance::Get().GetMousePos().x - selectUI->GetOrigin().x,
-					CGameInstance::Get().GetMousePos().y - selectUI->GetOrigin().y };
+				m_vDragOffset = { CGameInstance::Get().GetMousePos().x - origin.x,
+					CGameInstance::Get().GetMousePos().y - origin.y };
 			}
 		}
 	}
@@ -867,20 +1037,26 @@ void CLevelUIEditor::Picking()
 	if (std::nullopt != Target_UI)
 	{
 		Engine::CUIObject* selectUI = E::CGameInstance::Get().GetGameObjectByHandleT<Engine::CUIObject>(*Target_UI);
-		m_fX = selectUI->GetOrigin().x;
-		m_fY = selectUI->GetOrigin().y;
-		m_fSizeX = selectUI->GetSize().x;
-		m_fSizeY = selectUI->GetSize().y;
-		m_fAlpha = selectUI->GetAlpha();
-		m_iWeight = selectUI->GetWeight();
-		strcpy_s(m_cName, sizeof(m_cName), selectUI->GetName());
-		m_vColor = selectUI->GetColor();
+		UI_INFO& selectInfo = selectUI->GetUIInfo();
+		m_UIINFO.fX = selectInfo.fX;
+		m_UIINFO.fY = selectInfo.fY;
+		m_UIINFO.SizeX = selectInfo.SizeX;
+		m_UIINFO.SizeY = selectInfo.SizeY;
+		m_UIINFO.Alpha = selectInfo.Alpha;
+		m_UIINFO.Weight = selectInfo.Weight;
+		m_UIINFO.Color = selectInfo.Color;
+		m_UIINFO.UIType = selectInfo.UIType;
+		m_UIINFO.EffectType = selectInfo.EffectType;
+		strcpy_s(m_cName, sizeof(m_cName), selectInfo.Name.c_str());
 
-		if (ETOUI(UI_TYPE::FLIPBOOK) == selectUI->GetUIType())
+		if (ETOUI(UI_TYPE::FLIPBOOK) == selectInfo.UIType)
 		{
-			m_fCellSize = static_cast<CFlipBook*>(selectUI)->GetCellSize();
-			m_fDuration = static_cast<CFlipBook*>(selectUI)->GetDuration();
-			m_iTotalFrame = static_cast<CFlipBook*>(selectUI)->GetTotalFrame();
+			FLIP_INFO& flipInfo = static_cast<CFlipbookUI*>(selectUI)->GetFlipInfo();
+
+			m_FLIPINFO.cellsize = flipInfo.cellsize;
+			m_FLIPINFO.Duration = flipInfo.Duration;
+			m_FLIPINFO.TotalFrame = flipInfo.TotalFrame;
+			m_FLIPINFO.Padding = flipInfo.Padding;
 		}
 	}
 }
@@ -888,6 +1064,9 @@ void CLevelUIEditor::Picking()
 void CLevelUIEditor::PickingOnlyRoot()
 {
 	_float2 mousePos = CGameInstance::Get().GetMousePos();
+
+	if (nullptr == CGameInstance::Get().GetGameObjectLayer("Layer_UI"))
+		return;
 
 	std::vector<CHandle> uiHandles = *CGameInstance::Get().GetGameObjectLayer("Layer_UI");
 
@@ -906,11 +1085,10 @@ void CLevelUIEditor::PickingOnlyRoot()
 			continue;
 
 		Engine::CUIObject* selectUI = E::CGameInstance::Get().GetGameObjectByHandleT<Engine::CUIObject>(ui);
-		selectUI->GetOrigin(); // _float2 위치
-		selectUI->GetSize(); // _float2 사이즈
+		const UI_INFO& selectInfo = selectUI->GetUIInfo();
 
-		_float2 origin = selectUI->GetOrigin();
-		_float2 size = selectUI->GetSize();
+		_float2 origin = { selectInfo.fX, selectInfo.fY };
+		_float2 size = { selectInfo.SizeX, selectInfo.SizeY};
 
 		_float2 minPos =
 		{
@@ -929,14 +1107,14 @@ void CLevelUIEditor::PickingOnlyRoot()
 			mousePos.y >= minPos.y &&
 			mousePos.y <= maxPos.y)
 		{
-			uint32_t curWeight = selectUI->GetWeight();
-			if (curWeight > maxWeight)
+			uint32_t curWeight = selectInfo.Weight;
+			if (curWeight >= maxWeight)
 			{
 				maxWeight = curWeight;
 				Target_UI = ui;
 
-				m_vDragOffset = { CGameInstance::Get().GetMousePos().x - selectUI->GetOrigin().x,
-					CGameInstance::Get().GetMousePos().y - selectUI->GetOrigin().y };
+				m_vDragOffset = { CGameInstance::Get().GetMousePos().x - origin.x,
+					CGameInstance::Get().GetMousePos().y - origin.y };
 			}
 		}
 	}
@@ -944,13 +1122,24 @@ void CLevelUIEditor::PickingOnlyRoot()
 	if (std::nullopt != Target_UI)
 	{
 		Engine::CUIObject* selectUI = E::CGameInstance::Get().GetGameObjectByHandleT<Engine::CUIObject>(*Target_UI);
-		m_fX = selectUI->GetOrigin().x;
-		m_fY = selectUI->GetOrigin().y;
-		m_fSizeX = selectUI->GetSize().x;
-		m_fSizeY = selectUI->GetSize().y;
-		m_fAlpha = selectUI->GetAlpha();
-		m_iWeight = selectUI->GetWeight();
-		strcpy_s(m_cName, sizeof(m_cName), selectUI->GetName());
+		UI_INFO& selectInfo = selectUI->GetUIInfo();
+		m_UIINFO.fX = selectInfo.fX;
+		m_UIINFO.fY = selectInfo.fY;
+		m_UIINFO.SizeX = selectInfo.SizeX;
+		m_UIINFO.SizeY = selectInfo.SizeY;
+		m_UIINFO.Alpha = selectInfo.Alpha;
+		m_UIINFO.Weight = selectInfo.Weight;
+		strcpy_s(m_cName, sizeof(m_cName), selectInfo.Name.c_str());
+
+		if (ETOUI(UI_TYPE::FLIPBOOK) == selectInfo.UIType)
+		{
+			FLIP_INFO& flipInfo = static_cast<CFlipbookUI*>(selectUI)->GetFlipInfo();
+
+			m_FLIPINFO.cellsize = flipInfo.cellsize;
+			m_FLIPINFO.Duration = flipInfo.Duration;
+			m_FLIPINFO.TotalFrame = flipInfo.TotalFrame;
+			m_FLIPINFO.Padding = flipInfo.Padding;
+		}
 	}
 }
 
@@ -1126,59 +1315,81 @@ void CLevelUIEditor::FlipBookMake()
 	auto clientSize = CGameInstance::Get().GetClientScreenSize();
 
 	count++;
-	CFlipBook::UIOBJECT_DESC Desc{};
+	CFlipbookUI::FLIPBOOK_DESC Desc{};
 	Desc.sObjectTag = "UI_" + std::to_string(count);
 	Desc.fSizeX = 200.f;
 	Desc.fSizeY = 200.f;
 	Desc.fX = clientSize.x * 0.5f;
 	Desc.fY = clientSize.y * 0.5f;
 	Desc.fAlpha = 1.f;
-	Desc.ResTag = m_cResTag;
+	Desc.ResTag = m_UIINFO.Restag;
 	Desc.ResWeight = count;
 	Desc.UIType = ETOUI(UI_TYPE::FLIPBOOK);
 
-	std::optional<CHandle> handle = E::CGameInstance::Get().AddGameObjectToLayer("LEVEL_UIEDITOR", "Prototype_GameObject_FlipBook", "Layer_UI", &Desc);
+	std::optional<CHandle> handle = E::CGameInstance::Get().AddGameObjectToLayer("LEVEL_UIEDITOR", "Prototype_GameObject_EffectUI", "Layer_UI", &Desc);
+	CEffectUI* pUI = E::CGameInstance::Get().GetGameObjectByHandleT<CEffectUI>(*handle);
+
+	FLIP_INFO& flipInfo = pUI->GetFlipInfo();
+	flipInfo.cellsize = m_FLIPINFO.cellsize;
+	flipInfo.TotalFrame = m_FLIPINFO.TotalFrame;
+	flipInfo.Padding = m_FLIPINFO.Padding;
+	flipInfo.Duration = m_FLIPINFO.Duration;
+
+	
 }
 
 void CLevelUIEditor::SaveUIRecursive(E::CUIObject* pUI, nlohmann::ordered_json& obj)
 {
-	uint32_t uiType = pUI->GetUIType();
+	UI_INFO& uiInfo = pUI->GetUIInfo();
 
-	obj["UiType"] = uiType;
+	obj["UiType"] = uiInfo.UIType;
+	obj["UI_EFFECT_TYPE"] = uiInfo.EffectType;
 
-	obj["Name"] = pUI->GetName();
+	obj["Name"] = uiInfo.Name;
 
-	obj["X"] = pUI->GetWorldPos().x;
-	obj["Y"] = pUI->GetWorldPos().y;
+	obj["X"] = uiInfo.fX;
+	obj["Y"] = uiInfo.fY;
 
-	obj["LocalX"] = pUI->GetLocalX();
-	obj["LocalY"] = pUI->GetLocalY();
+	obj["LocalX"] = uiInfo.LocalX;
+	obj["LocalY"] = uiInfo.LocalY;
 
-	obj["SizeX"] = pUI->GetSize().x;
-	obj["SizeY"] = pUI->GetSize().y;
+	obj["SizeX"] = uiInfo.SizeX;
+	obj["SizeY"] = uiInfo.SizeY;
 
-	obj["WidthRatioX"] = pUI->GetWidthRatioX();
-	obj["WidthRatioY"] = pUI->GetWidthRatioY();
+	obj["WidthRatioX"] = uiInfo.WidthRatioX;
+	obj["WidthRatioY"] = uiInfo.WidthRatioY;
+	
+	obj["Rot"] = uiInfo.Rot;
+	obj["LocalRot"] = uiInfo.LocalRot;
 
-	obj["Alpha"] = pUI->GetAlpha();
-	obj["AlphaRatio"] = pUI->GetAlphaRatio();
+	obj["Alpha"] = uiInfo.Alpha;
+	obj["AlphaRatio"] = uiInfo.AlphaRatio;
 
-	obj["Weight"] = pUI->GetWeight();
-	obj["WeightOffset"] = pUI->GetWeightOffset();
+	obj["Weight"] = uiInfo.Weight;
+	obj["WeightOffset"] = uiInfo.WeightOffset;
 
-	obj["ResTag"] = pUI->Get_ResTag();
+	obj["ResTag"] = uiInfo.Restag;
 
-	obj["Color"] = { pUI->GetColor().x, pUI->GetColor().y, pUI->GetColor().z };
+	obj["Color"] = { uiInfo.Color.x, uiInfo.Color.y, uiInfo.Color.z };
 
-	switch (uiType)
+	switch (uiInfo.UIType)
 	{
 	case ETOUI(UI_TYPE::TEXUI):
 		break;
 	case ETOUI(UI_TYPE::FLIPBOOK):
-		obj["CellSize"] = static_cast<CFlipBook*>(pUI)->GetCellSize();
-		obj["TotalFrame"] = static_cast<CFlipBook*>(pUI)->GetTotalFrame();
-		obj["Duration"] = static_cast<CFlipBook*>(pUI)->GetDuration();
+	{
+		const FLIP_INFO& flipInfo = static_cast<CFlipbookUI*>(pUI)->GetFlipInfo();
+		obj["CellSize"] = flipInfo.cellsize;
+		obj["TotalFrame"] = flipInfo.TotalFrame;
+		obj["Padding"] = flipInfo.Padding;
+		obj["Duration"] = flipInfo.Duration;
 		break;
+	}
+	case ETOUI(UI_TYPE::TEXT):
+	{
+		const TEXT_INFO& textInfo = static_cast<CTextUI*>(pUI)->GetTextInfo();
+		//obj["Text"] = textInfo.Text;
+	}
 	default:
 		break;
 	}
@@ -1208,83 +1419,84 @@ E::CUIObject* CLevelUIEditor::LoadUIRecursive(const nlohmann::ordered_json& obj,
 	E::CUIObject::UIOBJECT_DESC Desc{};
 	std::optional<CHandle> uiHandle = std::nullopt;
 
+	Desc.sObjectTag = obj["Name"];
+
 	switch (uiType)
 	{
 	case ETOUI(UI_TYPE::TEXUI):
-		Desc.sObjectTag = obj["Name"];
-
-		uiHandle = E::CGameInstance::Get().AddGameObjectToLayer("LEVEL_UIEDITOR", "Prototype_GameObject_TexUI", "Layer_UI", &Desc);
-		pUI = E::CGameInstance::Get().GetGameObjectByHandleT<CTexUI>(*uiHandle);
+		uiHandle = E::CGameInstance::Get().AddGameObjectToLayer("LEVEL_UIEDITOR", "Prototype_GameObject_TextureUI", "Layer_UI", &Desc);
+		pUI = E::CGameInstance::Get().GetGameObjectByHandleT<CTextureUI>(*uiHandle);
 		break;
 	case ETOUI(UI_TYPE::FLIPBOOK):
-		Desc.sObjectTag = obj["Name"];
-
-		uiHandle = E::CGameInstance::Get().AddGameObjectToLayer("LEVEL_UIEDITOR", "Prototype_GameObject_FlipBook", "Layer_UI", &Desc);
-		pUI = E::CGameInstance::Get().GetGameObjectByHandleT<CFlipBook>(*uiHandle);
-		static_cast<CFlipBook*>(pUI)->SetCellSize(obj["CellSize"]);
-		static_cast<CFlipBook*>(pUI)->SetTotalFrame(obj["TotalFrame"]);
-		static_cast<CFlipBook*>(pUI)->SetDuration(obj["Duration"]);
+		uiHandle = E::CGameInstance::Get().AddGameObjectToLayer("LEVEL_UIEDITOR", "Prototype_GameObject_EffectUI", "Layer_UI", &Desc);
+		pUI = E::CGameInstance::Get().GetGameObjectByHandleT<CEffectUI>(*uiHandle);
+		{
+			FLIP_INFO& flipInfo = static_cast<CEffectUI*>(pUI)->GetFlipInfo();
+			flipInfo.cellsize	= obj["CellSize"];
+			flipInfo.TotalFrame = obj["TotalFrame"];
+			flipInfo.Padding	= obj["Padding"];
+			flipInfo.Duration	= obj["Duration"];
+		}
 		break;
+	case ETOUI(UI_TYPE::TEXT):
+		uiHandle = E::CGameInstance::Get().AddGameObjectToLayer("LEVEL_UIEDITOR", "Prototype_GameObject_TextBox", "Layer_UI", &Desc);
+		pUI = E::CGameInstance::Get().GetGameObjectByHandleT<CTextBox>(*uiHandle);
+		{
+			TEXT_INFO& textInfo = static_cast<CTextBox*>(pUI)->GetTextInfo();
+			//textInfo.Text = obj["Text"];
+		}
+		
 	default:
 		break;
 	}
 
+	UI_INFO& uiInfo = static_cast<CUIObject*>(pUI)->GetUIInfo();
+
 	if (pUI == nullptr)
 		return nullptr;
 
-	pUI->SetName(obj["Name"]);
-
-	pUI->SetSize(
-		{
-			obj["SizeX"],
-			obj["SizeY"]
-		});
-
-	pUI->SetAlpha(obj["Alpha"]);
-
-	pUI->SetWeight(obj["Weight"]);
-
-	pUI->SetLocalX(obj["LocalX"]);
-	pUI->SetLocalY(obj["LocalY"]);
-
-	pUI->SetWidthRatioX(obj["WidthRatioX"]);
-	pUI->SetWidthRatioY(obj["WidthRatioY"]);
-
-	pUI->SetAlphaRatio(obj["AlphaRatio"]);
-	pUI->SetWeightOffset(obj["WeightOffset"]);
-
-	pUI->Set_ResTag(obj["ResTag"]);
-
+	uiInfo.EffectType = obj["UI_EFFECT_TYPE"];
+	uiInfo.Name = obj["Name"];
+	
+	uiInfo.SizeX = obj["SizeX"];
+	uiInfo.SizeY = obj["SizeY"];
+	
+	uiInfo.Alpha = obj["Alpha"];
+	uiInfo.AlphaRatio = obj["AlphaRatio"];
+	
+	uiInfo.Weight = obj["Weight"];
+	uiInfo.WeightOffset = obj["WeightOffset"];
+	
+	uiInfo.LocalX = obj["LocalX"];
+	uiInfo.LocalY = obj["LocalY"];
+	
+	uiInfo.WidthRatioX = obj["WidthRatioX"];
+	uiInfo.WidthRatioY = obj["WidthRatioY"];
+	
+	uiInfo.Restag = obj["ResTag"];
+	
+	uiInfo.Rot = obj["Rot"];
+	uiInfo.LocalRot = obj["LocalRot"];
+	
 	auto color = obj["Color"];
-
-	_float3 vColor;
-	vColor.x = color[0];
-	vColor.y = color[1];
-	vColor.z = color[2];
-	pUI->SetColor(vColor);
+	uiInfo.Color = { color[0], color[1], color[2] };
 
 	if (parent == nullptr)
 	{
-		pUI->SetWorldPos(
-			{
-				obj["X"],
-				obj["Y"]
-			});
+		uiInfo.fX = obj["X"];
+		uiInfo.fY = obj["Y"];
 	}
 	else
 	{
 		pUI->SetParent(parent->GetHandle());
 		parent->AddChildren(pUI->GetHandle());
 
-		pUI->SetLocalPos(
-			{
-				obj["LocalX"],
-				obj["LocalY"]
-			});
-
-		// 부모 기준으로 다시 계산
-		//pUI->CalcUICoord();
+		uiInfo.LocalX = obj["LocalX"];
+		uiInfo.LocalY = obj["LocalY"];
 	}
+
+	// 부모 기준으로 다시 계산
+	pUI->CalcUICoord();
 
 	for (const auto& child : obj["Children"])
 	{
@@ -1297,25 +1509,11 @@ E::CUIObject* CLevelUIEditor::LoadUIRecursive(const nlohmann::ordered_json& obj,
 void CLevelUIEditor::StateView()
 {
 	auto clientSize = CGameInstance::Get().GetClientScreenSize();
-
-	ImGui::Spacing();
-	ImGui::TextColored(ImVec4(0, 1, 1, 1), "Target_State");
-	ImGui::Separator();
-
-	ImGui::Text("PosX  : %.2f  ", m_fX);
-	ImGui::SameLine(150);
-	ImGui::Text("PosY   : %.2f", m_fY);
-
-	ImGui::Text("SizeX : %.2f  ", m_fSizeX);
-	ImGui::SameLine(150);
-	ImGui::Text("SizeY  : %.2f", m_fSizeY);
-
-	ImGui::Text("Alpha : %.2f", m_fAlpha);
-	ImGui::SameLine(150);
-	ImGui::Text("Weight : %.d", m_iWeight);
-
-	ImGui::Text("Name : %s", m_cName);
-	ImGui::SameLine(150);
+	
+	if (!ImGui::CollapsingHeader("Global Properties", ImGuiTreeNodeFlags_DefaultOpen))
+	return;
+	
+	// 부모 노드 이름 처리
 	if (std::nullopt != Target_UI)
 	{
 		Engine::CUIObject* selectUI = E::CGameInstance::Get().GetGameObjectByHandleT<Engine::CUIObject>(*Target_UI);
@@ -1325,49 +1523,76 @@ void CLevelUIEditor::StateView()
 			Engine::CUIObject* parentUI = E::CGameInstance::Get().GetGameObjectByHandleT<Engine::CUIObject>(*parentNode);
 			strcpy_s(m_sParentName, parentUI->GetName());
 		}
-		else
-			strcpy_s(m_sParentName, "None");
+		else strcpy_s(m_sParentName, "None");
 	}
-	else
-		strcpy_s(m_sParentName, "None");
-	ImGui::Text("Parent : %s", m_sParentName);
-
-	ImGui::Spacing();
-	ImGui::TextColored(ImVec4(0, 1, 1, 1), "Input_State");
-	ImGui::Separator();
-
-	ImGui::SetNextItemWidth(80);
-	ImGui::DragFloat("fx", &m_fX, 0.1f, 0.0f, clientSize.x);
-	ImGui::SameLine(150);
-	ImGui::SetNextItemWidth(80);
-	ImGui::DragFloat("fy", &m_fY, 0.1f, 0.0f, clientSize.y);
-
-	ImGui::SetNextItemWidth(80);
-	ImGui::DragFloat("fSizeX", &m_fSizeX, 0.1f, 0.0f, clientSize.x);
-	ImGui::SameLine(150);
-	ImGui::SetNextItemWidth(80);
-	ImGui::DragFloat("fSizeY", &m_fSizeY, 0.1f, 0.0f, clientSize.y);
-
-	ImGui::SetNextItemWidth(80);
-	ImGui::DragFloat("fAlpha", &m_fAlpha, 0.001f, 0.0f, 1.f);
-	ImGui::SameLine(150);
-	ImGui::SetNextItemWidth(80);
-	ImGui::DragInt("iWeight", &m_iWeight, 1.f, 0.0f, 100);
-
-	ImGui::SetNextItemWidth(80);
-	ImGui::InputText("Name", m_cName, sizeof(m_cName));
-
-	ImGui::SetNextItemWidth(80);
-	ImGui::DragFloat("fColor.r", &m_vColor.x, 0.001f, 0.0f, 1.f);
-	ImGui::SetNextItemWidth(80);
-	ImGui::DragFloat("fColor.g", &m_vColor.y, 0.001f, 0.0f, 1.f);
-	ImGui::SetNextItemWidth(80);
-	ImGui::DragFloat("fColor.b", &m_vColor.z, 0.001f, 0.0f, 1.f);
-
-	if (std::nullopt != Target_UI)
+	else strcpy_s(m_sParentName, "None");
+	
+	
+	// 2개의 컬럼을 가진 프로퍼티 테이블 생성
+	if (ImGui::BeginTable("GlobalStateTable", 2, ImGuiTableFlags_BordersInnerH | ImGuiTableFlags_Resizable))
 	{
-		Engine::CUIObject* selectUI = E::CGameInstance::Get().GetGameObjectByHandleT<Engine::CUIObject>(*Target_UI);
-		selectUI->SetColor(m_vColor);
+		ImGui::TableSetupColumn("Property", ImGuiTableColumnFlags_WidthFixed, 100.0f);
+		ImGui::TableSetupColumn("Value", ImGuiTableColumnFlags_WidthStretch);
+	
+		// Name
+		ImGui::TableNextRow(); ImGui::TableNextColumn(); ImGui::AlignTextToFramePadding();
+		ImGui::Text("Name"); ImGui::TableNextColumn();
+		ImGui::SetNextItemWidth(-FLT_MIN);
+		ImGui::InputText("##Name", m_cName, sizeof(m_cName));
+		m_UIINFO.Name = m_cName;
+	
+		// Parent (Read Only)
+		ImGui::TableNextRow(); ImGui::TableNextColumn(); ImGui::AlignTextToFramePadding();
+		ImGui::Text("Parent"); ImGui::TableNextColumn();
+		ImGui::TextColored(ImVec4(0.7f, 0.7f, 0.7f, 1.0f), m_sParentName);
+	
+		// Transform (Position)
+		ImGui::TableNextRow(); ImGui::TableNextColumn(); ImGui::AlignTextToFramePadding();
+		ImGui::Text("Position"); ImGui::TableNextColumn();
+		ImGui::SetNextItemWidth(100); ImGui::DragFloat("X##PosX", &m_UIINFO.fX, 0.1f, 0.0f, clientSize.x); ImGui::SameLine();
+		ImGui::SetNextItemWidth(100); ImGui::DragFloat("Y##PosY", &m_UIINFO.fY, 0.1f, 0.0f, clientSize.y);
+	
+		// Transform (Size)
+		ImGui::TableNextRow(); ImGui::TableNextColumn(); ImGui::AlignTextToFramePadding();
+		ImGui::Text("Size"); ImGui::TableNextColumn();
+		ImGui::SetNextItemWidth(100); ImGui::DragFloat("W##SizeX", &m_UIINFO.SizeX, 0.1f, 0.0f, clientSize.x); ImGui::SameLine();
+		ImGui::SetNextItemWidth(100); ImGui::DragFloat("H##SizeY", &m_UIINFO.SizeY, 0.1f, 0.0f, clientSize.y);
+	
+		// Alpha & Weight
+		ImGui::TableNextRow(); ImGui::TableNextColumn(); ImGui::AlignTextToFramePadding();
+		ImGui::Text("Alpha"); ImGui::TableNextColumn();
+		ImGui::SetNextItemWidth(100); ImGui::DragFloat("##Alpha", &m_UIINFO.Alpha, 0.001f, 0.0f, 1.f);
+	
+		ImGui::TableNextRow(); ImGui::TableNextColumn(); ImGui::AlignTextToFramePadding();
+		ImGui::Text("Weight"); ImGui::TableNextColumn();
+		ImGui::SetNextItemWidth(100); ImGui::DragInt("##Weight", &m_UIINFO.Weight, 1, 0, 100);
+	
+		// Color
+		ImGui::TableNextRow(); ImGui::TableNextColumn(); ImGui::AlignTextToFramePadding();
+		ImGui::Text("Color (RGB)"); ImGui::TableNextColumn();
+		float colorArr[3] = { m_UIINFO.Color.x, m_UIINFO.Color.y, m_UIINFO.Color.z };
+		ImGui::SetNextItemWidth(200);
+		if (ImGui::ColorEdit3("##Color", colorArr))
+		{
+			m_UIINFO.Color.x = colorArr[0];
+			m_UIINFO.Color.y = colorArr[1];
+			m_UIINFO.Color.z = colorArr[2];
+		}
+	
+		// Enums (UI Type & Effect)
+		static const char* UITypeNames[] = { "CONTAINER", "TEXUI", "FLIPBOOK", "TEXT", "BUTTON" };
+		ImGui::TableNextRow(); ImGui::TableNextColumn(); ImGui::AlignTextToFramePadding();
+		ImGui::Text("UI Type"); ImGui::TableNextColumn();
+		ImGui::SetNextItemWidth(150);
+		ImGui::Combo("##UIType", reinterpret_cast<int*>(&m_UIINFO.UIType), UITypeNames, IM_ARRAYSIZE(UITypeNames));
+	
+		static const char* EffectTypeNames[] = { "NONE", "HOVER", "CLICK" };
+		ImGui::TableNextRow(); ImGui::TableNextColumn(); ImGui::AlignTextToFramePadding();
+		ImGui::Text("Effect Type"); ImGui::TableNextColumn();
+		ImGui::SetNextItemWidth(150);
+		ImGui::Combo("##EffectType", reinterpret_cast<int*>(&m_UIINFO.EffectType), EffectTypeNames, IM_ARRAYSIZE(EffectTypeNames));
+	
+		ImGui::EndTable();
 	}
 }
 
@@ -1378,77 +1603,92 @@ void CLevelUIEditor::LocalStateView()
 	std::optional<CHandle> parentNode = selectUI->GetParent();
 	Engine::CUIObject* parentUI = E::CGameInstance::Get().GetGameObjectByHandleT<Engine::CUIObject>(*parentNode);
 
-	_float localX, localY, widthX, widthY, alphaRatio;
-	int weightOffset;
-	localX = selectUI->GetLocalX();
-	localY = selectUI->GetLocalY();
-	widthX = selectUI->GetWidthRatioX();
-	widthY = selectUI->GetWidthRatioY();
-	alphaRatio = selectUI->GetAlphaRatio();
-	weightOffset = selectUI->GetWeightOffset();
+	UI_INFO& selectInfo = selectUI->GetUIInfo();
 
-	ImGui::Spacing();
-	ImGui::TextColored(ImVec4(0, 1, 1, 1), "Target_LocalState");
-	ImGui::Separator();
+	// 참조 대신 값 복사를 통한 수정용 변수 (원본과 연결됨)
+	_float localX = selectInfo.LocalX;
+	_float localY = selectInfo.LocalY;
+	_float widthX = selectInfo.WidthRatioX;
+	_float widthY = selectInfo.WidthRatioY;
+	_float alphaRatio = selectInfo.AlphaRatio;
+	int weightOffset = selectInfo.WeightOffset;
 
-	ImGui::Text("PosX  : %.2f  ", m_fX);
-	ImGui::SameLine(150);
-	ImGui::Text("PosY   : %.2f", m_fY);
+	if (!ImGui::CollapsingHeader("Local Properties (Child)", ImGuiTreeNodeFlags_DefaultOpen))
+	return;
 
-	ImGui::Text("SizeX : %.2f  ", m_fSizeX);
-	ImGui::SameLine(150);
-	ImGui::Text("SizeY  : %.2f", m_fSizeY);
-
-	ImGui::Text("Alpha : %.2f", m_fAlpha);
-	ImGui::SameLine(150);
-	ImGui::Text("Weight : %.d", m_iWeight);
-
-	ImGui::Text("Name : %s", m_cName);
-	ImGui::SameLine(150);
-	if (std::nullopt != Target_UI)
+	if (ImGui::BeginTable("LocalStateTable", 2, ImGuiTableFlags_BordersInnerH | ImGuiTableFlags_Resizable))
 	{
-		if (parentNode != std::nullopt)
+		ImGui::TableSetupColumn("Property", ImGuiTableColumnFlags_WidthFixed, 100.0f);
+		ImGui::TableSetupColumn("Value", ImGuiTableColumnFlags_WidthStretch);
+
+		// Name
+		ImGui::TableNextRow(); ImGui::TableNextColumn(); ImGui::AlignTextToFramePadding();
+		ImGui::Text("Name"); ImGui::TableNextColumn();
+		ImGui::SetNextItemWidth(-FLT_MIN);
+		ImGui::InputText("##LocalName", m_cName, sizeof(m_cName));
+		m_UIINFO.Name = m_cName;
+
+		// Parent
+		ImGui::TableNextRow(); ImGui::TableNextColumn(); ImGui::AlignTextToFramePadding();
+		ImGui::Text("Parent"); ImGui::TableNextColumn();
+		ImGui::TextColored(ImVec4(0.7f, 0.7f, 0.7f, 1.0f), parentUI->GetName());
+
+		// Local Transform
+		ImGui::TableNextRow(); ImGui::TableNextColumn(); ImGui::AlignTextToFramePadding();
+		ImGui::Text("Local Pos"); ImGui::TableNextColumn();
+		ImGui::SetNextItemWidth(100); ImGui::DragFloat("X##LPosX", &localX, 0.1f, -clientSize.x, clientSize.x); ImGui::SameLine();
+		ImGui::SetNextItemWidth(100); ImGui::DragFloat("Y##LPosY", &localY, 0.1f, -clientSize.y, clientSize.y);
+
+		// Width Ratio
+		ImGui::TableNextRow(); ImGui::TableNextColumn(); ImGui::AlignTextToFramePadding();
+		ImGui::Text("Width Ratio"); ImGui::TableNextColumn();
+		ImGui::SetNextItemWidth(100); ImGui::DragFloat("X##WRatioX", &widthX, 0.001f, 0.0f, 5.f); ImGui::SameLine();
+		ImGui::SetNextItemWidth(100); ImGui::DragFloat("Y##WRatioY", &widthY, 0.001f, 0.0f, 5.f);
+
+		// Alpha & Weight
+		ImGui::TableNextRow(); ImGui::TableNextColumn(); ImGui::AlignTextToFramePadding();
+		ImGui::Text("Alpha Ratio"); ImGui::TableNextColumn();
+		ImGui::SetNextItemWidth(100); ImGui::DragFloat("##AlphaRatio", &alphaRatio, 0.001f, 0.0f, 1.f);
+
+		ImGui::TableNextRow(); ImGui::TableNextColumn(); ImGui::AlignTextToFramePadding();
+		ImGui::Text("Weight Offset"); ImGui::TableNextColumn();
+		ImGui::SetNextItemWidth(100); ImGui::DragInt("##WeightOffset", &weightOffset, 1, -100, 100);
+
+		// Color 
+		ImGui::TableNextRow(); ImGui::TableNextColumn(); ImGui::AlignTextToFramePadding();
+		ImGui::Text("Color (RGB)"); ImGui::TableNextColumn();
+		float colorArr[3] = { m_UIINFO.Color.x, m_UIINFO.Color.y, m_UIINFO.Color.z };
+		ImGui::SetNextItemWidth(200);
+		if (ImGui::ColorEdit3("##LocalColor", colorArr))
 		{
-			strcpy_s(m_sParentName, parentUI->GetName());
+			m_UIINFO.Color.x = colorArr[0];
+			m_UIINFO.Color.y = colorArr[1];
+			m_UIINFO.Color.z = colorArr[2];
 		}
-		else
-			strcpy_s(m_sParentName, "None");
+
+		// Enums
+		static const char* UITypeNames[] = { "CONTAINER", "TEXUI", "FLIPBOOK", "TEXT", "BUTTON" };
+		ImGui::TableNextRow(); ImGui::TableNextColumn(); ImGui::AlignTextToFramePadding();
+		ImGui::Text("UI Type"); ImGui::TableNextColumn();
+		ImGui::SetNextItemWidth(150);
+		ImGui::Combo("##LUIType", reinterpret_cast<int*>(&m_UIINFO.UIType), UITypeNames, IM_ARRAYSIZE(UITypeNames));
+
+		static const char* EffectTypeNames[] = { "NONE", "HOVER", "CLICK" };
+		ImGui::TableNextRow(); ImGui::TableNextColumn(); ImGui::AlignTextToFramePadding();
+		ImGui::Text("Effect Type"); ImGui::TableNextColumn();
+		ImGui::SetNextItemWidth(150);
+		ImGui::Combo("##LEffectType", reinterpret_cast<int*>(&m_UIINFO.EffectType), EffectTypeNames, IM_ARRAYSIZE(EffectTypeNames));
+
+		ImGui::EndTable();
 	}
-	else
-		strcpy_s(m_sParentName, "None");
-	ImGui::Text("Parent : %s", m_sParentName);
 
-	ImGui::Spacing();
-	ImGui::TextColored(ImVec4(0, 1, 1, 1), "Input_State");
-	ImGui::Separator();
-
-	ImGui::SetNextItemWidth(80);
-	ImGui::DragFloat("LocalX", &localX, 0.1f, 0.0f, clientSize.x);
-	ImGui::SameLine(150);
-	ImGui::SetNextItemWidth(80);
-	ImGui::DragFloat("LocalY", &localY, 0.1f, 0.0f, clientSize.y);
-
-	ImGui::SetNextItemWidth(80);
-	ImGui::DragFloat("WidthX", &widthX, 0.001f, 0.0f, 1.f);
-	ImGui::SameLine(150);
-	ImGui::SetNextItemWidth(80);
-	ImGui::DragFloat("WidthY", &widthY, 0.001f, 0.0f, 1.f);
-
-	ImGui::SetNextItemWidth(80);
-	ImGui::DragFloat("AlphaRatio", &alphaRatio, 0.001f, 0.0f, 1.f);
-	ImGui::SameLine(150);
-	ImGui::SetNextItemWidth(80);
-	ImGui::DragInt("WeightOffset", &weightOffset, 1.f, 0, 100);
-
-	ImGui::SetNextItemWidth(80);
-	ImGui::InputText("Name", m_cName, sizeof(m_cName));
-
-	selectUI->SetLocalX(localX);
-	selectUI->SetLocalY(localY);
-	selectUI->SetWidthRatioX(widthX);
-	selectUI->SetWidthRatioY(widthY);
-	selectUI->SetAlphaRatio(alphaRatio);
-	selectUI->SetWeightOffset(weightOffset);
+	// Update Target Properties
+	selectInfo.LocalX = localX;
+	selectInfo.LocalY = localY;
+	selectInfo.WidthRatioX = widthX;
+	selectInfo.WidthRatioY = widthY;
+	selectInfo.AlphaRatio = alphaRatio;
+	selectInfo.WeightOffset = weightOffset;
 }
 
 void CLevelUIEditor::DrawFileExplorer()
@@ -1473,13 +1713,6 @@ void CLevelUIEditor::DeleteUIRecursive(std::optional<CHandle> targetHandle)
 
 		if (nullptr != parentUI)
 			parentUI->DeleteChild(targetUI->GetHandle());
-	}
-
-	if (0 == childHandles.size())
-	{
-		selectedParent--;
-		targetUI->SetPendingDestroyCascade();
-		return;
 	}
 
 	selectedParent--;
@@ -1581,11 +1814,11 @@ void CLevelUIEditor::DrawJsonFileLoader(uint32_t EditorMode)
 					break;
 				case ETOUI(UiEditorMode::PREFAB):
 					strcpy_s(m_cPrefabName, sizeof(m_cPrefabName), file.fileName.substr(0, file.fileName.length() - 5).c_str());
-					PrefabLoad();
+					GET_SINGLE(UIManager)->LoadPrefab(m_cPrefabName, g_PrefabPath);
 					break;
 				case ETOUI(UiEditorMode::FLIPBOOK):
 					strcpy_s(m_cPrefabName, sizeof(m_cPrefabName), file.fileName.substr(0, file.fileName.length() - 5).c_str());
-					PrefabLoad();
+					GET_SINGLE(UIManager)->LoadPrefab(m_cPrefabName, g_FlipbookPath);
 					break;
 				}
 

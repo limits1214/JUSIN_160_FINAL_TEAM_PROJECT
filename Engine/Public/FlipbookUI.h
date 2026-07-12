@@ -36,6 +36,9 @@ public:
 	virtual void LateUpdate(_float fTimeDelta);
 
 protected:
+	virtual void PlayEffect(uint32_t uiState);
+
+protected:
 	FLIP_INFO	m_FLIPINFO{};
 
 public:
@@ -58,6 +61,9 @@ protected:
 protected:
 	bool		m_Loop = true;
 	_float		m_fSumTime = 0.f;
+
+private:
+	char g_BasePath[256] = "./Resources/SampleClient/UIData/LevelUI/";
 };
 
 NS_END

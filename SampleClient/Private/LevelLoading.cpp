@@ -28,6 +28,7 @@
 #include "TextureUI.h"
 #include "EffectUI.h"
 #include "TextBox.h"
+#include "Button.h"
 
 #include "TestGob.h"
 NS_USING(Client)
@@ -267,16 +268,6 @@ void CLevelLoading::ThreadStart()
 				{
 					return false;
 				}
-
-				if (FAILED(E::CGameInstance::Get().AddPrototype("LEVEL_UIEDITOR", "Prototype_GameObject_TexUI", CTexUI::Create())))
-				{
-					return false;
-				}
-
-				if (FAILED(E::CGameInstance::Get().AddPrototype("LEVEL_UIEDITOR", "Prototype_GameObject_FlipBook", CFlipBook::Create())))
-				{
-					return false;
-				}
 				if (FAILED(E::CGameInstance::Get().AddPrototype("LEVEL_UIEDITOR", "Prototype_GameObject_TextureUI", CTextureUI::Create())))
 				{
 					return false;
@@ -286,6 +277,10 @@ void CLevelLoading::ThreadStart()
 					return false;
 				}
 				if (FAILED(E::CGameInstance::Get().AddPrototype("LEVEL_UIEDITOR", "Prototype_GameObject_TextBox", CTextBox::Create())))
+				{
+					return false;
+				}
+				if (FAILED(E::CGameInstance::Get().AddPrototype("LEVEL_UIEDITOR", "Prototype_GameObject_Button", CButton::Create())))
 				{
 					return false;
 				}

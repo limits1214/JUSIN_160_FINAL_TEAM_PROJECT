@@ -80,3 +80,7 @@ void CFlipbookUI::Update(_float fTimeDelta)
 void CFlipbookUI::LateUpdate(_float fTimeDelta)
 {
 }
+
+void CFlipbookUI::PlayEffect(uint32_t uiState)
+{
+}

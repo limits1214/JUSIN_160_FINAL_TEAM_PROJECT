@@ -29,29 +29,29 @@ PS_IN VSMain(VS_IN vin)
 float4 PSMain(PS_IN input) : SV_Target
 {
     float2 uv = g_ui_texCoord + input.uv * g_ui_uvSize;
-
+    
     float4 texColor = tex.Sample(LinearWrap, uv);
-
-    if (max(texColor.r, max(texColor.g, texColor.b)) < 0.001f)
+    
+    if (max(texColor.r, max(texColor.g, texColor.b)) < 0.01f)
     {
         discard;
     }
-
+    
     float alpha = dot(texColor.rgb, float3(0.299, 0.587, 0.114));
-    alpha = pow(alpha, 0.5);
-
+    alpha = pow(alpha, 0.5f);
+    
     if (alpha < 0.1f)
     {
         discard;
     }
-
+    
     float brightness = dot(texColor.rgb, float3(0.299, 0.587, 0.114));
     brightness = pow(brightness, 1.f);
-
+    
     if (max(g_ui_color.r, max(g_ui_color.g, g_ui_color.b)) > 0.0f)
     {
         texColor.rgb = g_ui_color.rgb * brightness;
     }
-
+    
     return float4(texColor.rgb, brightness * g_ui_color.a);
 }

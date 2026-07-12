@@ -109,6 +109,12 @@
     <Filter Include="GameObject\AI\Header">
       <UniqueIdentifier>{98fd5b71-cb07-4a23-88f0-80d1b6f6f076}</UniqueIdentifier>
     </Filter>
+    <Filter Include="GameObject\UI\TextBox">
+      <UniqueIdentifier>{e22f6b7b-6f6d-4105-8bc6-78361e7ef021}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="GameObject\UI\Button">
+      <UniqueIdentifier>{b95f98b8-dda0-492c-83ef-ee45acfd798b}</UniqueIdentifier>
+    </Filter>
     <Filter Include="LuaFiles">
       <UniqueIdentifier>{e2e6d417-5abe-4793-a29c-05884c540114}</UniqueIdentifier>
     </Filter>
@@ -170,12 +176,6 @@
     </ClInclude>
     <ClInclude Include="..\Public\LevelUIEditor.h">
       <Filter>Level\UiEditor</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Public\CTexUI.h">
-      <Filter>GameObject\UI\TexUI</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Public\FlipBook.h">
-      <Filter>GameObject\UI\FilpBook</Filter>
     </ClInclude>
     <ClInclude Include="..\Public\LevelAnimEditor.h">
       <Filter>Level\AnimationEditor</Filter>
@@ -246,12 +246,6 @@
     <ClInclude Include="..\public\Particle_Fire_GPU.h">
       <Filter>Particles</Filter>
     </ClInclude>
-    <ClInclude Include="..\public\EffectUI.h">
-      <Filter>GameObject\UI</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Public\TextureUI.h">
-      <Filter>GameObject\UI</Filter>
-    </ClInclude>
     <ClInclude Include="..\public\BTDecTimer.h">
       <Filter>GameObject\AI\BTDecorator</Filter>
     </ClInclude>
@@ -279,8 +273,23 @@
     <ClInclude Include="..\public\BTTeleport.h">
       <Filter>GameObject\AI\BTAction</Filter>
     </ClInclude>
+    <ClInclude Include="..\Public\TextureUI.h">
+      <Filter>GameObject\UI\TexUI</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\EffectUI.h">
+      <Filter>GameObject\UI\FilpBook</Filter>
+    </ClInclude>
     <ClInclude Include="..\public\TextBox.h">
+      <Filter>GameObject\UI\TextBox</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Public\UIManager.h">
       <Filter>GameObject\UI</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Public\UI_Enums.h">
+      <Filter>99.Defines</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Public\Button.h">
+      <Filter>GameObject\UI\Button</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -366,23 +375,8 @@
     <ClCompile Include="..\private\TestPhysXCapsule.cpp">
       <Filter>GameObject\TestPhysx\Capsule</Filter>
     </ClCompile>
-    <ClCompile Include="..\Private\CTexUI.cpp">
-      <Filter>GameObject\UI\TexUI</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Private\FlipBook.cpp">
-      <Filter>GameObject\UI\FilpBook</Filter>
-    </ClCompile>
     <ClCompile Include="..\private\TestGob.cpp">
       <Filter>GameObject\AI</Filter>
-    </ClCompile>
-    <ClCompile Include="..\private\EffectUI.cpp">
-      <Filter>GameObject\UI</Filter>
-    </ClCompile>
-    <ClCompile Include="..\private\TextBox.cpp">
-      <Filter>GameObject\UI</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Private\TextureUI.cpp">
-      <Filter>GameObject\UI</Filter>
     </ClCompile>
     <ClCompile Include="..\private\BTDecTimer.cpp">
       <Filter>GameObject\AI\BTDecorator</Filter>
@@ -411,6 +405,24 @@
     <ClCompile Include="..\private\BTTeleport.cpp">
       <Filter>GameObject\AI\BTAction</Filter>
     </ClCompile>
+    <ClCompile Include="..\Private\LevelUIEditor.cpp">
+      <Filter>Level\UiEditor</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Private\TextureUI.cpp">
+      <Filter>GameObject\UI\TexUI</Filter>
+    </ClCompile>
+    <ClCompile Include="..\private\EffectUI.cpp">
+      <Filter>GameObject\UI\FilpBook</Filter>
+    </ClCompile>
+    <ClCompile Include="..\private\TextBox.cpp">
+      <Filter>GameObject\UI\TextBox</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Private\UIManager.cpp">
+      <Filter>GameObject\UI</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Private\Button.cpp">
+      <Filter>GameObject\UI\Button</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\Private\TestModel.cpp">
@@ -433,9 +445,6 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="LevelUIEditor.cpp">
-      <Filter>Level\UiEditor</Filter>
-    </ClCompile>
     <ClCompile Include="..\private\BTAnimation.cpp">
       <Filter>GameObject\AI\BTAction</Filter>
     </ClCompile>

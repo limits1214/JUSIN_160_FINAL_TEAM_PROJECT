@@ -187,6 +187,7 @@ call CopySampleClient.bat "$(Configuration)"</Command>
     <ClInclude Include="..\public\BTDecSearch.h" />
     <ClInclude Include="..\Public\BTHeader_Definse.h" />
     <ClInclude Include="..\public\BTMove.h" />
+    <ClInclude Include="..\Public\Button.h" />
     <ClInclude Include="..\public\EffectUI.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
     </ClInclude>
@@ -194,8 +195,6 @@ call CopySampleClient.bat "$(Configuration)"</Command>
     <ClInclude Include="..\Public\LevelAnimEditor.h" />
     <ClInclude Include="..\Public\Client_Defines.h" />
     <ClInclude Include="..\Public\Client_Resources.h" />
-    <ClInclude Include="..\Public\CTexUI.h" />
-    <ClInclude Include="..\Public\FlipBook.h" />
     <ClInclude Include="..\public\TestGob.h" />
     <ClInclude Include="..\Public\LevelLightMap.h" />
     <ClInclude Include="..\public\LevelCollider.h" />
@@ -224,6 +223,8 @@ call CopySampleClient.bat "$(Configuration)"</Command>
     <ClInclude Include="..\public\TextBox.h" />
     <ClInclude Include="..\public\Trail_Example.h" />
     <ClInclude Include="..\Public\TextureUI.h" />
+    <ClInclude Include="..\Public\UIManager.h" />
+    <ClInclude Include="..\Public\UI_Enums.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="Resource.h" />
@@ -246,14 +247,14 @@ call CopySampleClient.bat "$(Configuration)"</Command>
     <ClCompile Include="..\private\BTTurnSlow.cpp" />
     <ClCompile Include="..\private\BTDecSearch.cpp" />
     <ClCompile Include="..\private\BTMove.cpp" />
+    <ClCompile Include="..\Private\Button.cpp" />
     <ClCompile Include="..\private\EffectUI.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="..\private\BTDecTimer.cpp" />
     <ClCompile Include="..\Private\LevelAnimEditor.cpp" />
-    <ClCompile Include="..\Private\FlipBook.cpp" />
+    <ClCompile Include="..\Private\LevelUIEditor.cpp" />
     <ClCompile Include="..\private\TestGob.cpp" />
-    <ClCompile Include="..\Private\CTexUI.cpp" />
     <ClCompile Include="..\Private\LevelLightMap.cpp" />
     <ClCompile Include="..\private\LevelCollider.cpp" />
     <ClCompile Include="..\Private\LevelLoading.cpp" />
@@ -279,8 +280,8 @@ call CopySampleClient.bat "$(Configuration)"</Command>
     <ClCompile Include="..\private\TestPhysXCapsule.cpp" />
     <ClCompile Include="..\private\TestPhysXTerrain.cpp" />
     <ClCompile Include="..\Private\TextureUI.cpp" />
+    <ClCompile Include="..\Private\UIManager.cpp" />
     <ClCompile Include="..\public\BTDead.cpp" />
-    <ClCompile Include="LevelUIEditor.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>

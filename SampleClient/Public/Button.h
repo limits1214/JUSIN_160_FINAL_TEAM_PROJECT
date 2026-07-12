@@ -6,18 +6,20 @@
 NS_BEGIN(Engine)
 class CComConstantBuffer;
 class CButtonComponent;
+class TweenComponent;
 NS_END
 
 NS_BEGIN(Client)
+class CEffectUI;
 
-class CTextureUI final : public E::CUITex
+class CButton final : public E::CUITex
 {
 public:
-	DECLARE_DERIVED_TYPE(CTextureUI, E::CUITex)
+	DECLARE_DERIVED_TYPE(CButton, E::CUITex)
 
 private:
-	CTextureUI();
-	~CTextureUI() override;
+	CButton();
+	~CButton() override;
 
 public:
 	HRESULT InitializePrototype(void* pArg = nullptr) override;
@@ -27,30 +29,25 @@ public:
 	void LateUpdate(E::_float fTimeDelta) override;
 	HRESULT Render(ID3D11DeviceContext* pContext, const E::RENDER_CTX& ctx) override;
 
-private:
-	virtual void PlayerEffect(uint32_t uiState);
-
-protected:
-	virtual void Creating();
-	virtual void StartHovering();
-	virtual void Hovering();
-	virtual void EndHovering();
-	virtual void Ending();
-
 public:
 	void SetMouseTracking(_bool isTracking) { m_bMouseTracking = isTracking; }
+	void SetEffectHovered(std::optional<CHandle> effectUIHandle) { m_Effect_Hovered = E::CGameInstance::Get().GetGameObjectByHandleT<CEffectUI>(*effectUIHandle); }
+	void SetEffectClicked(std::optional<CHandle> effectUIHandle) { m_Effect_Clicked = E::CGameInstance::Get().GetGameObjectByHandleT<CEffectUI>(*effectUIHandle); }
 private:
-	_bool m_bMouseTracking{false};
+	_bool m_bMouseTracking{ false };
 
 private:
 	bool m_bOutline{};
 
-	CComConstantBuffer* m_pComCBufferPerUI = nullptr;
-	CButtonComponent* m_pComCButton = nullptr;
-
 protected:
-	virtual void PlayEffect(uint32_t uiState);
+	virtual void PlayEffect(uint32_t uiState) override;
 
+	CEffectUI* m_Effect_Hovered = nullptr;
+	CEffectUI* m_Effect_Clicked = nullptr;
+
+	float m_fHoverScale = 1.1f;
+	float m_fScaleDuration = 0.1f;
+	float m_fAlphaDuration = 0.3f;
 private:
 	std::vector<std::optional<CHandle>> m_vEffects;
 
@@ -58,7 +55,7 @@ private:
 	std::string m_EffectTag;
 
 public:
-	static E::UPtr<CTextureUI> Create();
+	static E::UPtr<CButton> Create();
 	E::UPtr<E::CPrototype> Clone(void* pArg) override;
 };
 

@@ -46,7 +46,8 @@ HRESULT CRenderer::Initialize()
 	if (FAILED(InitializeBloom()))				return E_FAIL;
 
 #ifdef _DEBUG
-    if (FAILED(Initialize_Debugging()))         return E_FAIL;
+    if (FAILED(Initialize_Debugging()))         
+		return E_FAIL;
 #endif
 
     return S_OK;
@@ -527,7 +528,6 @@ HRESULT CRenderer::Draw() {
 	}
 	// PostProcess
 	if (FAILED(Render_PostProcess()))     return E_FAIL;
-
     {
         m_pLastTex2DBeforeFullScreenDraw = ApplyFilter ? m_pResDynTexTargetPostProcess : m_pOffScreenTex2D;
     }
@@ -1028,6 +1028,9 @@ HRESULT CRenderer::Render_UserInterface(){
 		ID3D11RenderTargetView* pRTVs[1] = { m_pLastTex2DBeforeFullScreenDraw->GetRTV().Get() };
 		m_pContext->OMSetRenderTargets(1, pRTVs, nullptr);
 		m_pContext->RSSetViewports(1, &m_pBackBufferViewPort->GetViewPort());
+
+		//_float4 clearColor = { 1.f, 1.f, 1.f, 1.f };
+		//m_pContext->ClearRenderTargetView(m_pLastTex2DBeforeFullScreenDraw->GetRTV().Get(), reinterpret_cast<float*>(&clearColor));
 
 		const auto& vs = m_pFullscreenVS;
 		const auto& ps = m_pFullscreenPS;

@@ -4,15 +4,13 @@
 #include "Level.h"
 #include "Handle.h"
 #include "FlipbookUI.h"
+#include "UIObject.h"
 
 NS_BEGIN(Engine)
 class CUIObject;
 NS_END
 
 NS_BEGIN(Client)
-
-class CTexUI;
-class CFlipBook;
 
 class CLevelUIEditor final : public Engine::CLevel
 {
@@ -24,6 +22,8 @@ public:
 public:
 	enum class UiEditorMode { ARRANGE, PREFAB, FLIPBOOK, END };
 	enum class UiButtonMode { DEFAULT, CREATE, SELECT, END };
+
+
 private:
 	explicit CLevelUIEditor();
 	~CLevelUIEditor() override;
@@ -59,12 +59,17 @@ private:
 	std::vector<std::string> m_vFlipBookResTag{};
 
 private:
+	// 애니메이션
+	UI_ANIMCLIP m_CurrentClip;
+
+private:
 	void CreateMode();
 	void SelectMode();
 
 	void ArrangeMode();
 	void PrefabMode();
 	void FlipbookMode();
+	void AnimationMode();
 
 private:
 	void Picking();
@@ -94,15 +99,9 @@ private:
 	std::vector<JsonFileInfo> g_ImageFiles;
 	bool g_IsFileGridInitialized = false; // 최초 1회 로드 체크용
 	char g_BasePath[256] = "./Resources/SampleClient/UIData/LevelUI/";
-
-private:
-	_float m_fX{}, m_fY{}, m_fSizeX{}, m_fSizeY{}, m_fAlpha{}, m_fRotation;
-	int m_iWeight{};
-	_float m_fCellSize{}, m_fDuration{};
-	int m_iTotalFrame{};
-
-	_float3 m_vColor{ 0.f, 0.f, 0.f };
-	uint32_t m_iEffectType{};
+	std::string g_LevelPath = "./Resources/SampleClient/UIData/LevelUI/";
+	std::string g_PrefabPath = "./Resources/SampleClient/UIData/Prefabs/";
+	std::string g_FlipbookPath = "./Resources/SampleClient/UIData/FlipBook/";
 
 public:
 	static Engine::UPtr<CLevelUIEditor> Create();

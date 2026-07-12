@@ -6,6 +6,7 @@ namespace Engine
 		PERMANENT,
 		CAMERAS,
 		PHYSX,
+		UI,
 		LUA,
 	};
 

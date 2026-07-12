@@ -22,7 +22,7 @@ HRESULT CTextBox::Initialize(void* pArg)
 	if (FAILED(CTextUI::Initialize(pDesc)))
 		return E_FAIL;
 
-	m_UIType = ETOUI(UI_TYPE::TEXUI);
+	m_UIINFO.UIType = ETOUI(UI_TYPE::TEXUI);
 
 	return S_OK;
 }

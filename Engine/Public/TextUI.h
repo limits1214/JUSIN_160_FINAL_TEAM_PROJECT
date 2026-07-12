@@ -29,6 +29,9 @@ public:
 	HRESULT Initialize(void* pArg) override;
 	virtual void Update(_float fTimeDelta);
 
+protected:
+	virtual void PlayEffect(uint32_t uiState);
+
 public:
 	TEXT_INFO& GetTextInfo() { return m_textInfo; }
 	const TEXT_INFO& GetTextInfo() const { return m_textInfo; }

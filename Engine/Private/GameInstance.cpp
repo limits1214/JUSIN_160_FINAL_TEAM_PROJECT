@@ -45,8 +45,8 @@
 #include "ParticleManager.h"
 #include "Particle.h"
 
-
-
+#include "ButtonComponent.h"
+#include "TweenComponent.h"
 NS_USING(Engine)
 
 CGameInstance::CGameInstance()
@@ -1229,6 +1229,19 @@ HRESULT CGameInstance::InitializePrototype()
 			return E_FAIL;
 		}
 		if (AddPrototype(ES_EngineProtoMajorType::PHYSX, ES_EngineProtoPhysXComponent::Prototype_Component_ComPxRigidBody, CComPxRigidBody::Create()))
+		{
+			return E_FAIL;
+		}
+	}
+
+	// UI관련
+	{
+		if (AddPrototype(ES_EngineProtoMajorType::UI, "Prototype_Component_ButtonUI", CButtonComponent::Create()))
+		{
+			return E_FAIL;
+		}
+
+		if (AddPrototype(ES_EngineProtoMajorType::UI, "Prototype_Component_Tween", TweenComponent::Create()))
 		{
 			return E_FAIL;
 		}

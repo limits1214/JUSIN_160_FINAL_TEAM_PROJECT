@@ -32,7 +32,8 @@ namespace Engine
 	//나중에 이 성 민 씨 가 옮길거임 접근 금지
 	static const uint32_t MAX_SPAWN_PER_CALL = 2000;
 
-	enum class UI_TYPE{ CONTAINER, TEXUI, FLIPBOOK, TEXT, END };
+	enum class UI_TYPE{ CONTAINER, TEXUI, FLIPBOOK, TEXT, BUTTON, END };
 	enum class UI_EFFECT_TYPE { NONE, HOVER, CLICK, END};
+	enum class EUITweenTarget { SCALE, EFFECT_ALPHA, POSITION_X, POSITION_Y }; // 제어할 UI 속성 타입
 
 }

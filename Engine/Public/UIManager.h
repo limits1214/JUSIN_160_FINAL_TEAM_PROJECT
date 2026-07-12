@@ -3,6 +3,7 @@
 #include "Engine_Defines.h"
 
 NS_BEGIN(Engine)
+class CUIObject;
 
 class CUIManager final : public CEngineBase
 {
@@ -17,8 +18,11 @@ public:
 
 	void Find_UiDesc();
 
-	std::vector<UI_DESC> Ui_Desces{};
+	void LoadPrefab(char path[256]);
+	E::CUIObject* LoadUIRecursive(const nlohmann::ordered_json& obj, CUIObject* parent);
 
+private:
+	std::vector<UI_DESC> Ui_Desces{};
 public:
 	static UPtr<CUIManager> Create();
 };

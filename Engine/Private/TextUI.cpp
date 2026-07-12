@@ -30,3 +30,7 @@ void CTextUI::Update(_float fTimeDelta)
 
 	CGameInstance::Get().FontAddLateDraw(RENDERGROUP::UI, "NeoDGM_15px", m_textInfo.Text.c_str(), { m_UIINFO.fX, m_UIINFO.fY }, m_UIINFO.SizeX, XMVectorSet(1.f, 1.f, 1.f, m_UIINFO.Alpha));
 }
+
+void CTextUI::PlayEffect(uint32_t uiState)
+{
+}

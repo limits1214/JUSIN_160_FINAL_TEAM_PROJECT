@@ -14,6 +14,9 @@ protected:
 	CUITex();
 	~CUITex() override;
 
+protected:
+	virtual void PlayEffect(uint32_t uiState) override;
+
 public:
 	HRESULT Initialize(void* pArg) override;
 	virtual void Update(_float fTimeDelta);

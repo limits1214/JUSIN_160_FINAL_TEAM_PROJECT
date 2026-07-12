@@ -1,6 +1,9 @@
 #pragma once
 
 #include "GameObject.h"
+#include "UIComponent.h"
+#include "ButtonComponent.h"
+#include "TweenComponent.h"
 
 NS_BEGIN(Engine)
 
@@ -25,13 +28,31 @@ typedef struct tagUIInfo
 	_float3			Color = { 0.f, 0.f, 0.f };		// 색
 }UI_INFO;
 
+/****************UI***********************/
+// 개별 애니메이션 트랙 데이터
+typedef struct tagUITweenTrack
+{
+	EUITweenTarget TargetType;
+	bool bUseCurrentStart; // 시작값을 현재 UI의 상태값으로 쓸 것인지?
+	float fStartValue;     // bUseCurrentStart가 false일 때 쓸 고정 시작값
+	float fEndValue;       // 목표값
+	float fDuration;       // 걸리는 시
+}UI_TWEENTRACK;
+
+// 애니메이션 클립
+typedef struct tagUIAnimClip
+{
+	std::string ClipName;
+	std::vector<UI_TWEENTRACK> Tracks;
+}UI_ANIMCLIP;
+
 class ENGINE_DLL CUIObject : public CGameObject
 {
 public:
 	DECLARE_DERIVED_TYPE(CUIObject, CGameObject)
 
 public:
-	enum class UI_STATE { ENTER, IDLE, EXIT, CLICK, APPEAR, DISAPPEAR, NONE };
+	enum class UI_STATE { ENTER, HOVERED, EXIT, CLICK, APPEAR, DISAPPEAR, NONE };
 
 public:
 	typedef struct tagUIObjectDesc : public CGameObject::GAMEOBJECT_DESC
@@ -55,12 +76,30 @@ public:
 	virtual void Update(_float fTimeDelta);
 	virtual void LateUpdate(_float fTimeDelta);
 
+public:
+	virtual void PlayEffect(uint32_t uiState);
+
+protected:
+	std::vector<CUIComponent*> m_UIComponents;
+
+	CComConstantBuffer* m_pComCBufferPerUI = nullptr;
+	CButtonComponent* m_pComCButton = nullptr;
+	TweenComponent* m_pComTween = nullptr;
+public:
+	TweenComponent* GetTweenCom() { return m_pComTween; }
+
+	/* 이벤트 콜백 함수 */
+	std::function<void(CUIObject* pCaller)> OnClicked;
+	std::function<void(CUIObject* pCaller)> OnHoverEnter;
+	std::function<void(CUIObject* pCaller)> OnHoverExit;
+
 protected:
 	UI_INFO		m_UIINFO{};
 	UI_STATE	m_CurrentState = UI_STATE::NONE;
 	uint32_t	m_AnimState = 0;
 	_bool		m_isActive = true;
 	_bool		m_isVisible = true;
+	_float		m_ScaleRatio = 1.f;
 
 public:
 	const UI_INFO& GetUIInfo() const { return m_UIINFO; }
@@ -68,83 +107,28 @@ public:
 
 	_bool GetActive() { return m_isActive; }
 	_bool GetVisible() { return m_isVisible; }
+	_float GetAlphaRatio() { return m_UIINFO.AlphaRatio; }
+	_float GetScaleRatio() { return m_ScaleRatio; }
 
 	void SetActive(bool isActive) { m_isActive = isActive; }
 	void SetVisible(bool isVisible) { m_isVisible = isVisible; }
+	void SetAlphaRatio(_float alpha) { m_UIINFO.AlphaRatio = alpha; }
+	void SetScaleRatio(_float scale) { m_ScaleRatio = scale; }
 
 	const char* GetName() { return m_UIINFO.Name.c_str(); }
+	const uint32_t* GetUIType() { return &m_UIINFO.UIType; }
+	void SetColor(_float3 vColor) { m_UIINFO.Color = vColor; }
+	int GetWeight() { return m_UIINFO.Weight; }
+	int GetWeight() const { return m_UIINFO.Weight; }
 public:
 	void SetParent(std::optional<CHandle> parentUI) { m_pParent = parentUI; }
 	std::optional<CHandle>  GetParent() { return m_pParent; }
 	void AddChildren(CHandle childUI) { m_vChildren.push_back(childUI); }
 	const std::vector<CHandle>& GetChildren() const { return m_vChildren; }
 
-protected:
-	_float m_fX{}, m_fY{}, m_fSizeX{}, m_fSizeY{}, m_fAlpha{};
-	int m_iWeight{};
-	char m_cName[256] = "";
-	uint32_t m_UIType{};
-	uint32_t m_iEffectType{};
-
-	_float m_fLocalX{ 0 }, m_fLocalY{ 0 }, m_fWidthRatioX{ 1 }, m_fWidthRatioY{ 1 }, m_fAlphaRatio{ 1 };
-	int m_iWeightOffset{ 0 };
-
-	_float3 m_vColor = { 0, 0, 0 };
-
-	std::string m_sRestag;
-
-public:
-	_float2 GetOrigin() const { return { m_fX , m_fY }; }
-	_float2 GetSize() const { return{ m_fSizeX , m_fSizeY }; }
-	void SetOrigin(_float2 f) { m_fX = f.x; m_fY = f.y;   CalcUICoord(); }
-	void SetSize(_float2 f) { m_fSizeX = f.x ; m_fSizeY = f.y; CalcUICoord();}
-	void SetAlpha(_float fAlpha) { m_fAlpha = fAlpha; }
-	_float GetAlpha() { return m_fAlpha; }
-
-	int			GetWeight() const { return m_iWeight; }
-	void		SetWeight(int weight) { m_iWeight = weight; }
-
-	
-	void		SetName(_string name)	{ strcpy_s(m_cName, name.c_str()); }
-
-	void SetLocalPos(_float2 localPos) { m_fLocalX = localPos.x; m_fLocalY = localPos.y;     CalcUICoord();};
-	void SetWorldPos(_float2 worldPos) { m_fX = worldPos.x; m_fY = worldPos.y;     CalcUICoord();}
-
-	_float2 GetLocalPos() { _float2 localPos = { m_fLocalX , m_fLocalY }; return localPos; }
-	_float2 GetWorldPos() { _float2 worldPos = { m_fX , m_fY }; return worldPos; }
-
-
-
-	_float GetLocalX() { return m_fLocalX; };
-	_float GetLocalY() { return m_fLocalY; };
-	_float GetWidthRatioX() { return m_fWidthRatioX; };
-	_float GetWidthRatioY() { return m_fWidthRatioY; };
-	_float GetAlphaRatio() { return m_fAlphaRatio; };
-	int GetWeightOffset() { return m_iWeightOffset; };
-
-	void SetLocalX(_float x) { m_fLocalX = x; };
-	void SetLocalY(_float y) { m_fLocalY = y; };
-	void SetWidthRatioX(_float widthX) { m_fWidthRatioX = widthX; };
-	void SetWidthRatioY(_float widthY) { m_fWidthRatioY = widthY; };
-	void SetAlphaRatio(_float alphaRatio) { m_fAlphaRatio = alphaRatio; };
-	void SetWeightOffset(int weightOffset) { m_iWeightOffset = weightOffset; };
-
-	uint32_t GetUIType() { return m_UIType; }
-	void SetUIType(uint32_t uiType) { m_UIType = uiType; }
-
-	std::string Get_ResTag() { return m_sRestag; }
-	void Set_ResTag(std::string tag) { m_sRestag = tag; }
-
-	_float3 GetColor() { return m_vColor; }
-	void SetColor(_float3 vColor) { m_vColor = vColor; }
-
-	uint32_t GetEffectType() { return m_iEffectType; }
-	void SetEffectType(uint32_t effectType) { m_iEffectType = effectType; }
 public:
 	void DeleteChild(CHandle childHandle);
 	void CalcUICoord();
-protected:
-	_bool CheckHovered();
 
 protected:
 	std::optional<CHandle> m_pParent = std::nullopt;

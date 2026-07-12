@@ -13,6 +13,10 @@ CUITex::~CUITex()
 {
 }
 
+void CUITex::PlayEffect(uint32_t uiState)
+{
+}
+
 HRESULT CUITex::Initialize(void* pArg)
 {
 	auto		pDesc = static_cast<CUIObject::UIOBJECT_DESC*>(pArg);

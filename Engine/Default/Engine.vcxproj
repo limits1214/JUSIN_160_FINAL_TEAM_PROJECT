@@ -268,6 +268,7 @@
     <ClInclude Include="..\public\LuaManager.h" />
     <ClInclude Include="..\public\LuaWatcher.h" />
     <ClInclude Include="..\public\ResLuaScript.h" />
+    <ClInclude Include="..\Public\ButtonComponent.h" />
     <ClInclude Include="..\public\ParticlePattern.h" />
     <ClInclude Include="..\Public\NavMeshManager.h" />
     <ClInclude Include="..\public\FlipbookUI.h" />
@@ -325,6 +326,8 @@
     <ClInclude Include="..\public\PhysXManager.h" />
     <ClInclude Include="..\public\PhysxManagerListener.h" />
     <ClInclude Include="..\public\TextUI.h" />
+    <ClInclude Include="..\Public\TweenComponent.h" />
+    <ClInclude Include="..\Public\UIComponent.h" />
     <ClInclude Include="..\public\SerializeManager.h" />
     <ClInclude Include="..\Public\UITex.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
@@ -385,7 +388,6 @@
     <ClInclude Include="..\public\Trail_CPU.h" />
     <ClInclude Include="..\Public\UICamera.h" />
     <ClInclude Include="..\Public\UIObject.h" />
-    <ClInclude Include="..\Public\UIManager.h" />
     <ClInclude Include="..\Public\WorkerManager.h" />
     <ClInclude Include="..\Public\Engine_PhysxDefines.h" />
     <ClInclude Include="..\Public\IPhysicsSync.h" />
@@ -541,6 +543,7 @@
     <ClCompile Include="..\private\LuaManager.cpp" />
     <ClCompile Include="..\private\LuaWatcher.cpp" />
     <ClCompile Include="..\private\ResLuaScript.cpp" />
+    <ClCompile Include="..\Private\ButtonComponent.cpp" />
     <ClCompile Include="..\Private\NavMeshManager.cpp" />
     <ClCompile Include="..\private\FlipbookUI.cpp" />
     <ClCompile Include="..\private\ParticlePattern.cpp" />
@@ -629,6 +632,8 @@
     <ClCompile Include="..\Private\SoundManager.cpp" />
     <ClCompile Include="..\private\ResStructuredBuffer.cpp" />
     <ClCompile Include="..\private\TextUI.cpp" />
+    <ClCompile Include="..\Private\TweenComponent.cpp" />
+    <ClCompile Include="..\Private\UIComponent.cpp" />
     <ClCompile Include="..\Private\UITex.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
     </ClCompile>
@@ -637,7 +642,6 @@
     <ClCompile Include="..\private\Trail_CPU.cpp" />
     <ClCompile Include="..\Private\UICamera.cpp" />
     <ClCompile Include="..\Private\UIObject.cpp" />
-    <ClCompile Include="..\Private\UIManager.cpp" />
     <ClCompile Include="..\Private\WorkerManager.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
