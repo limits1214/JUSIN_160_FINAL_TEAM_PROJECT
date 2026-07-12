@@ -96,8 +96,8 @@ HRESULT CComAnimator::Update_Anim(_float fTimeDelta)
 
 		if (pRootChannel)
 		{
-			_matrix matPrev = Evaluate_ChannelMatrix_CPU(pRootChannel.get(), fPrevTrackPosition);
-			_matrix matCurr = Evaluate_ChannelMatrix_CPU(pRootChannel.get(), m_CurAnimState.fTrackPosition);
+			_matrix matPrev = Evaluate_ChannelMatrix_CPU(*pRootChannel, fPrevTrackPosition);
+			_matrix matCurr = Evaluate_ChannelMatrix_CPU(*pRootChannel, m_CurAnimState.fTrackPosition);
 
 			_float3 vPrevPos{};
 			_float3 vCurrPos{};
@@ -276,14 +276,14 @@ void CComAnimator::Build_BoneMatrices_CPU(_float fTimeDelta)
 		XMStoreFloat4x4(&m_LocalBoneMatrices[i],Bones[i]->Get_TransformationMatrix());
 	}
 
-	const auto& Channels = pAnim->GetChannels();
+	 auto& Channels = pAnim->GetChannels();
 
 	if (m_CurAnimState.KeyFrameIndices.size() != Channels.size())
 		m_CurAnimState.KeyFrameIndices.resize(Channels.size(), 0);
 
 	for (uint32_t i = 0; i < static_cast<uint32_t>(Channels.size()); ++i)
 	{
-		Sample_Channel_CPU(Channels[i].get(), m_CurAnimState.fTrackPosition, m_CurAnimState.KeyFrameIndices[i], m_LocalBoneMatrices);
+		Sample_Channel_CPU(Channels[i], m_CurAnimState.fTrackPosition, m_CurAnimState.KeyFrameIndices[i], m_LocalBoneMatrices);
 	}
 
 
@@ -313,17 +313,17 @@ void CComAnimator::Build_BoneMatrices_CPU(_float fTimeDelta)
 	
 }
 
-void CComAnimator::Sample_Channel_CPU( CResModelChanel* pChannel,_float fTrackPosition,uint32_t& iCurrentKeyFrameIndex,std::vector<_float4x4>& OutLocalBoneMatrices)
+void CComAnimator::Sample_Channel_CPU(CChannel& pChannel,_float fTrackPosition,uint32_t& iCurrentKeyFrameIndex,std::vector<_float4x4>& OutLocalBoneMatrices)
 {
-	if (pChannel == nullptr)
-		return;
+	//if (pChannel == nullptr)
+	//	return;
 
-	const auto& KeyFrames = pChannel->Get_KeyFrames();
+	const auto& KeyFrames = pChannel.Get_KeyFrames();
 
 	if (KeyFrames.empty())
 		return;
 
-	const int32_t iBoneIndex = pChannel->Get_BoneIndex();
+	const int32_t iBoneIndex = pChannel.Get_BoneIndex();
 
 
 
@@ -395,14 +395,14 @@ void CComAnimator::Sample_Channel_CPU( CResModelChanel* pChannel,_float fTrackPo
 	XMStoreFloat4x4(&OutLocalBoneMatrices[iBoneIndex],matLocal);
 }
 
-_matrix CComAnimator::Evaluate_ChannelMatrix_CPU(CResModelChanel* pChannel, _float fTrackPosition)  {
+_matrix CComAnimator::Evaluate_ChannelMatrix_CPU(CChannel& pChannel, _float fTrackPosition)  {
 	// 이 함수는 처음 Load 해 올때만 Root Bone Transform 빼오기 위해서 만든 함수
-	if (pChannel->Get_KeyFrames().empty())
+	if (pChannel.Get_KeyFrames().empty())
 		return XMMatrixIdentity();
 
-	if (pChannel->Get_KeyFrames().size() == 1) {
+	if (pChannel.Get_KeyFrames().size() == 1) {
 
-		const KEYFRAME& KeyFrame = pChannel->Get_KeyFrames()[0];
+		const KEYFRAME& KeyFrame = pChannel.Get_KeyFrames()[0];
 
 		_vector vScale = XMLoadFloat3(&KeyFrame.vScale);
 		_vector vRotation = XMLoadFloat4(&KeyFrame.vRotation);
@@ -412,10 +412,10 @@ _matrix CComAnimator::Evaluate_ChannelMatrix_CPU(CResModelChanel* pChannel, _flo
 	}
 
 
-	uint32_t iKeyFrameIndex = pChannel->FindKeyFrameIndex(fTrackPosition);
+	uint32_t iKeyFrameIndex = pChannel.FindKeyFrameIndex(fTrackPosition);
 	// 다음 프레임, 이전 프레임 Keyframe 
-	const KEYFRAME& CurKeyFrame = pChannel->Get_KeyFrames()[iKeyFrameIndex];
-	const KEYFRAME& NextKeyFrame = pChannel->Get_KeyFrames()[iKeyFrameIndex + 1];
+	const KEYFRAME& CurKeyFrame = pChannel.Get_KeyFrames()[iKeyFrameIndex];
+	const KEYFRAME& NextKeyFrame = pChannel.Get_KeyFrames()[iKeyFrameIndex + 1];
 
 
 	// 다음 프레임간의 Tickpersecond
@@ -521,12 +521,12 @@ HRESULT CComAnimator::AnimEditor_Play_AnimResource(_float fTimeDelta, uint32_t i
     _bool           isFinished = { false };
 
     /* 뼈들의 m_TransformationMatrix를 갱신해준다. */
-    isFinished = pAnim[iModelAnimNum]->Update_TransformationMatrices(fTimeDelta, pModel->GetBones(), m_bLoop);
+    //isFinished = pAnim[iModelAnimNum]->Update_TransformationMatrices(fTimeDelta, pModel->GetBones(), m_bLoop);
 
-    for (auto& pBone : pModel->GetBones())
-    {
-        pBone->Update_CombinedTransformationMatrix(pModel->GetBones(), XMLoadFloat4x4(&m_PreTransformMatrix));
-    }
+    //for (auto& pBone : pModel->GetBones())
+    //{
+    //    pBone->Update_CombinedTransformationMatrix(pModel->GetBones(), XMLoadFloat4x4(&m_PreTransformMatrix));
+    //}
 
     return isFinished;
 }

@@ -120,7 +120,7 @@ HRESULT CResTexture2D::Load(const std::any& arg)
             D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET,
             0,
             D3D11_RESOURCE_MISC_GENERATE_MIPS,
-            DirectX::WIC_LOADER_FORCE_RGBA32 | DirectX::WIC_LOADER_IGNORE_SRGB,
+			DirectX::WIC_LOADER_DEFAULT,
             pResource.GetAddressOf(),
             m_pSRV.GetAddressOf()
         );

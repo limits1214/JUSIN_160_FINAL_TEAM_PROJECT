@@ -129,7 +129,7 @@ private:
     _bool m_bRender{ true };
     _float4 m_vColor{0.f, 0.f, 0.f, 1.f};
 
-    const uint32_t m_iVertexCnt{ 1000000 };
+    const uint32_t m_iVertexCnt{ 100 };
 
     SPtr<CResDynamicVIBuffer> m_pDbgBuffer{};
     SPtr<CResVertexShader> m_pDbgVShader{};

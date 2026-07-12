@@ -86,8 +86,8 @@ public:
 	void	Play_Anim(int32_t iAnimIndex, _bool bLoop=false, _float fBlendDuration = 0.1f);
 	void	Update_AnimState(_float fTimeDelta, ANIMSTRUCT& AnimState);
 	void	Build_BoneMatrices_CPU(_float fTimeDelta);
-	void	Sample_Channel_CPU( CResModelChanel* pChannel, _float fTrackPosition, uint32_t& iCurrentKeyFrameIndex, std::vector<_float4x4>& OutLocalBoneMatrices);
-	_matrix Evaluate_ChannelMatrix_CPU(CResModelChanel* pChannel, _float fTrackPosition);
+	void	Sample_Channel_CPU( CChannel& pChannel, _float fTrackPosition, uint32_t& iCurrentKeyFrameIndex, std::vector<_float4x4>& OutLocalBoneMatrices);
+	_matrix Evaluate_ChannelMatrix_CPU(CChannel& pChannel, _float fTrackPosition);
 
 
 	void	Blend_Anim(_float fTimeDelta);

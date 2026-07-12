@@ -55,7 +55,7 @@ private:
 	ComPtr<ID3D11Device> m_pDevice{};
 	ComPtr<ID3D11DeviceContext> m_pContext{};
 
-	const uint32_t m_iVertexCnt{ 20000 };
+	const uint32_t m_iVertexCnt{ 100 };
 
 	SPtr<CResDynamicVIBuffer> m_pDbgBuffer{};
 	SPtr<CResVertexShader> m_pDbgVShader{};

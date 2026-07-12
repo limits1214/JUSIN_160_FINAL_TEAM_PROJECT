@@ -57,7 +57,7 @@ CGameInstance::~CGameInstance()
 
 HRESULT CGameInstance::InitializeEngine(const ENGINE_DESC& EngineDesc, ComPtr<ID3D11Device>& ppDevice, ComPtr<ID3D11DeviceContext>& ppContext)
 {
-
+	LogMemoryUsage("InitializeEngine Start");
 
 	m_hWnd = EngineDesc.hWnd;
 	m_vClientScreenSize.x = (float)EngineDesc.iWinSizeX;
@@ -69,112 +69,131 @@ HRESULT CGameInstance::InitializeEngine(const ENGINE_DESC& EngineDesc, ComPtr<ID
 	{
 		return E_FAIL;
 	}
+	LogMemoryUsage("CGraphicDevice End");
 
 	m_pResourceManager = CResourceManager::Create(ppDevice.Get(), ppContext.Get());
 	if (m_pResourceManager == nullptr)
 	{
 		return E_FAIL;
 	}
+	LogMemoryUsage("CResourceManager End");
 
 	m_pSoundManager = CSoundManager::Create();
 	if (m_pSoundManager == nullptr)
 	{
 		return E_FAIL;
 	}
+	LogMemoryUsage("CSoundManager End");
 
 	if (FAILED(m_pGraphicDevice->ReadyDevice(EngineDesc.hWnd, EngineDesc.eWinMode, EngineDesc.iWinSizeX, EngineDesc.iWinSizeY)))
 	{
 		return E_FAIL;
 	}
+	
 
 
 	if (FAILED(InitializeResources()))
 	{
 		return E_FAIL;
 	}
+	LogMemoryUsage("InitializeResources End");
 
 	m_pPrototypeManager = CPrototypeManager::Create(ppDevice.Get(), ppContext.Get());
 	if (m_pPrototypeManager == nullptr)
 	{
 		return E_FAIL;
 	}
+	LogMemoryUsage("CPrototypeManager End");
 
 	if (FAILED(InitializePrototype()))
 	{
 		return E_FAIL;
 	}
+	LogMemoryUsage("InitializePrototype End");
 
 	m_pImguiManager = CImguiManager::Create(EngineDesc.hWnd, ppDevice.Get(), ppContext.Get());
 	if (m_pImguiManager == nullptr)
 	{
 		return E_FAIL;
 	}
+	LogMemoryUsage("CImguiManager End");
 
 	m_pLevelManager = CLevelManager::Create();
 	if (m_pLevelManager == nullptr)
 	{
 		return E_FAIL;
 	}
+	LogMemoryUsage("CLevelManager End");
 
 	m_pDInputManager = CDInputManager::Create(EngineDesc.hInstance, EngineDesc.hWnd);
 	if (m_pDInputManager == nullptr)
 	{
 		return E_FAIL;
 	}
+	LogMemoryUsage("CDInputManager End");
 
 	m_pTimeProvider = CTimeProvider::Create();
 	if (m_pTimeProvider == nullptr)
 	{
 		return E_FAIL;
 	}
+	LogMemoryUsage("CTimeProvider End");
 
 	m_pWorkerManager = CWorkerManager::Create("Normal", 3);
 	if (m_pWorkerManager == nullptr)
 	{
 		return E_FAIL;
 	}
+	LogMemoryUsage("CWorkerManager End");
 
 	m_pGameObjectManager = CGameObjectManager::Create();
 	if (m_pGameObjectManager == nullptr)
 	{
 		return E_FAIL;
 	}
+	LogMemoryUsage("CGameObjectManager End");
 
 	m_pRenderer = CRenderer::Create(ppDevice.Get(), ppContext.Get());
 	if (m_pRenderer == nullptr)
 	{
 		return E_FAIL;
 	}
+	LogMemoryUsage("CRenderer End");
 
 	m_pHizOcclusionCuller = CHizOcclusionCuller::Create();
 	if (m_pHizOcclusionCuller == nullptr)
 	{
 		return E_FAIL;
 	}
+	LogMemoryUsage("CHizOcclusionCuller End");
 
 	m_pCameraManager = CCameraManager::Create();
 	if (m_pCameraManager == nullptr)
 	{
 		return E_FAIL;
 	}
+	LogMemoryUsage("CCameraManager End");
 
 	m_pColliderManager = CColliderManager::Create(ppDevice.Get(), ppContext.Get());
 	if (m_pColliderManager == nullptr)
 	{
 		return E_FAIL;
 	}
+	LogMemoryUsage("CColliderManager End");
 
 	m_pAnimEdit_Manager = CAnimEdit_Manager::Create();
 	if (m_pAnimEdit_Manager == nullptr)
 	{
 		return E_FAIL;
 	}
+	LogMemoryUsage("CAnimEdit_Manager End");
 
 	m_pLightManager = CLightManager::Create(ppDevice.Get(), ppContext.Get());
 	if (m_pLightManager == nullptr)
 	{
 		return E_FAIL;
 	}
+	LogMemoryUsage("CLightManager End");
 
 
 	//m_pParticleManager = CParticleManager::Create(ppDevice.Get(), ppContext.Get());
@@ -187,49 +206,55 @@ HRESULT CGameInstance::InitializeEngine(const ENGINE_DESC& EngineDesc, ComPtr<ID
 	{
 		return E_FAIL;
 	}
+	LogMemoryUsage("CParticleManager End");
 
 	m_pFontManager = CFontManager::Create(ppDevice.Get(), ppContext.Get());
 	if (m_pFontManager == nullptr)
 	{
 		return E_FAIL;
 	}
+	LogMemoryUsage("CFontManager End");
 
 	m_pMapManager = CMapManager::Create();
 	if (m_pMapManager == nullptr)
 	{
 		return E_FAIL;
 	}
+	LogMemoryUsage("CMapManager End");
 	m_pNavMeshManager = CNavMeshManager::Create();
 	if (m_pNavMeshManager == nullptr)
 	{
 		return E_FAIL;
 	}
+	LogMemoryUsage("CNavMeshManager End");
 	m_pNodeEditor = CNodeEditor::Create();
 	if (m_pNodeEditor == nullptr)
 	{
 		return E_FAIL;
 	}
+	LogMemoryUsage("CNodeEditor End");
 	m_pPhysXManager = CPhysXManager::Create();
 	if (m_pPhysXManager == nullptr)
 	{
 		return E_FAIL;
 	}
-
+	LogMemoryUsage("CPhysXManager End");
 	m_pActionManager = CAction_Manager::Create();
 	if (m_pActionManager == nullptr)
 		return E_FAIL;
-
+	LogMemoryUsage("CAction_Manager End");
 	m_pDbgLineRender = CDbgLineRender::Create(ppDevice.Get(), ppContext.Get());
 	if (m_pDbgLineRender == nullptr)
 	{
 		return E_FAIL;
 	}
-
+	LogMemoryUsage("CDbgLineRender End");
 	m_pSerializeManager = CSerializeManager::Create();
 	if (m_pSerializeManager == nullptr)
 	{
 		return E_FAIL;
 	}
+	LogMemoryUsage("CSerializeManager End");
 
 	return S_OK;
 }

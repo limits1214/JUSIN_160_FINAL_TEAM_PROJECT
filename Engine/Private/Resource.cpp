@@ -6,7 +6,7 @@ NS_USING(Engine)
 CResource::CResource(const _string& sPath)
 	: m_sPath{ sPath }
 {
-
+	LogMemoryUsage();
 }
 
 CResource::~CResource()

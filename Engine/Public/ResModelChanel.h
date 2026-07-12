@@ -6,6 +6,9 @@
 NS_BEGIN(Engine)
 
 class CResModel;
+
+
+
 class CResModelBone;
 class ENGINE_DLL CResModelChanel final : public CResource
 {
@@ -24,7 +27,7 @@ public:
 	HRESULT Load(const std::any& arg = {}) override;
 	HRESULT Unload(const std::any& arg = {}) override;
 
-	void Update_TransformationMatrix(uint32_t& iCurrentKeyFrameIndex, _float fCurrentTrackPosition, const std::vector<SPtr<CResModelBone>>& Bones, int32_t m_iRootBoneIndex);
+	//void Update_TransformationMatrix(uint32_t& iCurrentKeyFrameIndex, _float fCurrentTrackPosition, const std::vector<SPtr<CResModelBone>>& Bones, int32_t m_iRootBoneIndex);
 
 	uint32_t FindKeyFrameIndex(float fTrackPos)const;
 
@@ -36,7 +39,7 @@ public:
 	std::vector<KEYFRAME>&	Get_KeyFrames() { return m_KeyFrames; }
 
 private:
-	char				m_szName[MAX_PATH] = {};
+	//char				m_szName[MAX_PATH] = {};
 	int32_t				m_iBoneIndex = {};
 	uint32_t			m_iNumKeyFrames = {};
 	std::vector<KEYFRAME>	m_KeyFrames;

@@ -1010,10 +1010,10 @@ _bool CAnimEdit_Manager::WriteSaveBakedBinary(const std::string& _path,const std
     {
         auto pChannel = Channels[i];
 
-        if (!pChannel)
-            continue;
+        //if (!pChannel)
+        //    continue;
 
-        int32_t BoneIndex = pChannel->Get_BoneIndex();
+        int32_t BoneIndex = pChannel.Get_BoneIndex();
 
         // 이제 키프레임 개수는 원본 키 개수가 아니라 굽힌 샘플 개수
         uint32_t KeyFrameCount = static_cast<uint32_t>(samples.size());
@@ -1039,7 +1039,7 @@ _bool CAnimEdit_Manager::WriteSaveBakedBinary(const std::string& _path,const std
 
             KEYFRAME bakedKey =
                 SampleChannelKeyFrame(
-                    pChannel.get(),
+                    pChannel,
                     sample.fSourceTrackPosition);
 
 
@@ -1102,11 +1102,11 @@ std::vector<CAnimEdit_Manager::BAKE_SAMPLE> CAnimEdit_Manager::BuildBakeSamples(
     return samples;
 }
 
-KEYFRAME CAnimEdit_Manager::SampleChannelKeyFrame(CResModelChanel* pChannel,float fTrackPosition)
+KEYFRAME CAnimEdit_Manager::SampleChannelKeyFrame( CChannel& pChannel,float fTrackPosition)
 {
     KEYFRAME result{};
 
-    auto& keyFrames = pChannel->Get_KeyFrames();
+    auto& keyFrames = pChannel.Get_KeyFrames();
 
     if (keyFrames.empty())
         return result;

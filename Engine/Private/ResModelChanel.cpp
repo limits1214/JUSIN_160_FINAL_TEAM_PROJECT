@@ -84,58 +84,58 @@ HRESULT CResModelChanel::Unload(const std::any& arg)
     return S_OK;
 }
 
-void CResModelChanel::Update_TransformationMatrix(uint32_t& iCurrentKeyFrameIndex, _float fCurrentTrackPosition, const std::vector<SPtr<CResModelBone>>& Bones,int32_t m_iRootBoneIndex)
-{
-    if (0.f == fCurrentTrackPosition)
-        iCurrentKeyFrameIndex = 0;
-
-    KEYFRAME        LastKeyFrame = m_KeyFrames.back();
-
-    _vector         vScale, vRotation, vTranslation;
-
-    if (fCurrentTrackPosition >= LastKeyFrame.fTrackPosition)
-    {
-        vScale = XMLoadFloat3(&LastKeyFrame.vScale);
-        vRotation = XMLoadFloat4(&LastKeyFrame.vRotation);
-        vTranslation = XMVectorSetW(XMLoadFloat3(&LastKeyFrame.vTranslation), 1.f);
-    }
-    else
-    {
-        while (fCurrentTrackPosition >= m_KeyFrames[iCurrentKeyFrameIndex + 1].fTrackPosition)
-            ++iCurrentKeyFrameIndex;
-
-        _float      fRatio = (fCurrentTrackPosition - m_KeyFrames[iCurrentKeyFrameIndex].fTrackPosition) /
-            (m_KeyFrames[iCurrentKeyFrameIndex + 1].fTrackPosition - m_KeyFrames[iCurrentKeyFrameIndex].fTrackPosition);
-
-        vScale = XMVectorLerp(
-            XMLoadFloat3(&m_KeyFrames[iCurrentKeyFrameIndex].vScale),
-            XMLoadFloat3(&m_KeyFrames[iCurrentKeyFrameIndex + 1].vScale),
-            fRatio
-        );
-
-        vRotation = XMQuaternionSlerp(
-            XMLoadFloat4(&m_KeyFrames[iCurrentKeyFrameIndex].vRotation),
-            XMLoadFloat4(&m_KeyFrames[iCurrentKeyFrameIndex + 1].vRotation),
-            fRatio
-        );
-
-        vTranslation = XMVectorSetW(XMVectorLerp(
-            XMLoadFloat3(&m_KeyFrames[iCurrentKeyFrameIndex].vTranslation),
-            XMLoadFloat3(&m_KeyFrames[iCurrentKeyFrameIndex + 1].vTranslation),
-            fRatio
-        ), 1.f);
-    }
-
-    _matrix         TransformationMatrix = XMMatrixAffineTransformation(vScale, XMVectorSet(0.f, 0.f, 0.f, 1.f), vRotation, vTranslation);
-
-	// 해당되는 RootBone이 들어오면 이동량 삭제
-	if (m_iBoneIndex == m_iRootBoneIndex)
-	{
-		TransformationMatrix.r[3] = XMVectorSet(0.f, 0.f, 0.f, 1.f);
-	}
-
-    Bones[m_iBoneIndex]->Set_TransformationMatrix(TransformationMatrix);
-}
+//void CResModelChanel::Update_TransformationMatrix(uint32_t& iCurrentKeyFrameIndex, _float fCurrentTrackPosition, const std::vector<SPtr<CResModelBone>>& Bones,int32_t m_iRootBoneIndex)
+//{
+//    if (0.f == fCurrentTrackPosition)
+//        iCurrentKeyFrameIndex = 0;
+//
+//    KEYFRAME        LastKeyFrame = m_KeyFrames.back();
+//
+//    _vector         vScale, vRotation, vTranslation;
+//
+//    if (fCurrentTrackPosition >= LastKeyFrame.fTrackPosition)
+//    {
+//        vScale = XMLoadFloat3(&LastKeyFrame.vScale);
+//        vRotation = XMLoadFloat4(&LastKeyFrame.vRotation);
+//        vTranslation = XMVectorSetW(XMLoadFloat3(&LastKeyFrame.vTranslation), 1.f);
+//    }
+//    else
+//    {
+//        while (fCurrentTrackPosition >= m_KeyFrames[iCurrentKeyFrameIndex + 1].fTrackPosition)
+//            ++iCurrentKeyFrameIndex;
+//
+//        _float      fRatio = (fCurrentTrackPosition - m_KeyFrames[iCurrentKeyFrameIndex].fTrackPosition) /
+//            (m_KeyFrames[iCurrentKeyFrameIndex + 1].fTrackPosition - m_KeyFrames[iCurrentKeyFrameIndex].fTrackPosition);
+//
+//        vScale = XMVectorLerp(
+//            XMLoadFloat3(&m_KeyFrames[iCurrentKeyFrameIndex].vScale),
+//            XMLoadFloat3(&m_KeyFrames[iCurrentKeyFrameIndex + 1].vScale),
+//            fRatio
+//        );
+//
+//        vRotation = XMQuaternionSlerp(
+//            XMLoadFloat4(&m_KeyFrames[iCurrentKeyFrameIndex].vRotation),
+//            XMLoadFloat4(&m_KeyFrames[iCurrentKeyFrameIndex + 1].vRotation),
+//            fRatio
+//        );
+//
+//        vTranslation = XMVectorSetW(XMVectorLerp(
+//            XMLoadFloat3(&m_KeyFrames[iCurrentKeyFrameIndex].vTranslation),
+//            XMLoadFloat3(&m_KeyFrames[iCurrentKeyFrameIndex + 1].vTranslation),
+//            fRatio
+//        ), 1.f);
+//    }
+//
+//    _matrix         TransformationMatrix = XMMatrixAffineTransformation(vScale, XMVectorSet(0.f, 0.f, 0.f, 1.f), vRotation, vTranslation);
+//
+//	// 해당되는 RootBone이 들어오면 이동량 삭제
+//	if (m_iBoneIndex == m_iRootBoneIndex)
+//	{
+//		TransformationMatrix.r[3] = XMVectorSet(0.f, 0.f, 0.f, 1.f);
+//	}
+//
+//    Bones[m_iBoneIndex]->Set_TransformationMatrix(TransformationMatrix);
+//}
 
 uint32_t CResModelChanel::FindKeyFrameIndex(float fTrackPos)const
 {

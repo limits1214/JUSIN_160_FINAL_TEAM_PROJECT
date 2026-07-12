@@ -73,6 +73,7 @@ HRESULT CResModelAnim::Load(const std::any& arg)
     m_CurrentKeyFrameIndices.clear();
     m_CurrentKeyFrameIndices.resize(m_iNumChannels, 0);
 
+	uint32_t keyFrameSize{};
     for (uint32_t i = 0; i < m_iNumChannels; ++i)
     {
         if (ptr + sizeof(uint32_t) > end)
@@ -88,18 +89,25 @@ HRESULT CResModelAnim::Load(const std::any& arg)
         if (ptr + channelSize > end)
             return E_FAIL;
 
-        auto pChannel = CResModelChanel::Create();
-        if (nullptr == pChannel)
-            return E_FAIL;
+        //auto pChannel = CResModelChanel::Create();
+        //if (nullptr == pChannel)
+        //    return E_FAIL;
 
-        CResModelChanel::DESC channelDesc{};
-        channelDesc.ptr = ptr;
-        channelDesc.pModel = pModel;
+        //CResModelChanel::DESC channelDesc{};
+        //channelDesc.ptr = ptr;
+        //channelDesc.pModel = pModel;
 
-        if (FAILED(pChannel->Load(channelDesc)))
-            return E_FAIL;
+        //if (FAILED(pChannel->Load(channelDesc)))
+        //    return E_FAIL;
 
-        m_Channels.push_back(pChannel);
+		CChannel channel{};
+		channel.Intialize(ptr, pModel);
+
+		keyFrameSize += sizeof(KEYFRAME)* channel.m_KeyFrames.size();
+		keyFrameSize += sizeof(KEYFRAME)* channel.m_RootKeyFrames.size();
+		
+
+        m_Channels.push_back(channel);
 
         ptr += channelSize;
     
@@ -118,30 +126,30 @@ HRESULT CResModelAnim::Unload(const std::any& arg)
 	return S_OK;
 }
 
-_bool CResModelAnim::Update_TransformationMatrices(_float fTimeDelta, const std::vector<SPtr<CResModelBone>>& Bones, _bool isLoop)
-{
-	_float fPrevTrackPosition = m_fCurrentTrackPosition;
-
-	m_fCurrentTrackPosition += m_fTickPerSecond * fTimeDelta;
-
-	if (m_fCurrentTrackPosition >= m_fDuration)
-	{
-		if (true == isLoop)
-			m_fCurrentTrackPosition = 0.f;
-		else
-			return true;
-	}
-
-	 ExtractRootMotionDelta(fPrevTrackPosition, m_fCurrentTrackPosition, m_iRootBoneIndex, m_vRootDelta);
-
-	for (uint32_t i = 0; i < m_iNumChannels; ++i)
-	{
-		m_Channels[i]->Update_TransformationMatrix(m_CurrentKeyFrameIndices[i], m_fCurrentTrackPosition, Bones, m_iRootBoneIndex);
-	}
-
-	return false;
-
-}
+//_bool CResModelAnim::Update_TransformationMatrices(_float fTimeDelta, const std::vector<SPtr<CResModelBone>>& Bones, _bool isLoop)
+//{
+//	_float fPrevTrackPosition = m_fCurrentTrackPosition;
+//
+//	m_fCurrentTrackPosition += m_fTickPerSecond * fTimeDelta;
+//
+//	if (m_fCurrentTrackPosition >= m_fDuration)
+//	{
+//		if (true == isLoop)
+//			m_fCurrentTrackPosition = 0.f;
+//		else
+//			return true;
+//	}
+//
+//	 ExtractRootMotionDelta(fPrevTrackPosition, m_fCurrentTrackPosition, m_iRootBoneIndex, m_vRootDelta);
+//
+//	for (uint32_t i = 0; i < m_iNumChannels; ++i)
+//	{
+//		m_Channels[i]->Update_TransformationMatrix(m_CurrentKeyFrameIndices[i], m_fCurrentTrackPosition, Bones, m_iRootBoneIndex);
+//	}
+//
+//	return false;
+//
+//}
 
 _bool CResModelAnim::ExtractRootMotionDelta(_float fPrevTrackPosition,_float fCurrTrackPosition,uint32_t iRootBoneIndex,_float3& vOutDelta)
 {
@@ -180,12 +188,12 @@ void CResModelAnim::SetCurrentTrackPosition(float fPos)
 	RebuildCurrentKeyFrameIndices();
 }
 
-SPtr<CResModelChanel> CResModelAnim::FindRootChannel(uint32_t iRootBoneIndex)
+CChannel* CResModelAnim::FindRootChannel(uint32_t iRootBoneIndex)
 {
 	for (auto& pChannel : m_Channels)
 	{
-		if (pChannel && pChannel->Get_BoneIndex() == iRootBoneIndex)
-			return pChannel;
+		if (pChannel.Get_BoneIndex() == iRootBoneIndex)
+			return &pChannel;
 	}
 
 	return nullptr;
@@ -196,7 +204,7 @@ void CResModelAnim::RebuildCurrentKeyFrameIndices()
 	for (uint32_t i = 0; i < m_iNumChannels; ++i)
 	{
 		m_CurrentKeyFrameIndices[i] =
-			m_Channels[i]->FindKeyFrameIndex(
+			m_Channels[i].FindKeyFrameIndex(
 				m_fCurrentTrackPosition);
 	}
 }

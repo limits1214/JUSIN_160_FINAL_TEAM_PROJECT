@@ -66,7 +66,7 @@ public:
 
 	_bool WriteSaveBakedBinary(const std::string& _path, const std::string& _Name);
 	std::vector<BAKE_SAMPLE> BuildBakeSamples(float fSourceDuration, float fTickPerSecond, float fSampleFPS);
-	KEYFRAME SampleChannelKeyFrame(CResModelChanel* pChannel, float fTrackPosition);
+	KEYFRAME SampleChannelKeyFrame( CChannel& pChannel, float fTrackPosition);
 
 	//-------------------------------------------------------Animmontage---------------------------------------------------------
 private:
