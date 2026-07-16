@@ -39,6 +39,14 @@ public:
 		_matrix matViewProj,
 		const _float2& screenSize);
 
+	HRESULT BuildSubMeshVisibility(
+		ID3D11DeviceContext* pContext,
+		const std::vector<MAPMESH_OCCLUSION_DATA>& occlusionData,
+		const CHizBuffer* pPrevHizBuffer,
+		_matrix matViewProj,
+		const _float2& screenSize,
+		std::vector<uint32_t>& visibility);
+
 
 	ID3D11Buffer* GetVisibleInstanceBuffer() const;
 	ID3D11Buffer* GetIndirectArgsBuffer() const;
@@ -71,6 +79,17 @@ private:
 	
 	// 디버그 확인용으로 cpu readback 하기위해 gpu에서 복사해올 버퍼
 	ComPtr<ID3D11Buffer> m_pVisibleCountStagingBuffer{};
+
+	SPtr<CResStructuredBuffer> m_pVisibilityFlagBuffer{};
+	static constexpr uint32_t SUBMESH_READBACK_SLOT_COUNT = 3;
+	struct SUBMESH_READBACK_SLOT
+	{
+		ComPtr<ID3D11Buffer> buffer{};
+		uint32_t elementCount = 0;
+		bool pending = false;
+	};
+	SUBMESH_READBACK_SLOT m_SubMeshReadbackSlots[SUBMESH_READBACK_SLOT_COUNT]{};
+	uint32_t m_iNextSubMeshReadbackSlot = 0;
 
 	ComPtr<ID3D11Buffer> m_pCBuffer{}; // ComputeShader가 instanceCount를 알아야 함
 

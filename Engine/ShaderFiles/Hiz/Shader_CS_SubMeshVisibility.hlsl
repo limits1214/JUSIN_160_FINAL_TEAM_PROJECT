@@ -1,0 +1,125 @@
+struct MAPMESH_OCCLUSION_DATA
+{
+    float3 worldCenter;
+    float padding0;
+    float3 worldExtents;
+    uint instanceIndex;
+};
+
+StructuredBuffer<MAPMESH_OCCLUSION_DATA> gBounds : register(t0);
+Texture2D<float> gPrevHiz : register(t1);
+RWStructuredBuffer<uint> gVisibility : register(u0);
+
+cbuffer CB_SubMeshVisibility : register(b0)
+{
+    float4x4 gMatViewProj;
+    float2 gScreenSize;
+    float2 gHizSize;
+    uint gElementCount;
+    uint gMipCount;
+    uint gUseHiz;
+    float gHizBias;
+};
+
+bool ProjectBounds(
+    MAPMESH_OCCLUSION_DATA bounds,
+    out float2 minScreen,
+    out float2 maxScreen,
+    out float nearestDepth)
+{
+    minScreen = float2(3.402823e38f, 3.402823e38f);
+    maxScreen = float2(-3.402823e38f, -3.402823e38f);
+    nearestDepth = 1.f;
+
+    [unroll]
+    for (uint i = 0; i < 8; ++i)
+    {
+        float3 signVec = float3(
+            ((i & 1) != 0) ? 1.f : -1.f,
+            ((i & 2) != 0) ? 1.f : -1.f,
+            ((i & 4) != 0) ? 1.f : -1.f);
+        float3 corner = bounds.worldCenter + bounds.worldExtents * signVec;
+        float4 clip = mul(float4(corner, 1.f), gMatViewProj);
+
+        if (clip.w <= 0.0001f)
+            return false;
+
+        float3 ndc = clip.xyz / clip.w;
+        if (ndc.z < 0.f || ndc.z > 1.f)
+            return false;
+
+        float2 screen;
+        screen.x = (ndc.x * 0.5f + 0.5f) * gScreenSize.x;
+        screen.y = (-ndc.y * 0.5f + 0.5f) * gScreenSize.y;
+        minScreen = min(minScreen, screen);
+        maxScreen = max(maxScreen, screen);
+        nearestDepth = min(nearestDepth, ndc.z);
+    }
+
+    if (maxScreen.x < 0.f || maxScreen.y < 0.f ||
+        minScreen.x > gScreenSize.x || minScreen.y > gScreenSize.y)
+        return false;
+
+    minScreen = clamp(minScreen, float2(0.f, 0.f), gScreenSize - 1.f);
+    maxScreen = clamp(maxScreen, float2(0.f, 0.f), gScreenSize - 1.f);
+    return true;
+}
+
+uint SelectMip(float2 minScreen, float2 maxScreen)
+{
+    float2 rectSize = max(float2(1.f, 1.f), maxScreen - minScreen);
+    float mipSize = max(rectSize.x, rectSize.y);
+    uint selectedMip = 0;
+    while (mipSize > 2.f && selectedMip + 1 < gMipCount)
+    {
+        mipSize *= 0.5f;
+        ++selectedMip;
+    }
+    if (selectedMip > 0)
+        --selectedMip;
+    return selectedMip;
+}
+
+bool IsOccluded(float2 minScreen, float2 maxScreen, float nearestDepth)
+{
+    uint mip = SelectMip(minScreen, maxScreen);
+    float2 mipSize = max(float2(1.f, 1.f), floor(gHizSize / exp2((float)mip)));
+    float2 mipScale = mipSize / gScreenSize;
+    uint2 mipExtent = uint2((uint)mipSize.x, (uint)mipSize.y);
+    uint2 maxValidTexel = mipExtent - uint2(1, 1);
+    uint2 minTexel = min(uint2(floor(minScreen * mipScale)), maxValidTexel);
+    uint2 maxTexel = min(uint2(floor(maxScreen * mipScale)), maxValidTexel);
+
+    for (uint y = minTexel.y; y <= maxTexel.y; ++y)
+    {
+        for (uint x = minTexel.x; x <= maxTexel.x; ++x)
+        {
+            float hizDepth = gPrevHiz.Load(int3(x, y, mip));
+            if (hizDepth >= nearestDepth - gHizBias)
+                return false;
+        }
+    }
+    return true;
+}
+
+[numthreads(64, 1, 1)]
+void CSMain(uint3 dispatchThreadID : SV_DispatchThreadID)
+{
+    uint index = dispatchThreadID.x;
+    if (index >= gElementCount)
+        return;
+
+    bool visible = true;
+    if (gUseHiz != 0)
+    {
+        float2 minScreen;
+        float2 maxScreen;
+        float nearestDepth;
+        if (ProjectBounds(gBounds[index], minScreen, maxScreen, nearestDepth) &&
+            IsOccluded(minScreen, maxScreen, nearestDepth))
+        {
+            visible = false;
+        }
+    }
+    gVisibility[index] = visible ? 1u : 0u;
+}

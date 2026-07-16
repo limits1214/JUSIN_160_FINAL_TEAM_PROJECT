@@ -871,6 +871,14 @@ HRESULT CGameInstanceInitLoader::LoadShader()
 		}
 	}
 
+	if (auto res = CGameInstance::Get().AddResourceT<E::CResComputeShader>(TAG_RES_GRP_PERMANENT_SHADER, "CS_SubMeshVisibility", "./ShaderFiles/Hiz/Shader_CS_SubMeshVisibility.hlsl"))
+	{
+		if (FAILED(res->Load()))
+		{
+			return E_FAIL;
+		}
+	}
+
 	if (auto res = CGameInstance::Get().AddResourceT<E::CResComputeShader>(TAG_RES_GRP_PERMANENT_SHADER, "CS_ClearByOwner", "./ShaderFiles/Particle/CS_ClearByOwner.hlsl"))
 	{
 		if (FAILED(res->Load()))

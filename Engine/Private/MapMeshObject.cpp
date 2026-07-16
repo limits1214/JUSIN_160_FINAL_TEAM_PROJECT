@@ -299,8 +299,59 @@ HRESULT CMapMeshObject::Render(ID3D11DeviceContext* pContext, const RENDER_CTX& 
 		auto pModel = m_pComModelInstance->GetModel();
 		if (nullptr == pModel)	return E_FAIL;
 		const uint32_t iNumMeshes = pModel->Get_NumMeshes();
+
+		if (m_pSubMeshGpuCuller == nullptr)
+		{
+			m_pSubMeshGpuCuller = CMapMeshGpuCuller::Create();
+		}
+
+		if (m_pSubMeshGpuCuller != nullptr && iNumMeshes > 0)
+		{
+			std::vector<MAPMESH_OCCLUSION_DATA> subMeshBounds(iNumMeshes);
+			const XMMATRIX world = GetTransform().GetLoadedCombinedWorldMatrix();
+
+			for (uint32_t i = 0; i < iNumMeshes; ++i)
+			{
+				const auto& mesh = pModel->GetMeshes()[i];
+				if (mesh == nullptr)
+					continue;
+
+				const auto& minPos = mesh->GetMinPos();
+				const auto& maxPos = mesh->GetMaxPos();
+				const BoundingBox localBounds{
+					{ (minPos.x + maxPos.x) * 0.5f,
+					  (minPos.y + maxPos.y) * 0.5f,
+					  (minPos.z + maxPos.z) * 0.5f },
+					{ (maxPos.x - minPos.x) * 0.5f,
+					  (maxPos.y - minPos.y) * 0.5f,
+					  (maxPos.z - minPos.z) * 0.5f }
+				};
+
+				BoundingBox worldBounds{};
+				localBounds.Transform(worldBounds, world);
+				subMeshBounds[i].worldCenter = worldBounds.Center;
+				subMeshBounds[i].worldExtents = worldBounds.Extents;
+				subMeshBounds[i].instanceIndex = i;
+			}
+
+			m_pSubMeshGpuCuller->BuildSubMeshVisibility(
+				pContext,
+				subMeshBounds,
+				CGameInstance::Get().GetPrevHizBuffer(),
+				ctx.matViewProj,
+				CGameInstance::Get().GetClientScreenSize(),
+				m_SubMeshVisibility);
+		}
+
 		for (uint32_t i = 0; i < iNumMeshes; ++i) {
 			const auto& viBuffer = pModel->GetMeshes()[i];
+			if (viBuffer == nullptr)
+				continue;
+			if (m_SubMeshVisibility.size() == iNumMeshes &&
+				m_SubMeshVisibility[i] == 0)
+			{
+				continue;
+			}
 
 			ID3D11Buffer* vertexBuffers[] = { viBuffer->GetVertexBuffer().Get() };
 			uint32_t strides[] = { viBuffer->GetVertexStride() };
@@ -376,6 +427,8 @@ HRESULT CMapMeshObject::SetModelResource(const std::string& modelGroupTag, const
 
 	m_modelResourceGroup = modelGroupTag;
 	m_modelResourceTag = modelResTag;
+	m_SubMeshVisibility.clear();
+	m_pSubMeshGpuCuller.reset();
 
 	return S_OK;
 }

@@ -13,6 +13,7 @@ HRESULT CMapMeshGpuCuller::EnsureCapacity(uint32_t instanceCount)
 		m_pInstanceInputBuffer &&
 		m_pOcclusionInputBuffer &&
 		m_pVisibleInstanceBuffer &&
+		m_pVisibilityFlagBuffer &&
 		m_pVisibleInstanceVertexBuffer &&
 		m_pIndirectArgsBuffer &&
 		m_pVisibleCountStagingBuffer &&
@@ -92,6 +93,27 @@ HRESULT CMapMeshGpuCuller::EnsureCapacity(uint32_t instanceCount)
 	}
 
 	{
+		auto pVisibilityFlagBuffer = CResStructuredBuffer::Create();
+		if (pVisibilityFlagBuffer == nullptr)
+		{
+			return E_FAIL;
+		}
+
+		CResStructuredBuffer::DESC bufferDesc{};
+		bufferDesc.iNumElements = static_cast<uint32_t>(newCapacity);
+		bufferDesc.iStructureByteStride = sizeof(uint32_t);
+		bufferDesc.pInitialData = nullptr;
+		bufferDesc.bAppendConsume = false;
+		bufferDesc.iBindFlags = D3D11_BIND_UNORDERED_ACCESS;
+		if (FAILED(pVisibilityFlagBuffer->Load(bufferDesc)))
+		{
+			return E_FAIL;
+		}
+
+		m_pVisibilityFlagBuffer = pVisibilityFlagBuffer;
+	}
+
+	{
 		D3D11_BUFFER_DESC bufferDesc{};
 		bufferDesc.ByteWidth = static_cast<UINT>(sizeof(MAPMESH_INSTANCE_DATA) * newCapacity);
 		bufferDesc.Usage = D3D11_USAGE_DEFAULT;
@@ -151,7 +173,131 @@ HRESULT CMapMeshGpuCuller::EnsureCapacity(uint32_t instanceCount)
 		}
 	}
 
+	for (auto& slot : m_SubMeshReadbackSlots)
+	{
+		D3D11_BUFFER_DESC bufferDesc{};
+		bufferDesc.ByteWidth = static_cast<UINT>(sizeof(uint32_t) * newCapacity);
+		bufferDesc.Usage = D3D11_USAGE_STAGING;
+		bufferDesc.BindFlags = 0;
+		bufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_READ;
+		bufferDesc.MiscFlags = 0;
+
+		slot.buffer.Reset();
+		slot.elementCount = 0;
+		slot.pending = false;
+		if (FAILED(CGameInstance::Get().GetGraphicDevice()->CreateBuffer(
+			&bufferDesc, nullptr, slot.buffer.GetAddressOf())))
+		{
+			return E_FAIL;
+		}
+	}
+	m_iNextSubMeshReadbackSlot = 0;
+
 	m_iCapacity = static_cast<uint32_t>(newCapacity);
+
+	return S_OK;
+}
+
+HRESULT CMapMeshGpuCuller::BuildSubMeshVisibility(
+	ID3D11DeviceContext* pContext,
+	const std::vector<MAPMESH_OCCLUSION_DATA>& occlusionData,
+	const CHizBuffer* pPrevHizBuffer,
+	_matrix matViewProj,
+	const _float2& screenSize,
+	std::vector<uint32_t>& visibility)
+{
+	if (pContext == nullptr || occlusionData.empty())
+		return E_FAIL;
+
+	const uint32_t elementCount = static_cast<uint32_t>(occlusionData.size());
+	if (FAILED(EnsureCapacity(elementCount)))
+		return E_FAIL;
+
+	for (uint32_t i = 0; i < SUBMESH_READBACK_SLOT_COUNT; ++i)
+	{
+		const uint32_t slotIndex =
+			(m_iNextSubMeshReadbackSlot + i) % SUBMESH_READBACK_SLOT_COUNT;
+		auto& slot = m_SubMeshReadbackSlots[slotIndex];
+		if (!slot.pending)
+			continue;
+
+		D3D11_MAPPED_SUBRESOURCE mapped{};
+		const HRESULT mapResult = pContext->Map(
+			slot.buffer.Get(), 0, D3D11_MAP_READ, D3D11_MAP_FLAG_DO_NOT_WAIT, &mapped);
+		if (mapResult == DXGI_ERROR_WAS_STILL_DRAWING)
+			continue;
+		if (FAILED(mapResult))
+			return mapResult;
+
+		visibility.resize(slot.elementCount);
+		memcpy(visibility.data(), mapped.pData, sizeof(uint32_t) * slot.elementCount);
+		pContext->Unmap(slot.buffer.Get(), 0);
+		slot.pending = false;
+		break;
+	}
+
+	if (FAILED(m_pOcclusionInputBuffer->UpdateData(
+		occlusionData.data(),
+		static_cast<uint32_t>(sizeof(MAPMESH_OCCLUSION_DATA) * elementCount))))
+	{
+		return E_FAIL;
+	}
+
+	SPtr<CResComputeShader> shader = CGameInstance::Get().GetResourceFirst<CResComputeShader>(
+		TAG_RES_GRP_PERMANENT_SHADER, "CS_SubMeshVisibility");
+	if (shader == nullptr)
+		return E_FAIL;
+
+	pContext->CSSetShader(shader->GetComputeShader().Get(), nullptr, 0);
+
+	ComPtr<ID3D11ShaderResourceView> prevHizSRV =
+		pPrevHizBuffer ? pPrevHizBuffer->GetSRV() : nullptr;
+	ID3D11ShaderResourceView* srvs[] = {
+		m_pOcclusionInputBuffer->GetSRV().Get(),
+		prevHizSRV.Get()
+	};
+	pContext->CSSetShaderResources(0, 2, srvs);
+
+	ID3D11UnorderedAccessView* uavs[] = { m_pVisibilityFlagBuffer->GetUAV().Get() };
+	pContext->CSSetUnorderedAccessViews(0, 1, uavs, nullptr);
+
+	CB_MAPMESH_GPU_CULL cb{};
+	XMStoreFloat4x4(&cb.matViewProj, matViewProj);
+	cb.screenSize = screenSize;
+	cb.hizSize = pPrevHizBuffer
+		? _float2{ static_cast<_float>(pPrevHizBuffer->GetWidth()), static_cast<_float>(pPrevHizBuffer->GetHeight()) }
+		: _float2{};
+	cb.instanceCount = elementCount;
+	cb.mipCount = pPrevHizBuffer ? pPrevHizBuffer->GetMipCount() : 0;
+	cb.useHiz = (pPrevHizBuffer != nullptr && prevHizSRV != nullptr &&
+		cb.mipCount > 0 && screenSize.x > 0.f && screenSize.y > 0.f) ? 1u : 0u;
+
+	D3D11_MAPPED_SUBRESOURCE mapped{};
+	if (FAILED(pContext->Map(m_pCBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped)))
+		return E_FAIL;
+	memcpy(mapped.pData, &cb, sizeof(cb));
+	pContext->Unmap(m_pCBuffer.Get(), 0);
+	pContext->CSSetConstantBuffers(0, 1, m_pCBuffer.GetAddressOf());
+
+	pContext->Dispatch((elementCount + 63) / 64, 1, 1);
+
+	ID3D11ShaderResourceView* nullSRVs[] = { nullptr, nullptr };
+	ID3D11UnorderedAccessView* nullUAVs[] = { nullptr };
+	ID3D11Buffer* nullCBuffers[] = { nullptr };
+	pContext->CSSetShaderResources(0, 2, nullSRVs);
+	pContext->CSSetUnorderedAccessViews(0, 1, nullUAVs, nullptr);
+	pContext->CSSetConstantBuffers(0, 1, nullCBuffers);
+	pContext->CSSetShader(nullptr, nullptr, 0);
+
+	auto& copySlot = m_SubMeshReadbackSlots[m_iNextSubMeshReadbackSlot];
+	if (!copySlot.pending)
+	{
+		pContext->CopyResource(copySlot.buffer.Get(), m_pVisibilityFlagBuffer->GetBuffer().Get());
+		copySlot.elementCount = elementCount;
+		copySlot.pending = true;
+		m_iNextSubMeshReadbackSlot =
+			(m_iNextSubMeshReadbackSlot + 1) % SUBMESH_READBACK_SLOT_COUNT;
+	}
 
 	return S_OK;
 }

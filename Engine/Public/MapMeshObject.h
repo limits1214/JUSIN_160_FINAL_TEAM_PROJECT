@@ -86,6 +86,8 @@ private:
 	CComConstantBuffer* m_pComCBufferPerObject{};
 	SPtr<CResVertexShader> m_pResVertexShader{};
 	SPtr<CResPixelShader> m_pResPixelShader{};
+	UPtr<CMapMeshGpuCuller> m_pSubMeshGpuCuller{};
+	std::vector<uint32_t> m_SubMeshVisibility{};
 
 private:
 	static std::unordered_map<SPtr<CResStaticModel>, MAPMESH_INSTANCE_BATCH> s_InstanceBatches;

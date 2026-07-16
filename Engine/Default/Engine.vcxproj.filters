@@ -1613,6 +1613,9 @@
     <FxCompile Include="..\ShaderFiles\Hiz\Shader_CS_MapMeshGpuCull.hlsl">
       <Filter>ShaderFiles\Hiz</Filter>
     </FxCompile>
+    <FxCompile Include="..\ShaderFiles\Hiz\Shader_CS_SubMeshVisibility.hlsl">
+      <Filter>ShaderFiles\Hiz</Filter>
+    </FxCompile>
     <FxCompile Include="..\ShaderFiles\TestModel\Shader_Animation_Compute.hlsl">
       <Filter>ShaderFiles\TestModel\Compute</Filter>
     </FxCompile>
