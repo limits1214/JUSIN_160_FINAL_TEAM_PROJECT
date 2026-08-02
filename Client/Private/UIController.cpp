@@ -513,28 +513,28 @@ void CUIController::CreateMonsterHP()
 
 void CUIController::UpdateMonsterHP()
 {
-	if (m_TargetHandle != std::nullopt && nullptr == E::CGameInstance::Get().GetGameObjectByHandleT<CUIObject>(*m_TargetHandle))
+	if (m_TargetHandle != std::nullopt && nullptr != E::CGameInstance::Get().GetGameObjectByHandleT<CMonster>(*m_TargetHandle))
 	{
 		auto* pMonster = E::CGameInstance::Get().GetGameObjectByHandleT<CMonster>(*m_TargetHandle);
 		
-		if (m_MonsterHP != std::nullopt && nullptr == E::CGameInstance::Get().GetGameObjectByHandleT<CUIObject>(*m_MonsterHP))
+		if (m_MonsterHP != std::nullopt && nullptr != E::CGameInstance::Get().GetGameObjectByHandleT<CUIObject>(*m_MonsterHP))
 		{
 			static_cast<CHPBar*>(GetSafeUI(*m_MonsterHP))->SetMaxFill(static_cast<_float>(pMonster->Get_MaxHp()));
 			static_cast<CHPBar*>(GetSafeUI(*m_MonsterHP))->SetCurrentFill(static_cast<_float>(pMonster->Get_CurrentHp()));
 		}
 
 	}
-	else {
-		if (m_MonsterHP != std::nullopt && nullptr == E::CGameInstance::Get().GetGameObjectByHandleT<CUIObject>(*m_MonsterHP))
-		{
-			static_cast<CHPBar*>(GetSafeUI(*m_MonsterHP))->SetCurrentFill(static_cast<_float>(0.f));
-		}
-	}
+	//else {
+	//	if (m_MonsterHP != std::nullopt && nullptr != E::CGameInstance::Get().GetGameObjectByHandleT<CUIObject>(*m_MonsterHP))
+	//	{
+	//		static_cast<CHPBar*>(GetSafeUI(*m_MonsterHP))->SetCurrentFill(static_cast<_float>(0.f));
+	//	}
+	//}
 }
 
 void CUIController::DeleteMonsterHP()
 {
-	if(m_MonsterHP != std::nullopt && E::CGameInstance::Get().GetGameObjectByHandleT<CUIObject>(*m_MonsterHP))
+	if(m_MonsterHP != std::nullopt && nullptr != E::CGameInstance::Get().GetGameObjectByHandleT<CUIObject>(*m_MonsterHP))
 	{
 		const CHandle hMonsterHP = *m_MonsterHP;
 		m_bMonsterHP = false;
