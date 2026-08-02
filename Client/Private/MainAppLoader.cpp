@@ -547,7 +547,7 @@ HRESULT CMainAppLoader::Initialize_Sound()
 		if (pSoundManager == nullptr ||
 			!pSoundManager->Preload(sSoundPath))
 			return E_FAIL;
-
+		
 		const SOUND_ID iSoundID = pSoundManager->Play2D(
 			sSoundPath,
 			E::SOUND_PLAY_DESC{

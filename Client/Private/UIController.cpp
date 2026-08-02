@@ -161,8 +161,8 @@ void CUIController::Update(E::_float fTimeDelta)
 		AddMonsterHP(-30.f);
 
 	// 죽는 화면
-	//if (E::CGameInstance::Get().KeyDown(DIK_0))
-	//	CreateDeathScene();
+	if (E::CGameInstance::Get().KeyDown(DIK_0))
+		CreateDeathScene();
 
 	/****************필수********************/
 	if (m_bMonsterHP)
@@ -513,15 +513,20 @@ void CUIController::CreateMonsterHP()
 
 void CUIController::UpdateMonsterHP()
 {
-	if (m_TargetHandle != std::nullopt && nullptr == E::CGameInstance::Get().GetGameObjectByHandleT<CUIObject>(*m_TargetHandle))
+	if (m_TargetHandle != std::nullopt && nullptr == E::CGameInstance::Get().GetGameObjectByHandleT<CMonster>(*m_TargetHandle))
 	{
 		auto* pMonster = E::CGameInstance::Get().GetGameObjectByHandleT<CMonster>(*m_TargetHandle);
-		
-		static_cast<CHPBar*>(GetSafeUI(*m_MonsterHP))->SetMaxFill(static_cast<_float>(pMonster->Get_MaxHp()));
-		static_cast<CHPBar*>(GetSafeUI(*m_MonsterHP))->SetCurrentFill(static_cast<_float>(pMonster->Get_CurrentHp()));
+	
+		if (m_MonsterHP != std::nullopt && nullptr == E::CGameInstance::Get().GetGameObjectByHandleT<CUIObject>(*m_MonsterHP))
+		{
+			static_cast<CHPBar*>(GetSafeUI(*m_MonsterHP))->SetMaxFill(static_cast<_float>(pMonster->Get_MaxHp()));
+			static_cast<CHPBar*>(GetSafeUI(*m_MonsterHP))->SetCurrentFill(static_cast<_float>(pMonster->Get_CurrentHp()));
+		}
+
+
 	}
 	else {
-		static_cast<CHPBar*>(GetSafeUI(*m_MonsterHP))->SetCurrentFill(static_cast<_float>(0.f));
+		//static_cast<CHPBar*>(GetSafeUI(*m_MonsterHP))->SetCurrentFill(static_cast<_float>(0.f));
 	}
 }
 
