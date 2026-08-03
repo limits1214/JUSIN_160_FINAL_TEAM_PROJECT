@@ -39,9 +39,9 @@ public:
 	void SetUIController(std::optional<CHandle> hController) { m_UIController = hController; }
 
 	/*******페이드 인아웃******/
-	void CreateFadeIn(float delay = 0.f, float playtime = 0.5f);
-	void CreateFadeOut(float delay = 0.f, float playtime = 0.5f);
-	void CreateFadeInSceneChange(float delay = 0.f, float playtime = 1.f);
+	void CreateFadeIn(float delay = 0.f, float playtime = 0.3f);
+	void CreateFadeOut(float delay = 0.f, float playtime = 0.3f);
+	void CreateFadeInSceneChange(float delay = 0.f, float playtime = 0.5f);
 public:
 	std::optional<CHandle> RootUIPicking();
 
