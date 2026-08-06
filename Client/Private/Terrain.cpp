@@ -8,6 +8,7 @@
 #include "ComPxRigidBody.h"
 #include "ComPxTriMeshCollider.h"
 #include "Level_Defines.h"
+#include "ComPxHeightFieldCollider.h"
 
 NS_USING(Client)
 
@@ -46,9 +47,15 @@ HRESULT CTerrain::InitializePrototype(void* pArg)
 		return E_FAIL;
 	}
 
-	if (FAILED(BuildPxRuntimeTriMesh()))
+	//if (FAILED(BuildPxRuntimeTriMesh()))
+	//{
+	//	MSG_BOX("Terrain BuildPxRuntimeTriMesh Failed");
+	//	return E_FAIL;
+	//}
+
+	if (FAILED(BuildPxRuntimeHeightField()))
 	{
-		MSG_BOX("Terrain BuildPxRuntimeTriMesh Failed");
+		MSG_BOX("Terrain BuildPxRuntimeHeightField Failed");
 		return E_FAIL;
 	}
 
@@ -82,21 +89,49 @@ HRESULT CTerrain::Initialize(void* pArg)
 	}
 
 
+	//{
+	//	CComPxTriMeshCollider::DESC Desc{};
+	//	Desc.pComPxRigidBody = m_pComPxRigidBody;
+	//	Desc.pResTriMesh = m_pResTriMesh;
+	//	Desc.pResMaterial = CResPhysXMaterial::CreateAndLoad({});
+	//	Desc.tFilter = PX_FILTER_DESC{
+	//		.iLayer = ETOUI(COLLISION_LAYER::WORLD_STATIC),
+	//		.iSimulationMask = PX_ALL_LAYERS,
+	//		.iQueryMask = PX_ALL_LAYERS };
+	//	if (FAILED(AddComponentFromProto("PHYSX", "Prototype_Component_ComPxTriMeshCollider", "ComPxTriMeshCollider", &Desc, &m_pComPxTriMeshCollider)))
+	//	{
+	//		return E_FAIL;
+	//	};
+	//}
+
 	{
-		CComPxTriMeshCollider::DESC Desc{};
+		CComPxHeightFieldCollider::DESC Desc{};
+
 		Desc.pComPxRigidBody = m_pComPxRigidBody;
-		Desc.pResTriMesh = m_pResTriMesh;
+		Desc.pResHeightField = m_pResHeightField;
 		Desc.pResMaterial = CResPhysXMaterial::CreateAndLoad({});
+
+		Desc.fHeightScale = m_fPxHeightScale;
+		Desc.fRowScale = m_fPxRowScale;
+		Desc.fColumnScale = m_fPxColumnScale;
+		Desc.vLocalOffset = m_vPxHeightFieldOffset;
+
 		Desc.tFilter = PX_FILTER_DESC{
 			.iLayer = ETOUI(COLLISION_LAYER::WORLD_STATIC),
 			.iSimulationMask = PX_ALL_LAYERS,
-			.iQueryMask = PX_ALL_LAYERS };
-		if (FAILED(AddComponentFromProto("PHYSX", "Prototype_Component_ComPxTriMeshCollider", "ComPxTriMeshCollider", &Desc, &m_pComPxTriMeshCollider)))
+			.iQueryMask = PX_ALL_LAYERS
+		};
+
+		if (FAILED(AddComponentFromProto(
+			ES_EngineProtoMajorType::PHYSX,
+			ES_EngineProtoPhysXComponent::Prototype_Component_ComPxHeightFieldCollider,
+			"ComPxHeightFieldCollider",
+			&Desc,
+			&m_pComPxHeightFieldCollider)))
 		{
 			return E_FAIL;
-		};
+		}
 	}
-
 
 	return S_OK;
 }
@@ -197,6 +232,358 @@ HRESULT CTerrain::BuildPxRuntimeTriMesh()
 	{
 		return E_FAIL;
 	}
+
+	return S_OK;
+}
+
+HRESULT CTerrain::BuildPxRuntimeHeightField()
+{
+	using HEIGHT_FIELD_RES = CResPhysXRTHeightFieldGeometry;
+	using SAMPLE = HEIGHT_FIELD_RES::SAMPLE;
+
+	constexpr _float COORD_EPSILON = 1.e-4f;
+	constexpr _float MIN_HEIGHT_SCALE = 1.e-6f;
+
+	const auto& vertices = m_pResTerrainVIBuffer->GetVertices();
+	const auto& indices = m_pResTerrainVIBuffer->GetIndices();
+
+	if (vertices.size() < 4 || indices.size() < 6 ||
+		indices.size() % 3 != 0)
+	{
+		DEBUG_LOG("[PX][TerrainHF] Invalid terrain mesh.\n");
+		return E_FAIL;
+	}
+
+	/*
+	 * 1. X축과 Z축의 고유 좌표를 구합니다.
+	 *
+	 * PhysX HeightField:
+	 *   row    = local X
+	 *   column = local Z
+	 */
+	std::vector<_float> xAxis{};
+	std::vector<_float> zAxis{};
+
+	xAxis.reserve(vertices.size());
+	zAxis.reserve(vertices.size());
+
+	for (const auto& vertex : vertices)
+	{
+		xAxis.push_back(vertex.pos.x);
+		zAxis.push_back(vertex.pos.z);
+	}
+
+	const auto BuildUniformAxis =
+		[COORD_EPSILON](
+			std::vector<_float>& axis,
+			_float& outScale) -> _bool
+		{
+			std::sort(axis.begin(), axis.end());
+
+			axis.erase(
+				std::unique(
+					axis.begin(),
+					axis.end(),
+					[COORD_EPSILON](_float lhs, _float rhs)
+					{
+						return std::abs(lhs - rhs) <= COORD_EPSILON;
+					}),
+				axis.end());
+
+			if (axis.size() < 2)
+				return false;
+
+			outScale = axis[1] - axis[0];
+			if (outScale <= 0.f)
+				return false;
+
+			const _float tolerance =
+				std::max(COORD_EPSILON, std::abs(outScale) * 1.e-3f);
+
+			for (size_t i = 1; i < axis.size(); ++i)
+			{
+				const _float expected =
+					axis[0] + static_cast<_float>(i) * outScale;
+
+				if (std::abs(axis[i] - expected) > tolerance)
+					return false;
+			}
+
+			return true;
+		};
+
+	if (!BuildUniformAxis(xAxis, m_fPxRowScale) ||
+		!BuildUniformAxis(zAxis, m_fPxColumnScale))
+	{
+		DEBUG_LOG(
+			"[PX][TerrainHF] Terrain vertices are not a uniform X/Z grid.\n");
+		return E_FAIL;
+	}
+
+	if (xAxis.size() >
+		static_cast<size_t>(std::numeric_limits<uint32_t>::max()) ||
+		zAxis.size() >
+		static_cast<size_t>(std::numeric_limits<uint32_t>::max()))
+	{
+		return E_FAIL;
+	}
+
+	const uint32_t rowCount =
+		static_cast<uint32_t>(xAxis.size());
+
+	const uint32_t columnCount =
+		static_cast<uint32_t>(zAxis.size());
+
+	const size_t sampleCount =
+		static_cast<size_t>(rowCount) * columnCount;
+
+	/*
+	 * HeightField는 한 X/Z 좌표마다 버텍스가 하나씩 있어야 합니다.
+	 * 렌더 메쉬가 UV seam 등의 이유로 버텍스를 중복했다면
+	 * 이 조건이 실패합니다.
+	 */
+	if (sampleCount != vertices.size())
+	{
+		DEBUG_LOG(
+			"[PX][TerrainHF] Vertex count does not match row * column.\n");
+		return E_FAIL;
+	}
+
+	/*
+	 * 2. HeightField sample index -> 렌더 버텍스 index 매핑
+	 */
+	constexpr uint32_t INVALID_INDEX =
+		std::numeric_limits<uint32_t>::max();
+
+	std::vector<uint32_t> gridToVertex(
+		sampleCount,
+		INVALID_INDEX);
+
+	_float minHeight = std::numeric_limits<_float>::max();
+	_float maxHeight = std::numeric_limits<_float>::lowest();
+
+	const _float originX = xAxis.front();
+	const _float originZ = zAxis.front();
+
+	for (uint32_t vertexIndex = 0;
+		vertexIndex < static_cast<uint32_t>(vertices.size());
+		++vertexIndex)
+	{
+		const auto& position = vertices[vertexIndex].pos;
+
+		const _float rowValue =
+			(position.x - originX) / m_fPxRowScale;
+
+		const _float columnValue =
+			(position.z - originZ) / m_fPxColumnScale;
+
+		const int64_t row =
+			static_cast<int64_t>(std::llround(rowValue));
+
+		const int64_t column =
+			static_cast<int64_t>(std::llround(columnValue));
+
+		if (row < 0 ||
+			column < 0 ||
+			row >= static_cast<int64_t>(rowCount) ||
+			column >= static_cast<int64_t>(columnCount) ||
+			std::abs(rowValue - static_cast<_float>(row)) > 1.e-3f ||
+			std::abs(columnValue - static_cast<_float>(column)) > 1.e-3f)
+		{
+			DEBUG_LOG(
+				"[PX][TerrainHF] Vertex is outside the uniform grid.\n");
+			return E_FAIL;
+		}
+
+		const size_t sampleIndex =
+			static_cast<size_t>(row) * columnCount +
+			static_cast<size_t>(column);
+
+		if (gridToVertex[sampleIndex] != INVALID_INDEX)
+		{
+			DEBUG_LOG(
+				"[PX][TerrainHF] Duplicate X/Z terrain vertex.\n");
+			return E_FAIL;
+		}
+
+		gridToVertex[sampleIndex] = vertexIndex;
+
+		minHeight = std::min(minHeight, position.y);
+		maxHeight = std::max(maxHeight, position.y);
+	}
+
+	for (const uint32_t vertexIndex : gridToVertex)
+	{
+		if (vertexIndex == INVALID_INDEX)
+		{
+			DEBUG_LOG(
+				"[PX][TerrainHF] Missing terrain grid vertex.\n");
+			return E_FAIL;
+		}
+	}
+
+	/*
+	 * 3. 실제 float 높이를 signed int16으로 양자화합니다.
+	 *
+	 * 실제 높이:
+	 *   localOffset.y + sample.iHeight * heightScale
+	 */
+	const _float heightCenter =
+		minHeight + (maxHeight - minHeight) * 0.5f;
+
+	m_fPxHeightScale = std::max(
+		(maxHeight - minHeight) / 65534.f,
+		MIN_HEIGHT_SCALE);
+
+	m_vPxHeightFieldOffset = {
+		originX,
+		heightCenter,
+		originZ
+	};
+
+	std::vector<SAMPLE> samples(sampleCount);
+
+	for (size_t sampleIndex = 0;
+		sampleIndex < sampleCount;
+		++sampleIndex)
+	{
+		const auto& position =
+			vertices[gridToVertex[sampleIndex]].pos;
+
+		const int64_t quantizedHeight =
+			static_cast<int64_t>(std::llround(
+				(position.y - heightCenter) /
+				m_fPxHeightScale));
+
+		auto& sample = samples[sampleIndex];
+
+		sample.iHeight = static_cast<int16_t>(
+			std::clamp<int64_t>(
+				quantizedHeight,
+				std::numeric_limits<int16_t>::min(),
+				std::numeric_limits<int16_t>::max()));
+
+		// 현재 Shape에 재질을 하나만 전달하므로 0번 재질 사용
+		sample.iMaterialIndex0 = 0;
+		sample.iMaterialIndex1 = 0;
+		sample.bTessFlag = false;
+	}
+
+	/*
+	 * 4. 렌더 메쉬 인덱스에서 각 사각형의 대각선을 구합니다.
+	 *
+	 * tessFlag == true:
+	 *   (row, column) → (row + 1, column + 1)
+	 *
+	 * tessFlag == false:
+	 *   나머지 두 꼭짓점 사이를 연결
+	 */
+	const auto MakeEdgeKey =
+		[](uint32_t lhs, uint32_t rhs) -> uint64_t
+		{
+			if (lhs > rhs)
+				std::swap(lhs, rhs);
+
+			return
+				(static_cast<uint64_t>(lhs) << 32) |
+				static_cast<uint64_t>(rhs);
+		};
+
+	std::unordered_set<uint64_t> meshEdges{};
+	meshEdges.reserve(indices.size());
+
+	for (size_t i = 0; i < indices.size(); i += 3)
+	{
+		const uint32_t i0 = static_cast<uint32_t>(indices[i]);
+		const uint32_t i1 = static_cast<uint32_t>(indices[i + 1]);
+		const uint32_t i2 = static_cast<uint32_t>(indices[i + 2]);
+
+		if (i0 >= vertices.size() ||
+			i1 >= vertices.size() ||
+			i2 >= vertices.size())
+		{
+			DEBUG_LOG(
+				"[PX][TerrainHF] Terrain index is out of range.\n");
+			return E_FAIL;
+		}
+
+		meshEdges.insert(MakeEdgeKey(i0, i1));
+		meshEdges.insert(MakeEdgeKey(i1, i2));
+		meshEdges.insert(MakeEdgeKey(i2, i0));
+	}
+
+	for (uint32_t row = 0; row + 1 < rowCount; ++row)
+	{
+		for (uint32_t column = 0;
+			column + 1 < columnCount;
+			++column)
+		{
+			const size_t sample00 =
+				static_cast<size_t>(row) * columnCount + column;
+
+			const size_t sample10 =
+				static_cast<size_t>(row + 1) * columnCount + column;
+
+			const size_t sample01 =
+				static_cast<size_t>(row) * columnCount + column + 1;
+
+			const size_t sample11 =
+				static_cast<size_t>(row + 1) * columnCount + column + 1;
+
+			const uint32_t vertex00 = gridToVertex[sample00];
+			const uint32_t vertex10 = gridToVertex[sample10];
+			const uint32_t vertex01 = gridToVertex[sample01];
+			const uint32_t vertex11 = gridToVertex[sample11];
+
+			const _bool hasCurrentToOpposite =
+				meshEdges.find(
+					MakeEdgeKey(vertex00, vertex11)) !=
+				meshEdges.end();
+
+			const _bool hasOtherDiagonal =
+				meshEdges.find(
+					MakeEdgeKey(vertex10, vertex01)) !=
+				meshEdges.end();
+
+			/*
+			 * 정상적인 grid triangle mesh라면
+			 * 두 대각선 중 정확히 하나만 존재해야 합니다.
+			 */
+			if (hasCurrentToOpposite == hasOtherDiagonal)
+			{
+				DEBUG_LOG(
+					"[PX][TerrainHF] Could not determine cell tessellation.\n");
+				return E_FAIL;
+			}
+
+			samples[sample00].bTessFlag =
+				hasCurrentToOpposite;
+		}
+	}
+
+	/*
+	 * 5. 런타임 쿠킹 및 PxHeightField 생성
+	 */
+	const auto heightFieldDesc =
+		HEIGHT_FIELD_RES::MakeDesc(
+			samples,
+			rowCount,
+			columnCount,
+			0.f,
+			false);
+
+	m_pResHeightField =
+		HEIGHT_FIELD_RES::CreateAndLoad(heightFieldDesc);
+
+	if (!m_pResHeightField)
+	{
+		DEBUG_LOG(
+			"[PX][TerrainHF] Failed to create HeightField resource.\n");
+		return E_FAIL;
+	}
+
+	DEBUG_LOG(
+		"[PX][TerrainHF] HeightField created successfully.\n");
 
 	return S_OK;
 }

@@ -20,7 +20,8 @@ namespace Engine
 		CAPSULE,
 		CONVEX_MESH,
 		TRIANGLE_MESH,
-		RAGDOLL
+		RAGDOLL,
+		HEIGHT_FIELD
 	};
 
 	struct PX_ACTOR_USER_DATA

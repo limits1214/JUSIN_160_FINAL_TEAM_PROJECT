@@ -8,7 +8,8 @@ namespace Engine::PhysXCookedMeshFile
 	enum class TYPE : uint32_t
 	{
 		TRIANGLE_MESH = 1,
-		CONVEX_MESH = 2
+		CONVEX_MESH = 2,
+		HEIGHT_FIELD = 3
 	};
 
 	struct HEADER

@@ -31,6 +31,7 @@ namespace Engine
 		Prototype_Component_ComPxSphereCollider,
 		Prototype_Component_ComPxConvexCollider,
 		Prototype_Component_ComPxTriMeshCollider,
+		Prototype_Component_ComPxHeightFieldCollider,
 		Prototype_Component_ComPxRigidBody,
 		Prototype_Component_ComPxCharacterController,
 		Prototype_Component_ComPxFixedJoint,

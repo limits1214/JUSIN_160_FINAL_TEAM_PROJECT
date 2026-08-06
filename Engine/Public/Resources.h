@@ -63,6 +63,8 @@
 #include "ResPhysXSphereGeometry.h"
 #include "ResPhysXCapsuleGeometry.h"
 #include "ResPhysXMaterial.h"
+#include "ResPhysXHeightFieldGeometry.h"
+#include "ResPhysXRTHeightFieldGeometry.h"
 
 #include "ResLuaScript.h"
 

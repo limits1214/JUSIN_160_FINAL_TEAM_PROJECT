@@ -11,6 +11,9 @@ class CResSamplerState;
 class CComPxRigidBody;
 class CComPxTriMeshCollider;
 class CResPhysXRTTriMeshGeometry;
+
+class CComPxHeightFieldCollider;
+class CResPhysXRTHeightFieldGeometry;
 NS_END
 
 NS_BEGIN(Client)
@@ -34,6 +37,7 @@ public:
 
 private:
 	HRESULT BuildPxRuntimeTriMesh();
+	HRESULT BuildPxRuntimeHeightField();
 
 private:
 	SPtr<CResTerrainVIBuffer> m_pResTerrainVIBuffer{};
@@ -46,6 +50,14 @@ private:
 	CComPxRigidBody* m_pComPxRigidBody{};
 	CComPxTriMeshCollider* m_pComPxTriMeshCollider{};
 	SPtr<CResPhysXRTTriMeshGeometry> m_pResTriMesh{};
+
+private:
+	CComPxHeightFieldCollider* m_pComPxHeightFieldCollider{};
+	SPtr<CResPhysXRTHeightFieldGeometry> m_pResHeightField{};
+	_float m_fPxHeightScale{ 1.f };
+	_float m_fPxRowScale{ 1.f };
+	_float m_fPxColumnScale{ 1.f };
+	_float3 m_vPxHeightFieldOffset{};
 
 
 public:

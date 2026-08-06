@@ -252,6 +252,7 @@
     <ClInclude Include="..\public\ComPxCharacterController.h" />
     <ClInclude Include="..\Public\ComCharacterMoveIntent.h" />
     <ClInclude Include="..\Public\ComCharacterMotor.h" />
+    <ClInclude Include="..\public\ComPxHeightFieldCollider.h" />
     <ClInclude Include="..\Public\ComSound.h" />
     <ClInclude Include="..\Public\ComSocket.h" />
     <ClInclude Include="..\Public\ComStaticModelInstance.h" />
@@ -312,6 +313,8 @@
     <ClInclude Include="..\public\LuaWatcher.h" />
     <ClInclude Include="..\Public\ParticleParamImGui.h" />
     <ClInclude Include="..\public\ParticleShaderCache.h" />
+    <ClInclude Include="..\public\ResPhysXHeightFieldGeometry.h" />
+    <ClInclude Include="..\public\ResPhysXRTHeightFieldGeometry.h" />
     <ClInclude Include="..\Public\ShaderWatcher.h" />
     <ClInclude Include="..\Public\StateMachine.h" />
     <ClInclude Include="..\public\MyFSR2_2.h" />
@@ -596,6 +599,7 @@
     <ClCompile Include="..\private\ComPxCharacterController.cpp" />
     <ClCompile Include="..\Private\ComCharacterMoveIntent.cpp" />
     <ClCompile Include="..\Private\ComCharacterMotor.cpp" />
+    <ClCompile Include="..\private\ComPxHeightFieldCollider.cpp" />
     <ClCompile Include="..\Private\ComSound.cpp" />
     <ClCompile Include="..\Private\ComSocket.cpp" />
     <ClCompile Include="..\Private\ComStaticModelInstance.cpp" />
@@ -663,6 +667,8 @@
     <ClCompile Include="..\private\LuaManager.cpp" />
     <ClCompile Include="..\private\LuaWatcher.cpp" />
     <ClCompile Include="..\private\ParticleShaderCache.cpp" />
+    <ClCompile Include="..\private\ResPhysXHeightFieldGeometry.cpp" />
+    <ClCompile Include="..\private\ResPhysXRTHeightFieldGeometry.cpp" />
     <ClCompile Include="..\Private\ShaderWatcher.cpp" />
     <ClCompile Include="..\Private\StateMachine.cpp" />
     <ClCompile Include="..\private\MyFSR2_2.cpp" />

@@ -55,6 +55,8 @@
 #include "TweenComponent.h"
 #include "ShadowCamera.h"
 
+#include "ComPxHeightFieldCollider.h"
+
 
 NS_BEGIN(Engine)
 
@@ -474,6 +476,10 @@ HRESULT CGameInstanceInitLoader::LoadPrototypeComponent()
 			return E_FAIL;
 		}
 		if (CGameInstance::Get().AddPrototype(ES_EngineProtoMajorType::PHYSX, ES_EngineProtoPhysXComponent::Prototype_Component_ComPxTriMeshCollider, CComPxTriMeshCollider::Create()))
+		{
+			return E_FAIL;
+		}
+		if (CGameInstance::Get().AddPrototype(ES_EngineProtoMajorType::PHYSX, ES_EngineProtoPhysXComponent::Prototype_Component_ComPxHeightFieldCollider, CComPxHeightFieldCollider::Create()))
 		{
 			return E_FAIL;
 		}
