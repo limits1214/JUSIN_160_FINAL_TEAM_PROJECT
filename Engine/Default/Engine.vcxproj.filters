@@ -547,6 +547,9 @@
     <Filter Include="Component\BeHavior\BlackBoard">
       <UniqueIdentifier>{5ae5c2f5-28f2-4282-8126-5374cdbbd9cd}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Blast">
+      <UniqueIdentifier>{54753909-f100-46b4-8d09-46dc3a6d843f}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework.h">
@@ -1258,6 +1261,9 @@
     <ClInclude Include="..\public\BTBlackBoard.h">
       <Filter>Component\BeHavior\BlackBoard</Filter>
     </ClInclude>
+    <ClInclude Include="..\public\BlastManager.h">
+      <Filter>Blast</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp">
@@ -1881,6 +1887,9 @@
     </ClCompile>
     <ClCompile Include="..\private\ComBeHavior.cpp">
       <Filter>Component\BeHavior</Filter>
+    </ClCompile>
+    <ClCompile Include="..\private\BlastManager.cpp">
+      <Filter>Blast</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

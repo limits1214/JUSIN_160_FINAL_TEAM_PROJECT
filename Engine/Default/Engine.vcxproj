@@ -151,7 +151,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>..\Public\;$(ProjectDir);$(SolutionDir)ThirdParty\nlohmann_3.12.0\include\;$(SolutionDir)ThirdParty\HBAOPlus-3.1.0\include\;$(SolutionDir)ThirdParty\physx-5.6.1\include\;$(SolutionDir)ThirdParty\fsr2_2\include\;$(SolutionDir)ThirdParty\tweeny-3.2.1\include\;$(SolutionDir)ThirdParty\fmod_2_03_12\inc\;$(SolutionDir)ThirdParty\imgui-node-editor-0.9.3\;$(SolutionDir)ThirdParty\ImGuizmo-1.83\;$(SolutionDir)ThirdParty\imgui-1.83\;$(SolutionDir)ThirdParty\tracy-0.13.1\public\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\Public\;$(ProjectDir);$(SolutionDir)ThirdParty\nlohmann_3.12.0\include\;$(SolutionDir)ThirdParty\HBAOPlus-3.1.0\include\;$(SolutionDir)ThirdParty\physx-5.6.1\include\;$(SolutionDir)ThirdParty\fsr2_2\include\;$(SolutionDir)ThirdParty\tweeny-3.2.1\include\;$(SolutionDir)ThirdParty\fmod_2_03_12\inc\;$(SolutionDir)ThirdParty\imgui-node-editor-0.9.3\;$(SolutionDir)ThirdParty\ImGuizmo-1.83\;$(SolutionDir)ThirdParty\imgui-1.83\;$(SolutionDir)ThirdParty\tracy-0.13.1\public\;$(SolutionDir)ThirdParty\blast-5.0.6\release\blast-sdk\include\;$(SolutionDir)ThirdParty\blast-5.0.6\release\blast-sdk\include\lowlevel\;$(SolutionDir)ThirdParty\blast-5.0.6\release\blast-sdk\include\globals\;$(SolutionDir)ThirdParty\blast-5.0.6\release\blast-sdk\include\toolkit\;$(SolutionDir)ThirdParty\blast-5.0.6\release\blast-sdk\include\shared\NvFoundation\;$(SolutionDir)ThirdParty\blast-5.0.6\release\blast-sdk\include\extensions\assetutils\;$(SolutionDir)ThirdParty\blast-5.0.6\release\blast-sdk\include\extensions\authoring\;$(SolutionDir)ThirdParty\blast-5.0.6\release\blast-sdk\include\extensions\authoringCommon\;$(SolutionDir)ThirdParty\blast-5.0.6\release\blast-sdk\include\extensions\serialization\;$(SolutionDir)ThirdParty\blast-5.0.6\release\blast-sdk\include\extensions\shaders\;$(SolutionDir)ThirdParty\blast-5.0.6\release\blast-sdk\include\extensions\stress\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions>/utf-8 /bigobj %(AdditionalOptions)</AdditionalOptions>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
@@ -159,8 +159,8 @@
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
-      <AdditionalDependencies>d3d11.lib;dxguid.lib;fmod_vc.lib;dinput8.lib;dxcompiler.lib;DirectXTex.lib;GFSDK_SSAO_D3D11.win64.lib;PhysX_64.lib;PhysXCommon_64.lib;PhysXFoundation_64.lib;PhysXCooking_64.lib;PhysXExtensions_static_64.lib;PhysXCharacterKinematic_static_64.lib;PhysXVehicle2_static_64.lib;PhysXPvdSDK_static_64.lib;LowLevel_static_64.lib;LowLevelAABB_static_64.lib;LowLevelDynamics_static_64.lib;SceneQuery_static_64.lib;SimulationController_static_64.lib;PhysXTask_static_64.lib;ffx_fsr2_api_dx11_x64d.lib;ffx_fsr2_api_x64d.lib;NvCloth_x64.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(SolutionDir)ThirdParty\fmod_2_03_12\lib\x64\;$(SolutionDir)ThirdParty\HBAOPlus-3.1.0\lib\;$(SolutionDir)ThirdParty\fsr2_2\libs\;$(SolutionDir)ThirdParty\physx-5.6.1\bin_debug\;$(SolutionDir)ThirdParty\NvCloth_1.1.6\lib\Release\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>d3d11.lib;dxguid.lib;fmod_vc.lib;dinput8.lib;dxcompiler.lib;DirectXTex.lib;GFSDK_SSAO_D3D11.win64.lib;PhysX_64.lib;PhysXCommon_64.lib;PhysXFoundation_64.lib;PhysXCooking_64.lib;PhysXExtensions_static_64.lib;PhysXCharacterKinematic_static_64.lib;PhysXVehicle2_static_64.lib;PhysXPvdSDK_static_64.lib;LowLevel_static_64.lib;LowLevelAABB_static_64.lib;LowLevelDynamics_static_64.lib;SceneQuery_static_64.lib;SimulationController_static_64.lib;PhysXTask_static_64.lib;NvBlast.lib;NvBlastExtAssetUtils.lib;NvBlastExtAuthoring.lib;NvBlastExtSerialization.lib;NvBlastExtShaders.lib;NvBlastExtStress.lib;NvBlastExtTkSerialization.lib;NvBlastGlobals.lib;NvBlastTk.lib;ffx_fsr2_api_dx11_x64d.lib;ffx_fsr2_api_x64d.lib;NvCloth_x64.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)ThirdParty\fmod_2_03_12\lib\x64\;$(SolutionDir)ThirdParty\HBAOPlus-3.1.0\lib\;$(SolutionDir)ThirdParty\fsr2_2\libs\;$(SolutionDir)ThirdParty\physx-5.6.1\bin_debug\;$(SolutionDir)ThirdParty\NvCloth_1.1.6\lib\Release\;$(SolutionDir)ThirdParty\blast-5.0.6\release\blast-sdk\bin\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent />
     <FxCompile>
@@ -178,7 +178,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>..\Public\;$(ProjectDir);$(SolutionDir)ThirdParty\nlohmann_3.12.0\include\;$(SolutionDir)ThirdParty\HBAOPlus-3.1.0\include\;$(SolutionDir)ThirdParty\physx-5.6.1\include\;$(SolutionDir)ThirdParty\fsr2_2\include\;$(SolutionDir)ThirdParty\tweeny-3.2.1\include\;$(SolutionDir)ThirdParty\fmod_2_03_12\inc\;$(SolutionDir)ThirdParty\imgui-node-editor-0.9.3\;$(SolutionDir)ThirdParty\ImGuizmo-1.83\;$(SolutionDir)ThirdParty\imgui-1.83\;$(SolutionDir)ThirdParty\tracy-0.13.1\public\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\Public\;$(ProjectDir);$(SolutionDir)ThirdParty\nlohmann_3.12.0\include\;$(SolutionDir)ThirdParty\HBAOPlus-3.1.0\include\;$(SolutionDir)ThirdParty\physx-5.6.1\include\;$(SolutionDir)ThirdParty\fsr2_2\include\;$(SolutionDir)ThirdParty\tweeny-3.2.1\include\;$(SolutionDir)ThirdParty\fmod_2_03_12\inc\;$(SolutionDir)ThirdParty\imgui-node-editor-0.9.3\;$(SolutionDir)ThirdParty\ImGuizmo-1.83\;$(SolutionDir)ThirdParty\imgui-1.83\;$(SolutionDir)ThirdParty\tracy-0.13.1\public\;$(SolutionDir)ThirdParty\blast-5.0.6\release\blast-sdk\include\;$(SolutionDir)ThirdParty\blast-5.0.6\release\blast-sdk\include\lowlevel\;$(SolutionDir)ThirdParty\blast-5.0.6\release\blast-sdk\include\globals\;$(SolutionDir)ThirdParty\blast-5.0.6\release\blast-sdk\include\toolkit\;$(SolutionDir)ThirdParty\blast-5.0.6\release\blast-sdk\include\shared\NvFoundation\;$(SolutionDir)ThirdParty\blast-5.0.6\release\blast-sdk\include\extensions\assetutils\;$(SolutionDir)ThirdParty\blast-5.0.6\release\blast-sdk\include\extensions\authoring\;$(SolutionDir)ThirdParty\blast-5.0.6\release\blast-sdk\include\extensions\authoringCommon\;$(SolutionDir)ThirdParty\blast-5.0.6\release\blast-sdk\include\extensions\serialization\;$(SolutionDir)ThirdParty\blast-5.0.6\release\blast-sdk\include\extensions\shaders\;$(SolutionDir)ThirdParty\blast-5.0.6\release\blast-sdk\include\extensions\stress\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
@@ -186,8 +186,8 @@
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
-      <AdditionalDependencies>d3d11.lib;dxguid.lib;fmod_vc.lib;dinput8.lib;dxcompiler.lib;DirectXTex.lib;GFSDK_SSAO_D3D11.win64.lib;PhysX_64.lib;PhysXCommon_64.lib;PhysXFoundation_64.lib;PhysXCooking_64.lib;PhysXExtensions_static_64.lib;PhysXCharacterKinematic_static_64.lib;PhysXVehicle2_static_64.lib;PhysXPvdSDK_static_64.lib;LowLevel_static_64.lib;LowLevelAABB_static_64.lib;LowLevelDynamics_static_64.lib;SceneQuery_static_64.lib;SimulationController_static_64.lib;PhysXTask_static_64.lib;ffx_fsr2_api_dx11_x64.lib;ffx_fsr2_api_x64.lib;NvCloth_x64.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(SolutionDir)ThirdParty\fmod_2_03_12\lib\x64\;$(SolutionDir)ThirdParty\HBAOPlus-3.1.0\lib\;$(SolutionDir)ThirdParty\fsr2_2\libs\;$(SolutionDir)ThirdParty\physx-5.6.1\bin_release\;$(SolutionDir)ThirdParty\NvCloth_1.1.6\lib\Release\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>d3d11.lib;dxguid.lib;fmod_vc.lib;dinput8.lib;dxcompiler.lib;DirectXTex.lib;GFSDK_SSAO_D3D11.win64.lib;PhysX_64.lib;PhysXCommon_64.lib;PhysXFoundation_64.lib;PhysXCooking_64.lib;PhysXExtensions_static_64.lib;PhysXCharacterKinematic_static_64.lib;PhysXVehicle2_static_64.lib;PhysXPvdSDK_static_64.lib;LowLevel_static_64.lib;LowLevelAABB_static_64.lib;LowLevelDynamics_static_64.lib;SceneQuery_static_64.lib;SimulationController_static_64.lib;PhysXTask_static_64.lib;NvBlast.lib;NvBlastExtAssetUtils.lib;NvBlastExtAuthoring.lib;NvBlastExtSerialization.lib;NvBlastExtShaders.lib;NvBlastExtStress.lib;NvBlastExtTkSerialization.lib;NvBlastGlobals.lib;NvBlastTk.lib;ffx_fsr2_api_dx11_x64.lib;ffx_fsr2_api_x64.lib;NvCloth_x64.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)ThirdParty\fmod_2_03_12\lib\x64\;$(SolutionDir)ThirdParty\HBAOPlus-3.1.0\lib\;$(SolutionDir)ThirdParty\fsr2_2\libs\;$(SolutionDir)ThirdParty\physx-5.6.1\bin_release\;$(SolutionDir)ThirdParty\NvCloth_1.1.6\lib\Release\;$(SolutionDir)ThirdParty\blast-5.0.6\release\blast-sdk\bin\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent />
     <FxCompile>
@@ -238,6 +238,7 @@
     <ClInclude Include="..\public\BinDeSerializer.h" />
     <ClInclude Include="..\public\BinSerializeFormat.h" />
     <ClInclude Include="..\public\BinSerializer.h" />
+    <ClInclude Include="..\public\BlastManager.h" />
     <ClInclude Include="..\Public\BTActionNode.h" />
     <ClInclude Include="..\public\BTBlackBoard.h" />
     <ClInclude Include="..\Public\BTComposite.h" />
@@ -583,6 +584,7 @@
     <ClCompile Include="..\private\Beam_CPU.cpp" />
     <ClCompile Include="..\private\BinDeSerializer.cpp" />
     <ClCompile Include="..\private\BinSerializer.cpp" />
+    <ClCompile Include="..\private\BlastManager.cpp" />
     <ClCompile Include="..\Private\BTActionNode.cpp" />
     <ClCompile Include="..\private\BTBlackBoard.cpp" />
     <ClCompile Include="..\Private\BTComposite.cpp" />
