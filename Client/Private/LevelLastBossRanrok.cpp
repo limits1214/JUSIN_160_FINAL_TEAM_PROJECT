@@ -77,10 +77,10 @@ HRESULT CLevelLastBossRanrok::Initialize()
 	//if (FAILED(SpawnSkyBox()))
 	//	return E_FAIL;
 
-	//if (FAILED(PlayBGM()))
-	//	return E_FAIL;
+	if (FAILED(PlayBGM()))
+		return E_FAIL;
 
-	//SubscribePlayerDeath(*hPlayer);
+	SubscribePlayerDeath(*hPlayer);
 
 
 	return S_OK;
@@ -374,7 +374,7 @@ HRESULT CLevelLastBossRanrok::SpawnSkyBox()
 
 HRESULT CLevelLastBossRanrok::PlayBGM()
 {
-	const _string sSoundPath = "./Resources/SampleClient/Sound/CharlesRookwood/CharlesRookwoodBgm.wav";
+	const _string sSoundPath = "./Resources/SampleClient/Sound/LastBossRanrok/Ambient/Ranroks_Rage.mp3";
 	auto* pSoundManager = CGameInstance::Get().GetSoundManager();
 	if (pSoundManager == nullptr || !pSoundManager->Preload(sSoundPath))
 		return E_FAIL;
