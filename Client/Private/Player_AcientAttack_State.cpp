@@ -7,6 +7,7 @@
 #include "Player_Weapon.h"
 #include "Monster.h"
 #include "ClientEvents.h"
+#include "Trail_CPU.h"
 
 NS_USING(Client)
 
@@ -50,6 +51,11 @@ void CPlayer_AcientAttack_State::Enter(CStateMachine* pStateMachine)
 	m_fAcientElapsed = 0.f;
 
 	// 고대마법 발동 이벤트 발행
+	{
+		auto a = CGameInstance::Get().GetParticle("Lightning_Trail", "Lightning_Trail");
+		static_cast<CTrail_CPU*>(a)->SetColor(_float4(67 / 255.f, 97 / 255.f, 174 / 255.f, 1.f));
+		static_cast<CTrail_CPU*>(a)->SetEmissive(_float4(51 / 255.f, 77 / 255.f, 126 / 255.f, 4.f));
+	}
 	CGameInstance::Get().EventPublish<FAcientMagicStart>();
 }
 

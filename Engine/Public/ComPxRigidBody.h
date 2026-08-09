@@ -61,6 +61,9 @@ public:
 	_bool WakeUp();
 	_bool PutToSleep();
 	_bool IsSleeping() const;
+	// Pool 반환이나 상태 전환 전에 이 RigidBody와 연결된 모든 Joint를 안전하게 해제한다.
+	void ReleaseConnectedJoints();
+
 private:
 	explicit CComPxRigidBody();
 	~CComPxRigidBody() override;
@@ -78,7 +81,6 @@ private:
 private:
 	void RegisterJoint(CComPxJoint* pJoint);
 	void UnregisterJoint(CComPxJoint* pJoint);
-	void ReleaseConnectedJoints();
 
 public:
 	static UPtr<CComPxRigidBody> Create();

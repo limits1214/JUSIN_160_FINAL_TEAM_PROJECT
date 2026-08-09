@@ -45,7 +45,7 @@ private:
 	int32_t FindAnimationIndex(const CPlayer& player,_string_view sAnimationName) const;
 
 private:
-	static constexpr size_t FORWARD_LIGHT_ANIMATION_COUNT = 9;
+	static constexpr size_t FORWARD_LIGHT_ANIMATION_COUNT = 13;
 	static constexpr size_t FORWARD_HVY_ANIMATION_COUNT = 10;
 	static constexpr _float ATTACK_BLEND_DURATION = 0.12f;
 	static constexpr _float COMBO_INPUT_START_RATIO = 0.25f;

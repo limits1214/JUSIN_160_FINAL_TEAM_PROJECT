@@ -58,14 +58,16 @@ EVALUATE CBTAttackAnimation::Evaluate(_float fTimeDelta)
 					m_bStart = false;
 				}
 
-				if (!m_bActiveSkill)
-				{
+				_float fAnimRatio = pAnimator->GetPlayAnimRatio();
+				if (!m_bTrigger && !m_bActiveSkill)
 					m_bActiveSkill = Active_Skill();
-				}
+				
+				if (m_bTrigger && !m_bActiveSkill && fAnimRatio >= m_fSkillRatio.x)
+					m_bActiveSkill = ActiveTriggerSkill();
+				
 				Gravity();
 				Play_Sound(fTimeDelta);
 				_bool bFinished = pAnimator->GetFinish();
-				_float fAnimRatio = pAnimator->GetPlayAnimRatio();
 				//살려주세요 살려주세요!!!
 				Att(pOwner, pTransform, pTarget, fAnimRatio,fTimeDelta);
 				EventFlagToRatio(fAnimRatio);
@@ -137,12 +139,10 @@ void CBTAttackAnimation::Update_Gui()
 		DragFloat("Move Speed", m_Value.fSpeed);
 		DragFloat("Intensive", m_fIntensive);
 		DragFloat("ShakeCamRatio", m_fCamShakeRatio);
-		ImGui::Text("RotRatio");
-		ImGui::DragFloat2("##RotRatio", reinterpret_cast<_float*>(&m_vRotRatio), 0.1f, 0.f, 1.f);
 		ImGui::Text("OverLabRatio");
 		ImGui::DragFloat2("##OverLabRatio", reinterpret_cast<_float*>(&m_vOverlabRatio), 0.1f, 0.f, 1.f);
 		DragFloat("AttRadius", m_fAttRadius);
-
+		BoolButton("TriggerSkill", m_bTrigger);
 		BoolButton("overlabLoop", m_bOverLabLoop);
 		BoolButton("overlabMove", m_bOverLabMove);
 		DragFloat("overlabSpeed", m_fOverLabSpeed);
@@ -192,6 +192,13 @@ void CBTAttackAnimation::Att(CMonster* pMon, CComTransform* pSrcTransform, CGame
 
 	if (m_vOverlabRatio.y >= fRotRatio && fRotRatio >= m_vOverlabRatio.x)
 	{
+		if (!m_bDir)
+		{
+			XMStoreFloat3(&m_vLastDir, pSrcTransform->GetState(STATE::LOOK));
+			m_vLastPos = pSrcTransform->GetPosition();
+			m_bDir = true;
+		}
+		
 		_float3 vPos = pSrcTransform->GetPosition();
 		if (m_bOverLabLoop)
 		{
@@ -205,6 +212,7 @@ void CBTAttackAnimation::Att(CMonster* pMon, CComTransform* pSrcTransform, CGame
 			XMStoreFloat3(&m_vLastPos, XMLoadFloat3(&m_vLastPos) + XMLoadFloat3(&m_vLastDir) * m_fOverLabSpeed * fTimeDelta);
 			XMStoreFloat3(&vPos, XMLoadFloat3(&m_vLastPos));
 		}
+
 		pxOverLabDesc.tFilter = PX_QUERY_FILTER_DESC{ .iQueryMask = ETOUI(COLLISION_LAYER::PLAYER_HURTBOX) };
 		pxOverLabDesc.tGeometry = PX_QUERY_GEOMETRY_DESC{ .eType = PX_QUERY_GEOMETRY_TYPE::SPHERE,.fRadius = m_fCurOverLabSpeed };
 		pxOverLabDesc.tPose = PX_QUERY_POSE{ .vPosition = vPos };
@@ -260,7 +268,6 @@ void CBTAttackAnimation::Abort()
 nlohmann::json CBTAttackAnimation::Save_Node()
 {
 	nlohmann::json j = __super::Save_Node();
-	JsonSaveLoadManager::SaveJsonTypeFloat2(j, "RotRatio", m_vRotRatio);
 	JsonSaveLoadManager::SaveJsonTypeFloat2(j, "AttColRatio", m_vOverlabRatio);
 
 	SaveJsonValue(j, "overlabLoop", m_bOverLabLoop);
@@ -271,13 +278,14 @@ nlohmann::json CBTAttackAnimation::Save_Node()
 	SaveJsonValue(j, "CamShakeRatio", m_fCamShakeRatio);
 	SaveJsonValue(j, "AttRadius", m_fAttRadius);
 	SaveJsonValue(j, "OverlabMove", m_bOverLabMove);
+
+	SaveJsonValue(j, "TriggerSkill", m_bTrigger);
 	
 	return j;
 }
 HRESULT CBTAttackAnimation::Load_json(const nlohmann::json& j)
 {
 	__super::Load_json(j);
-	JsonSaveLoadManager::LoadJsonTypeFloat2(j, "RotRatio", m_vRotRatio);
 	JsonSaveLoadManager::LoadJsonTypeFloat2(j, "AttColRatio", m_vOverlabRatio);
 
 	LoadJsonValue(j, "overlabLoop", m_bOverLabLoop);
@@ -288,46 +296,37 @@ HRESULT CBTAttackAnimation::Load_json(const nlohmann::json& j)
 	LoadJsonValue(j, "CamShakeRatio", m_fCamShakeRatio);
 	LoadJsonValue(j, "AttRadius", m_fAttRadius);
 	LoadJsonValue(j, "OverlabMove", m_bOverLabMove);
+	LoadJsonValue(j, "TriggerSkill", m_bTrigger);
 
 	return S_OK;
 }
 
-void CBTAttackAnimation::Rotation(CComTransform* pTransform, CComCharacterMoveIntent* pMoveIntent, CGameObject* pTarget, _float fTimeDelta, _float fRotRatio)
-{
-	if (m_vRotRatio.x < fRotRatio && m_vRotRatio.y >= fRotRatio)
-	{
-		_float3 vFacingDirection{};
-		XMStoreFloat3(&vFacingDirection, pTarget->GetTransform().GetState(STATE::POSITION) - pTransform->GetState(STATE::POSITION));
-		const _float fTurnTime = std::max(m_Value.fTime, 0.001f);
-		pMoveIntent->SetFacingIntent(vFacingDirection, 180.f / fTurnTime);
-	}
-	
-
-}
 
 void CBTAttackAnimation::OnEnter()
 {
+	m_bDir = false;
 	__super::OnEnter();
 	m_bAttRatio = m_bActiveSkill = false;
 	m_bCamShake = true;
 	m_fTime = 0.f;
 	m_fCurOverLabSpeed = m_fAttRadius;
 
-	if (auto pBT = Get_ComBT())
-	{
-		if (auto pOwner = pBT->GetGameObject())
-		{
-			if (auto pTransform = (Get_Component<CComTransform>(m_Handle, "Com_Transform")))
-			{
-				XMStoreFloat3(&m_vLastDir,pTransform->GetState(STATE::LOOK));
-				m_vLastPos = pTransform->GetPosition();
-			}
-		}
-	}
 
 }
 void CBTAttackAnimation::OnExit(EVALUATE eResult)
 {
+	m_bDir = false;
+}
+_bool CBTAttackAnimation::ActiveTriggerSkill()
+{
+	auto pBT = Get_ComBT();
+	if (nullptr == pBT) return false;
+
+	auto pMonster = static_cast<CMonster*>(pBT->GetGameObject());
+	if (nullptr == pMonster) return false;
+	
+	pMonster->Set_AttTable(m_eSkillType, m_fSkillRatio);
+	return true;
 }
 E::UPtr<CBTAttackAnimation> CBTAttackAnimation::Create()
 {

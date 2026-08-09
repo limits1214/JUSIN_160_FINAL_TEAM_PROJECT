@@ -67,6 +67,9 @@ namespace Client
 		Prototype_GameObject_TMBGurdian,
 		Prototype_GameObject_TmbGurdianDead,
 		Prototype_GameObject_BossWeapon,
+		Prototype_GameObject_Dragon,
+		Prototype_GameObject_Dragon_FireBall,
+		Prototype_GameObject_Dragon_Breath,
 		Prototype_GameObject_Axe,
 		Prototype_GameObject_Sword,
 		Prototype_GameObject_Mace,
@@ -90,6 +93,7 @@ namespace Client
 
 	enum class TURN { LEFT_45, LEFT_90, LEFT_135, LEFT_180, RIGHT_45, RIGHT_90, RIGHT_135, RIGHT_180, END };
 	enum class ATTMON { SLOT0, SLOT1, SLOT2, SLOT3, SLOT4, SLOT5, SLOT6, SKIP, SLOT7, SLOT8, SLOT9,END };
+	enum class EFFMON {EFFSLOT0, EFFSLOT1, EFFSLOT2, EFFSLOT3, EFFSLOT4, EFFSLOT5, EFFSLOT6, EFFSLOT7, END};
 	enum class PLAYER_SKILL_TYPE { DEFAULT, ATTACK, ACCIO, DEPULSO , DESCENDO, ACIENT_LIGHTNING, PROTEGO,END};
 	enum class MONSTER_TYPE{NORMAL,ELITE, BOSS};
 

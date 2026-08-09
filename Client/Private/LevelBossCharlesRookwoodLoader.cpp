@@ -214,14 +214,14 @@ HRESULT CLevelBossCharlesRookwoodLoader::MonsterLoad_InWorker()
 	{
 		//TombBos
 		{
-			if (auto res = CGameInstance::Get().AddResourceT<E::CResModel>(LEVEL::BOSS_CHARLES_ROOKWOOD, "Model_Resource_TombProtector",
+			if (auto res = CGameInstance::Get().AddResourceT<E::CResModel>(LEVEL::BOSS_CHARLES_ROOKWOOD, "Model_Resource_TombBoss",
 				CResModel::Create("./Resources/SampleClient/Models/Skeleton/Tomb_Protector/SK_Tomb_Protector.bin")))
 			{
 				E::CResModel::DESC pDesc{};
 				pDesc.PreTransformMatrix = XMMatrixScaling(1.f, 1.f, 1.f) * XMMatrixRotationY(XMConvertToRadians(180.f));
 				if (FAILED(res->Load(pDesc)))
 				{
-					MSG_BOX("BOSS_CHARLES_ROOKWOOD Failed Model_Resource_TombProtector");
+					MSG_BOX("BOSS_CHARLES_ROOKWOOD Failed Model_Resource_TombBoss");
 					return E_FAIL;
 				}
 			}
@@ -279,7 +279,6 @@ _bool CLevelBossCharlesRookwoodLoader::UILoad()
 
 			const char* targetDirectories[] = {
 				"./Resources/SampleClient/Textures/UI/UITexture/PlayScreen",
-				"./Resources/SampleClient/Textures/UI/UITexture/SpellType",
 				"./Resources/SampleClient/Textures/UI/UITexture/SpellSlot",
 				"./Resources/SampleClient/Textures/UI/UITexture/DeadScene",
 				"./Resources/SampleClient/Textures/UI/UITexture/Cursor"

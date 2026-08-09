@@ -3,6 +3,7 @@
 #include "Client_Defines.h"
 
 enum class BOSSTOMB_SKILL{SPAWN, STUMP, BLUST_END, BLUST_START, BALL, BALL_BREAK, READY_STAR, THROW_STAR, SKIP,SMESH,DEAD,END};
+
 NS_BEGIN(Client)
 class CBossTMB final : public CMonster
 {

@@ -242,27 +242,38 @@ void CParticle_CPU::Simulate(E::_float fTimeDelta)
 		_matrix matTrans = XMMatrixTranslation(p.vPosition.x, p.vPosition.y, p.vPosition.z);
 
 		_matrix matWorld;
-		if ((p.iBehaviorType & CParticle::BEHAVIOR_BILLBOARD) != 0 && m_Desc.whatKind == MESHORTEXTURE::TEX)
+		if ((p.iBehaviorType & CParticle::BEHAVIOR_BILLBOARD) != 0 /*&& m_Desc.whatKind == MESHORTEXTURE::TEX*/)
 		{
 			auto camera = CGameInstance::Get().GetActiveCamera();
 			if (!camera)
 				return;
+
 			_matrix matView = camera->GetView();
 			_matrix matInvView = XMMatrixInverse(nullptr, matView);
-			XMVECTOR camRight = matInvView.r[0];
-			XMVECTOR camUp = matInvView.r[1];
-			XMVECTOR camForward = matInvView.r[2];
+
+			// 1. 카메라 회전(빌보드 기저 벡터) 추출
+			XMVECTOR camRight = XMVector3Normalize(matInvView.r[0]);
+			XMVECTOR camUp = XMVector3Normalize(matInvView.r[1]);
+			XMVECTOR camForward = XMVector3Normalize(matInvView.r[2]);
 
 			_matrix matBillboardRot = XMMatrixIdentity();
-
 			matBillboardRot.r[0] = camRight;
 			matBillboardRot.r[1] = camUp;
-			matBillboardRot.r[2] = camForward ;
+			matBillboardRot.r[2] = camForward;
 			matBillboardRot.r[3] = XMVectorSet(0.f, 0.f, 0.f, 1.f);
-			matBillboardRot = matBillboardRot *XMMatrixRotationAxis(camForward,  p.rotation.w);
 
+			// 2. 파티클 자체의 회전 행렬 생성 (예: p.rotation이 Vector3(Pitch, Yaw, Roll)인 경우)
+			_matrix matParticleRot = XMMatrixRotationRollPitchYaw(p.rotation.x, p.rotation.y, p.rotation.z);
 
-			matWorld = matScale * matBillboardRot * matTrans;
+			// 만약 p.rotation이 Quaternion(XMFLOAT4 / XMVECTOR)인 경우:
+			// _matrix matParticleRot = XMMatrixRotationQuaternion(XMLoadFloat4(&p.rotation));
+
+			// 3. 빌보드 회전과 파티클 오프셋 회전 결합
+			// (로컬 공간 회전 후 카메라 방향으로 정렬)
+			_matrix matFinalRot = matParticleRot * matBillboardRot;
+
+			// 4. 최종 월드 행렬 계산
+			matWorld = matScale * matFinalRot * matTrans;
 		}
 		else
 		{
@@ -488,7 +499,7 @@ void CParticle_CPU::Lightning(PARTICLE_CPU_DATA& p, _float fTimeDelta){
 			p.vVelocity = { 0.f, 0.f, 0.f };
 			return;
 		}
-	}
+	}	
 	{
 		///////////////////////////////////////////// Velocity Control
 		_float DragFactor = 2.f;
@@ -628,6 +639,7 @@ HRESULT CParticle_CPU::Render(ID3D11DeviceContext* pContext, const E::RENDER_CTX
 		pContext->Unmap(m_pComTimeCBuffer->GetCBuffer().Get(), 0);
 	}
 
+	pContext->VSSetConstantBuffers(11, 1, m_pComTimeCBuffer->GetCBuffer().GetAddressOf());
 
 	pContext->PSSetConstantBuffers(11, 1, m_pComTimeCBuffer->GetCBuffer().GetAddressOf());
 
@@ -709,6 +721,7 @@ HRESULT CParticle_CPU::Render_Mesh(ID3D11DeviceContext* pContext, const E::RENDE
 	{
 		ID3D11ShaderResourceView* distortionSRV = m_pDistortionTexture->GetSRV().Get();
 		pContext->PSSetShaderResources(6, 1, &distortionSRV);
+		pContext->VSSetShaderResources(6, 1, &distortionSRV);
 	}
 
 	if (m_pAnyTexture)

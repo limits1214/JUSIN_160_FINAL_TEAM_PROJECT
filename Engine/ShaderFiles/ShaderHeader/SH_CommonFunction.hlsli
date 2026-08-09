@@ -43,6 +43,10 @@ float3 Compute_WorldNormal(Texture2D _NormalTex, float2 _TexCoord, float4 _InNor
 
     return normalize(worldNormal);
 }
+float Convert_ViewZPosByDepth(float _Depth)
+{
+	return g_matProj._m32 / (_Depth - g_matProj._m22);
+}
 
 bool Compute_DynamicLight(float3 _WorldPosition, DynamicLight Light, out float3 L, out float3 Radiance)
 {

@@ -26,7 +26,7 @@ void CPlayer_Attack_State::Enter(CStateMachine* pStateMachine)
 
 	CacheAnimationIndices(*player);
 
-	m_iCurrentForwardLightAnimation = 0;
+	m_iCurrentForwardLightAnimation = static_cast<size_t>(Engine::RandInt(0,(int32_t)(m_ForwardLightAnimations.size()) - 1));
 	m_iComboCount = 1;
 	m_bAttackQueued = false;
 	m_bPlayingHeavy = false;
@@ -111,23 +111,6 @@ void CPlayer_Attack_State::Update(CStateMachine* pStateMachine, _float fTimeDelt
 		m_bMagicBulletFired = true;
 	}
 
-	if (!m_bPlayingHeavy)
-	{
-		const _float fMoveTime =
-			PlayerAnimationRatioGuard::CalculateActiveDeltaTime(
-				fPreviousAnimRatio,
-				fAnimRatio,
-				LIGHT_FORWARD_MOVE_START_RATIO,
-				LIGHT_FORWARD_MOVE_END_RATIO,
-				fTimeDelta);
-
-		if (fMoveTime > 0.f)
-		{
-			player->ApplyAttackForwardMovement(
-				LIGHT_FORWARD_MOVE_SPEED,
-				fMoveTime);
-		}
-	}
 
 	if (fAnimRatio >= MOVE_CANCEL_START_RATIO &&player->HasRawMoveInput()) {
 		m_bAttackQueued = false;
@@ -293,7 +276,8 @@ _bool CPlayer_Attack_State::PlayDirectionalAttack(CPlayer& player,_bool bHeavy)
 	m_bPlayingHeavy = bHeavy;
 	m_bMagicBulletFired = false;
 	m_fPreviousAnimRatio = 0.f;
-	player.SetRootMotionTranslationActive(true);
+	// 왼쪽으로 90도 도는 애만 이상함 RootMotion이
+	player.SetRootMotionTranslationActive(eDirection != ATTACK_DIRECTION::LFT_90);
 	player.SetRootMotionRotationActive(bHeavy || eDirection != ATTACK_DIRECTION::FWD);
 	animator->Play_Anim(iAnimation,false,ATTACK_BLEND_DURATION);
 	animator->GetCurAnimState().fSpeed = 1.3f;
@@ -314,6 +298,10 @@ void CPlayer_Attack_State::CacheAnimationIndices(const CPlayer& player)
 	m_ForwardLightAnimations[6] = FindAnimationIndex(player, "AN_ProfessorSharp_MasterRig_Hu_Cmbt_Atk_Cast_Fwd_Lht_07_anm.bin");
 	m_ForwardLightAnimations[7] = FindAnimationIndex(player, "AN_ProfessorSharp_MasterRig_Hu_Cmbt_Atk_Cast_Fwd_Lht_08_anm.bin");
 	m_ForwardLightAnimations[8] = FindAnimationIndex(player, "AN_ProfessorSharp_MasterRig_Hu_Cmbt_Atk_Cast_Fwd_Lht_09_anm.bin");
+	m_ForwardLightAnimations[9] = FindAnimationIndex(player, "AN_ProfessorSharp_MasterRig_Hu_Cmbt_Atk_Cast_Fwd_Lht_StepBwd_01_anm.bin");
+	m_ForwardLightAnimations[10] = FindAnimationIndex(player, "AN_ProfessorSharp_MasterRig_Hu_Cmbt_Atk_Cast_Fwd_Lht_StepBwd_02_anm.bin");
+	m_ForwardLightAnimations[11] = FindAnimationIndex(player, "AN_ProfessorSharp_MasterRig_Hu_Cmbt_Atk_Cast_Fwd_Lht_StepBwd_03_anm.bin");
+	m_ForwardLightAnimations[12] = FindAnimationIndex(player, "AN_ProfessorSharp_MasterRig_Hu_Cmbt_Atk_Cast_Fwd_Lht_StepBwd_04_anm.bin");
 
 	m_ForwardHvyAnimations[0] = FindAnimationIndex(player, "AN_ProfessorSharp_MasterRig_Hu_Cmbt_Atk_Cast_Fwd_Hvy_01_Spin_anm.bin");
 	m_ForwardHvyAnimations[1] = FindAnimationIndex(player, "AN_ProfessorSharp_MasterRig_Hu_Cmbt_Atk_Cast_Fwd_Hvy_02_anm.bin");

@@ -21,9 +21,10 @@ protected:
 	virtual HRESULT	InitializePrototype(void* pArg) override;
 	virtual HRESULT Initalize(void* pArg) override;
 
-	virtual void OnEnter() {};
-	virtual void OnExit(EVALUATE eResult) {};
+	virtual void OnEnter() override;
+	virtual void OnExit(EVALUATE eResult)override;
 public:
+	HRESULT				Save_SubTree(const _string& SavePath) override;
 	virtual EVALUATE	Evaluate(_float fTimeDelta)override;
 	void						Abort() override;
 	virtual void				Update_Gui() PURE;

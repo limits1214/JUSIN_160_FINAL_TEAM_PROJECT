@@ -53,6 +53,39 @@ namespace
 		};
 	}
 
+	nlohmann::ordered_json MakeWindJson(const WIND_DESC& windDesc)
+	{
+		return nlohmann::ordered_json
+		{
+			{ "type", static_cast<uint32_t>(windDesc.type) },
+			{ "strength", windDesc.strength },
+			{ "speed", windDesc.speed },
+			{ "frequency", windDesc.frequency },
+			{ "bendExponent", windDesc.bendExponent },
+			{ "heightStart", windDesc.heightStart },
+			{ "heightEnd", windDesc.heightEnd }
+		};
+	}
+
+	WIND_DESC ReadWindJson(const nlohmann::ordered_json& objectJson)
+	{
+		WIND_DESC windDesc{};
+		if (!objectJson.contains("wind") || !objectJson["wind"].is_object())
+			return windDesc;
+
+		const auto& windJson = objectJson["wind"];
+		const uint32_t windType = windJson.value("type", static_cast<uint32_t>(EWindType::None));
+		if (windType <= static_cast<uint32_t>(EWindType::Tree))
+			windDesc.type = static_cast<EWindType>(windType);
+		windDesc.strength = windJson.value("strength", windDesc.strength);
+		windDesc.speed = windJson.value("speed", windDesc.speed);
+		windDesc.frequency = windJson.value("frequency", windDesc.frequency);
+		windDesc.bendExponent = windJson.value("bendExponent", windDesc.bendExponent);
+		windDesc.heightStart = windJson.value("heightStart", windDesc.heightStart);
+		windDesc.heightEnd = windJson.value("heightEnd", windDesc.heightEnd);
+		return windDesc;
+	}
+
 	nlohmann::ordered_json MakeObjectJson(CMapMeshObject* pMeshObj, const std::string& layerName, const MAPCHUNK_COORD& coord)
 	{
 		const auto& pTransform = pMeshObj->GetTransform();
@@ -72,6 +105,7 @@ namespace
 			{"position", { pos.x, pos.y, pos.z }},
 			{"rotation", { quat.x, quat.y, quat.z, quat.w }},
 			{"scale", { scale.x, scale.y, scale.z }},
+			{"wind", MakeWindJson(pMeshObj->GetWindDesc())},
 			{"chunk", MakeCoordJson(coord)}
 		};
 	}
@@ -96,6 +130,7 @@ namespace
 		desc.position = _float3{ pos[0], pos[1], pos[2] };
 		desc.rotation = _float4{ rot[0], rot[1], rot[2], rot[3] };
 		desc.scale = _float3{ scale[0], scale[1], scale[2] };
+		desc.windDesc = ReadWindJson(objectJson);
 
 		return desc;
 	}
@@ -135,6 +170,7 @@ namespace
 		desc.modelResTag = model;
 		desc.protoGroupTag = objectJson.value("protoGroup", "PERMANENT");
 		desc.prototypeTag = objectJson.value("prototype", "Prototype_GameObject_MapMeshObject");
+		desc.windDesc = ReadWindJson(objectJson);
 
 		auto hObject = E::CGameInstance::Get().AddGameObjectToLayer(
 			desc.protoGroupTag,
@@ -869,6 +905,7 @@ HRESULT CMapManager::LoadMap(const std::string& path, _bool clearBeforeLoad)
 			desc.prototypeTag = objectDesc.prototype;
 			desc.modelGroupTag = objectDesc.modelGroup;
 			desc.modelResTag = objectDesc.model;
+			desc.windDesc = objectDesc.windDesc;
 
 			auto hObject = CGameInstance::Get().AddGameObjectToLayer(
 				desc.protoGroupTag, desc.prototypeTag, objectDesc.layer, &desc);
@@ -1569,6 +1606,7 @@ HRESULT CMapManager::ContinueApplyLoadedChunkResult(PENDING_CHUNK_APPLY_STATE& s
 		desc.prototypeTag = objectDesc.prototype;
 		desc.modelGroupTag = objectDesc.modelGroup;
 		desc.modelResTag = objectDesc.model;
+		desc.windDesc = objectDesc.windDesc;
 
 		auto hObject = CGameInstance::Get().AddGameObjectToLayer(
 			desc.protoGroupTag,
@@ -1648,6 +1686,7 @@ HRESULT CMapManager::ApplyLoadedChunkResult(const PENDING_CHUNK_LOAD_RESULT& res
 		desc.prototypeTag = objectDesc.prototype;
 		desc.modelGroupTag = objectDesc.modelGroup;
 		desc.modelResTag = objectDesc.model;
+		desc.windDesc = objectDesc.windDesc;
 
 		auto hObject = CGameInstance::Get().AddGameObjectToLayer(
 			desc.protoGroupTag,

@@ -31,39 +31,53 @@ HRESULT CBTRandSelector::Initalize(void* pArg)
 
 void CBTRandSelector::OnEnter()
 {
+
+	Shuffle();
+	
 }
 
 void CBTRandSelector::OnExit(EVALUATE eResult)
 {
+	if (m_ePreEvaluate == EVALUATE::RUN)
+	{
+		if (!m_Shuffle.empty())
+			m_Shuffle.pop_back();
+	}
 }
 
 EVALUATE CBTRandSelector::Evaluate(_float fTimeDelta)
 {
-	uint32_t iRand = rand() % m_Actions.size();
+	if (m_Shuffle.empty())
+		return m_eDebug = EVALUATE::FAILED;;
 
-	if (iRand >= m_Actions.size())
-		return 	m_eDebug = EVALUATE::FAILED;
+	uint32_t iRand = m_Shuffle.back();
 
 	if (m_NodeValue.bCur)
 		iRand = m_NodeValue.iPreSecquenceIndex;
-
-	if (m_Actions.empty() || nullptr == m_Actions[iRand])
-		return 	m_eDebug = EVALUATE::FAILED;
-
+	
+	if (iRand >= m_Actions.size() || nullptr == m_Actions[iRand])
+	{
+		m_NodeValue.bCur = false;
+		m_Shuffle.pop_back();
+		return 	m_ePreEvaluate = m_eDebug = EVALUATE::FAILED;
+	}
+		
 	EVALUATE eValuate = m_Actions[iRand]->Execute(fTimeDelta);
 	if (eValuate == EVALUATE::SUCCESS)
 	{
 		m_NodeValue.bCur = false;
-		return m_eDebug = EVALUATE::SUCCESS;
+		m_Shuffle.pop_back();
+		return m_ePreEvaluate = m_eDebug = EVALUATE::SUCCESS;
 	}
 	else if (eValuate == EVALUATE::RUN)
 	{
 		m_NodeValue.bCur = true;
 		m_NodeValue.iPreSecquenceIndex = iRand;
-		return m_eDebug = EVALUATE::RUN;
+		return m_ePreEvaluate = m_eDebug = EVALUATE::RUN;
 	}
 	m_NodeValue.bCur = false;
-	return m_eDebug = EVALUATE::FAILED;
+	m_Shuffle.pop_back();
+	return m_ePreEvaluate = m_eDebug = EVALUATE::FAILED;
 }
 
 void CBTRandSelector::Abort()
@@ -81,9 +95,31 @@ nlohmann::json CBTRandSelector::Save_Node()
 	return __super::Save_Node();
 }
 
+
+
 HRESULT CBTRandSelector::Load_json(const nlohmann::json& j)
 {
 	return __super::Load_json(j);
+}
+
+void CBTRandSelector::Shuffle()
+{
+	if(m_Actions.empty())
+		return;
+	if (!m_Shuffle.empty())
+		return;
+
+	uint32_t iRand = m_Actions.size();
+
+	for (size_t i = 0; i < iRand; ++i)
+		m_Shuffle.push_back(i);
+
+	for (size_t i = m_Shuffle.size(); i > 1; --i)
+	{
+		size_t iRand = rand() % i;
+
+		std::swap(m_Shuffle[i - 1], m_Shuffle[iRand]);
+	}
 }
 
 UPtr<CBTRandSelector> CBTRandSelector::Create(void* pArg)

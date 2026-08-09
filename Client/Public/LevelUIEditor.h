@@ -111,10 +111,10 @@ private:
 	std::vector<JsonFileInfo> g_JsonFiles;
 	std::vector<JsonFileInfo> g_ImageFiles;
 	bool g_IsFileGridInitialized = false; // 최초 1회 로드 체크용
-	char g_BasePath[256] = "./Resources/SampleClient/UIData/LevelUI/";
-	std::string g_LevelPath = "./Resources/SampleClient/UIData/LevelUI/";
-	std::string g_PrefabPath = "./Resources/SampleClient/UIData/Prefabs/";
-	std::string g_FlipbookPath = "./Resources/SampleClient/UIData/FlipBook/";
+	char g_BasePath[256] = "./Resources/SampleClient/UIData_Editor/LevelUI/";
+	std::string g_LevelPath = "./Resources/SampleClient/UIData_Editor/LevelUI/";
+	std::string g_PrefabPath = "./Resources/SampleClient/UIData_Editor/Prefabs/";
+	std::string g_FlipbookPath = "./Resources/SampleClient/UIData_Editor/FlipBook/";
 
 public:
 	static Engine::UPtr<CLevelUIEditor> Create();

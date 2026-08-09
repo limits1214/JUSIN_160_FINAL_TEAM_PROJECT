@@ -33,6 +33,7 @@ private:
 		const std::optional<CHandle>& hPlayer);
 	HRESULT InitializePathPlaybackTests();
 	HRESULT InitializeTombBossBulletTest(CHandle hPlayer);
+	HRESULT InitializeOilBarrelPool();
 
 	HRESULT SpawnMonster(const std::optional<CHandle>& hPlayer);
 public:
@@ -52,6 +53,7 @@ private:
 	_bool m_bCreatePlayScreenUI{ false };
 	CHandle m_hPlayer{};
 	_float m_fTombBossBulletSpawnYawDegrees{};
+	_float3 m_vOilBarrelPoolSpawnPosition{ 10.f, 100.f, 10.f };
 
 private:
 	HRESULT InitializeMyMagicSquareStep();

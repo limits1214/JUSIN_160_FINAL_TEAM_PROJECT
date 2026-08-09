@@ -114,8 +114,10 @@ void CPhysxManagerListener::DispatchPendingEvents()
 
 	for (const PENDING_EVENT& tEvent : pendingEvents)
 	{
+		// [LSY] 풀로 반환된 객체에는 큐에 남아 있던 지연 이벤트를 전달하지 않는다.
 		CGameObject* pObjectA = CGameInstance::Get().GetGameObjectByHandle(tEvent.hObjectA);
-		if (!pObjectA || pObjectA->GetPendingDestroy())
+		if (!pObjectA || pObjectA->GetPendingDestroy() ||
+			!pObjectA->IsManagedUpdateEnabled())
 			continue;
 
 		if (tEvent.eType == EVENT_TYPE::WAKE)
@@ -148,8 +150,12 @@ void CPhysxManagerListener::DispatchPendingEvents()
 
 			PX_CCT_HIT_DATA tHit = tEvent.tCCTHit;
 			tHit.pGameObject = CGameInstance::Get().GetGameObjectByHandle(tEvent.hObjectB);
-			if (tHit.pGameObject && tHit.pGameObject->GetPendingDestroy())
+			if (tHit.pGameObject &&
+				(tHit.pGameObject->GetPendingDestroy() ||
+				 !tHit.pGameObject->IsManagedUpdateEnabled()))
+			{
 				tHit.pGameObject = nullptr;
+			}
 
 			if (tEvent.eType == EVENT_TYPE::CCT_SHAPE_HIT)
 				pObjectA->OnCCTShapeHit(tHit);
@@ -159,7 +165,8 @@ void CPhysxManagerListener::DispatchPendingEvents()
 		}
 
 		CGameObject* pObjectB = CGameInstance::Get().GetGameObjectByHandle(tEvent.hObjectB);
-		if (!pObjectB || pObjectB->GetPendingDestroy())
+		if (!pObjectB || pObjectB->GetPendingDestroy() ||
+			!pObjectB->IsManagedUpdateEnabled())
 			continue;
 
 		switch (tEvent.eType)

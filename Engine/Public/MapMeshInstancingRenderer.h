@@ -9,7 +9,6 @@ class CResStaticModel;
 class CResTexture2D;
 
 
-
 class ENGINE_DLL CMapMeshInstancingRenderer final : public CEngineBase, public IRenderable
 {
 public:
@@ -49,6 +48,7 @@ private:
 	struct DRAW_ITEM
 	{
 		SPtr<CResStaticModel> model{};
+		EMapMeshRenderFeature renderFeature{};
 		const std::vector<MAPMESH_TEXTURE_SET>* textureCache = nullptr;
 		uint32_t meshIndex = 0;
 		uint32_t instanceOffset = 0;
@@ -58,12 +58,23 @@ private:
 	HRESULT BindMapMeshTextures(ID3D11DeviceContext* pContext, const std::vector<MAPMESH_TEXTURE_SET>& textureCache, uint32_t meshIndex) const;
 
 public:
-	HRESULT PushMapObjectInstance(const SPtr<CResStaticModel>& pModel, const MAPMESH_INSTANCE_DATA& instanceData, MAPMESH_OCCLUSION_DATA& occlusionData);
+	HRESULT PushMapObjectInstance(const SPtr<CResStaticModel>& pModel, EMapMeshRenderFeature renderFeature, const MAPMESH_INSTANCE_DATA& instanceData, MAPMESH_OCCLUSION_DATA& occlusionData);
 	HRESULT Render(ID3D11DeviceContext* pContext, const RENDER_CTX& ctx) override; // 이 렌더러가 렌더 큐에 들어가서 인스턴싱 렌더 (대표오브젝트 구조 x)
 	bool HasRenderPass(RENDERPASS ePass) const override;
 
 private:
-	std::unordered_map<SPtr<CResStaticModel>, MAPMESH_INSTANCE_BATCH> s_InstanceBatches;
+	using MAPOBJECTKEY = std::pair<SPtr<CResStaticModel>, EMapMeshRenderFeature>;
+	struct MAPOBJECT_HASH
+	{
+		size_t operator()(const MAPOBJECTKEY& key) const noexcept
+		{
+			const size_t modelHash = std::hash<SPtr<CResStaticModel>>{}(key.first);
+			const size_t featureHash = std::hash<uint32_t>{}(static_cast<uint32_t>(key.second));
+
+			return modelHash ^ (featureHash << 1);
+		}
+	};
+	std::unordered_map<MAPOBJECTKEY, MAPMESH_INSTANCE_BATCH, MAPOBJECT_HASH> s_InstanceBatches;
 	MAPMESH_TEXTURE_CACHE m_MapMeshTextureCache;
 	UPtr<CMapMeshGpuCuller> s_pGpuCuller;
 
@@ -82,6 +93,10 @@ private:
 	INSTANCING_STATS s_FrameStats { true };
 	INSTANCING_STATS s_LastStats { true };
 
+
+	// RenderFeature별 잦은 Set을 방지하기 위해 // 원래 Draw 인덱스를 Static/Foliage 버킷에 따로 저장
+	static constexpr size_t RENDER_FEATURE_COUNT = 2;
+	std::array<std::vector<uint32_t>, RENDER_FEATURE_COUNT> m_DrawIndicesByFeature;
 
 public:
 	static UPtr<CMapMeshInstancingRenderer> Create();

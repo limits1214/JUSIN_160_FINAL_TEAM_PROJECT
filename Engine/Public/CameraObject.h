@@ -39,6 +39,11 @@ public:
 	_matrix GetView() const { return XMLoadFloat4x4(&m_matView); }
 	_matrix GetProj() const { return XMLoadFloat4x4(&m_matProj); }
 	_float GetFovY() const { return m_cameraDesc.fFovY; }
+	/*----------- 광윤 추가 -----------*/
+	_float GetAspect()	const { return m_cameraDesc.fAspect; }
+	_float GetNear()	const { return m_cameraDesc.fNear;	 }
+	_float GetFar()		const { return m_cameraDesc.fFar;	 }
+	/*---------------------------------*/
 	const CCollider* GetViewVolumeCollider() const { return m_pViewVolumeCollider.get(); }
 	const CCollFrustum* GetFrustumCollider() const;
 	const CCollOrientedBox* GetOrientedBoxCollider() const;

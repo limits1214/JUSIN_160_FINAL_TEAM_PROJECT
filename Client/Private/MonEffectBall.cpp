@@ -69,7 +69,7 @@ void CMonEffectBall::FixedUpdate(E::_float fTimeDelta)
 void CMonEffectBall::Update(E::_float fTimeDelta)
 {
 	if (!m_bHit)
-		OverlapTest();
+	OverlapTest();
 
 	if (m_bHit || m_iEffectID == INVALID_EFFECT_INSTANCE_ID || m_fDeadTime > 1.f) {
 
@@ -123,23 +123,23 @@ void CMonEffectBall::OverlapTest()
 	if (!m_bThrow)
 		return;
 	_float3 vPos{
-		  m_CurWorldmat._41,
-		  m_CurWorldmat._42,
-		  m_CurWorldmat._43
+			m_CurWorldmat._41,
+			m_CurWorldmat._42,
+			m_CurWorldmat._43
 	};
 
 	PX_OVERLAP_DESC desc{};
 	desc.tGeometry = {
-	   .eType = PX_QUERY_GEOMETRY_TYPE::SPHERE,
-	   .fRadius = 1.2f
+		.eType = PX_QUERY_GEOMETRY_TYPE::SPHERE,
+		.fRadius = 1.2f
 	};
 	desc.tPose = { .vPosition = vPos };
 
 	// 플레이어 검사
 	desc.tFilter = {
-	   .iQueryMask = ETOUI(COLLISION_LAYER::PLAYER_HURTBOX),
-	   .bQueryStatic = false,
-	   .bQueryDynamic = true
+		.iQueryMask = ETOUI(COLLISION_LAYER::PLAYER_HURTBOX),
+		.bQueryStatic = false,
+		.bQueryDynamic = true
 	};
 
 	PX_OVERLAP_RESULT result{};
@@ -157,9 +157,9 @@ void CMonEffectBall::OverlapTest()
 
 	// 바닥/벽 검사
 	desc.tFilter = {
-	   .iQueryMask = ETOUI(COLLISION_LAYER::WORLD_STATIC),
-	   .bQueryStatic = true,
-	   .bQueryDynamic = false
+		.iQueryMask = ETOUI(COLLISION_LAYER::WORLD_STATIC),
+		.bQueryStatic = true,
+		.bQueryDynamic = false
 	};
 
 	result = {};

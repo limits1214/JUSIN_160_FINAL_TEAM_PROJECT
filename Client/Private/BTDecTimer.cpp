@@ -127,11 +127,10 @@ EVALUATE CBTDecTimer::Evaluate(_float fTimeDelta)
 }
 void CBTDecTimer::Abort()
 {
-	if (auto pBT = Get_ComBT())
-	{
-		m_bRun = true;
-		m_fAddTime = m_fTick = 0.f;
-	}
+	__super::Abort();
+	
+	m_bRun = true;
+	m_fAddTime = m_fTick = 0.f;
 		
 }
 nlohmann::json CBTDecTimer::Save_Node()
@@ -141,6 +140,12 @@ nlohmann::json CBTDecTimer::Save_Node()
 	SaveJsonValue(j, "Run", m_bRun);
 	SaveJsonEnum(j, "TimerType", m_eTimer);
 	return j;
+}
+void CBTDecTimer::OnEnter()
+{
+}
+void CBTDecTimer::OnExit(EVALUATE eResult)
+{
 }
 HRESULT CBTDecTimer::Load_json(const nlohmann::json& j)
 {

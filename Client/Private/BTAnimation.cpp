@@ -30,20 +30,31 @@ HRESULT CBTAnimation::Initalize(void* pArg)
 
 EVALUATE CBTAnimation::Evaluate(_float fTimeDelta)
 {
+	auto pBT = Get_ComBT();
+	if (!pBT) return EVALUATE::FAILED;
+	auto pOwner = static_cast<CMonster*>(pBT->GetGameObject());
+	if (!pOwner) return EVALUATE::FAILED;
+	auto pTarget = pOwner->Get_Target();
+	if (!pTarget) return EVALUATE::FAILED;
+
+	auto pTransform = (Get_Component<CComTransform>(m_Handle, "Com_Transform"));
+	auto pMoveIntent = Get_Component<CComCharacterMoveIntent>(m_Handle, "ComCharacterMoveIntent");
 	auto pAnimator =(Get_Component<CComAnimator>(m_Handle, "ComCModelAnimator"));
-	
-	if (pAnimator == nullptr || -1 == m_Value.iAnimIndex)
+
+	if (!pTransform || !pMoveIntent ||!pAnimator || -1 == m_Value.iAnimIndex)
 		return m_eDebug = EVALUATE::FAILED;
+	_float fAnimRatio = pAnimator->GetPlayAnimRatio();
 	if (m_bStart)
 		pAnimator->SetPlay(true);
 	if (!m_bUseCurAnim)
 		pAnimator->Play_Anim(m_Value.iAnimIndex, m_bLoop, m_fBlend);
+
 	_bool bFinished = pAnimator->GetFinish();
 	Gravity();
-
 	Play_Sound(fTimeDelta);
-	EventFlagToRatio(pAnimator->GetPlayAnimRatio());
-	if (m_bEarly && m_fEarlyRatio <= pAnimator->GetPlayAnimRatio() || bFinished)
+	EventFlagToRatio(fAnimRatio);
+	Rotation(pTransform, pMoveIntent, pTarget, fTimeDelta, fAnimRatio);
+	if (m_bEarly && m_fEarlyRatio <= fAnimRatio || bFinished)
 	{
 		return m_eDebug = EVALUATE::SUCCESS;
 	}

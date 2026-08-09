@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "MapMeshInstancingRenderer.h"
 #include "MapMeshGpuCuller.h"
+#include "MapMeshObject.h"
 
 NS_USING(Engine)
 
@@ -152,14 +153,14 @@ HRESULT CMapMeshInstancingRenderer::Initialize()
 	return S_OK;
 }
 
-HRESULT CMapMeshInstancingRenderer::PushMapObjectInstance(const SPtr<CResStaticModel>& pModel, const MAPMESH_INSTANCE_DATA& instanceData, MAPMESH_OCCLUSION_DATA& occlusionData)
+HRESULT CMapMeshInstancingRenderer::PushMapObjectInstance(const SPtr<CResStaticModel>& pModel, EMapMeshRenderFeature renderFeature, const MAPMESH_INSTANCE_DATA& instanceData, MAPMESH_OCCLUSION_DATA& occlusionData)
 {
 	if (pModel == nullptr)
 	{
 		return E_FAIL;
 	}
-
-	auto& batch = s_InstanceBatches[pModel];
+	MAPOBJECTKEY key{ pModel, renderFeature };
+	auto& batch = s_InstanceBatches[key];
 
 	occlusionData.instanceIndex = static_cast<uint32_t>(batch.instances.size());
 
@@ -207,14 +208,15 @@ HRESULT CMapMeshInstancingRenderer::Render(ID3D11DeviceContext* pContext, const 
 	if (pContext == nullptr || s_InstanceBatches.empty())
 		return S_OK;
 
-	const auto& vertexShader = CGameInstance::Get().GetResourceFirst<CResVertexShader>(TAG_RES_GRP_PERMANENT_SHADER, "VS_TestModelNonAnim_Instanced");
+	const auto& vertexStaticShader = CGameInstance::Get().GetResourceFirst<CResVertexShader>(TAG_RES_GRP_PERMANENT_SHADER, "VS_TestModelNonAnim_Instanced");
+	const auto& vertexFoliageShader = CGameInstance::Get().GetResourceFirst<CResVertexShader>(TAG_RES_GRP_PERMANENT_SHADER, "VS_TestModelNonAnim_Instanced_Foliage");
 	const auto& pixelShader = CGameInstance::Get().GetResourceFirst<CResPixelShader>(TAG_RES_GRP_PERMANENT_SHADER, "PS_TestModelNonAnim_Instanced");
 	const auto& sampler = CGameInstance::Get().GetResourceFirst<CResSamplerState>(TAG_RES_GRP_PERMANENT_STATE, TAG_RES_STATE_SS_LINEAR_WRAP);
-	if (!vertexShader || !pixelShader || !sampler)
+	if (!vertexStaticShader || !vertexFoliageShader || !pixelShader || !sampler)
 		return E_FAIL;
 
-	pContext->IASetInputLayout(vertexShader->GetInputLayout().Get());
-	pContext->VSSetShader(vertexShader->GetVertexShader().Get(), nullptr, 0);
+	//pContext->IASetInputLayout(vertexStaticShader->GetInputLayout().Get());
+	//pContext->VSSetShader(vertexStaticShader->GetVertexShader().Get(), nullptr, 0);
 	pContext->PSSetShader(pixelShader->GetPixelShader().Get(), nullptr, 0);
 	pContext->PSSetSamplers(0, 1, sampler->GetSamplerState().GetAddressOf());
 
@@ -227,8 +229,9 @@ HRESULT CMapMeshInstancingRenderer::Render(ID3D11DeviceContext* pContext, const 
 
 	size_t totalInstances = 0;
 	size_t totalDraws = 0;
-	for (const auto& [model, batch] : s_InstanceBatches)
+	for (const auto& [pair, batch] : s_InstanceBatches)
 	{
+		const auto& model = pair.first;
 		if (model && !batch.instances.empty())
 		{
 			totalInstances += batch.instances.size();
@@ -244,8 +247,10 @@ HRESULT CMapMeshInstancingRenderer::Render(ID3D11DeviceContext* pContext, const 
 	m_DrawItems.reserve(totalDraws);
 
 	uint32_t batchIndex = 0;
-	for (const auto& [model, batch] : s_InstanceBatches)
+	for (const auto& [pair, batch] : s_InstanceBatches)
 	{
+		const auto& model = pair.first;
+		const auto& renderFeature = pair.second;
 		if (!model || batch.instances.empty())
 			continue;
 		if (batch.occlusionData.size() != batch.instances.size())
@@ -265,12 +270,18 @@ HRESULT CMapMeshInstancingRenderer::Render(ID3D11DeviceContext* pContext, const 
 			const auto& mesh = model->GetMeshes()[meshIndex];
 			if (mesh == nullptr)
 				continue;
+			const uint32_t drawIndex = static_cast<uint32_t>(m_DrawItems.size());
 
 			m_DrawBatchIndices.push_back(batchIndex);
 			D3D11_DRAW_INDEXED_INSTANCED_INDIRECT_ARGS args{};
 			args.IndexCountPerInstance = static_cast<uint32_t>(mesh->GetNumIndices());
 			m_IndirectArgs.push_back(args);
-			m_DrawItems.push_back({ model, textureCache, meshIndex, instanceOffset });
+			m_DrawItems.push_back({ model, renderFeature, textureCache, meshIndex, instanceOffset });
+
+			const size_t featureIndex = static_cast<size_t>(renderFeature);
+			if (featureIndex >= RENDER_FEATURE_COUNT)
+				return E_FAIL;
+			m_DrawIndicesByFeature[featureIndex].push_back(drawIndex);
 		}
 		++batchIndex;
 	}
@@ -294,24 +305,49 @@ HRESULT CMapMeshInstancingRenderer::Render(ID3D11DeviceContext* pContext, const 
 	if (FAILED(BindMapMeshMaterial(pContext, { 1.f, 1.f, 1.f }, 0.f, 1.f)))
 		return E_FAIL;
 
-	for (uint32_t drawIndex = 0; drawIndex < m_DrawItems.size(); ++drawIndex)
+	const auto RenderFeature = [&](EMapMeshRenderFeature renderFeature, const SPtr<CResVertexShader>& vertexShader) -> HRESULT
 	{
-		const auto& item = m_DrawItems[drawIndex];
-		const auto& mesh = item.model->GetMeshes()[item.meshIndex];
-		ID3D11Buffer* vertexBuffers[] = { mesh->GetVertexBuffer().Get(), visibleInstanceBuffer };
-		uint32_t strides[] = { mesh->GetVertexStride(), static_cast<uint32_t>(sizeof(MAPMESH_INSTANCE_DATA)) };
-		uint32_t offsets[] = { 0, item.instanceOffset * static_cast<uint32_t>(sizeof(MAPMESH_INSTANCE_DATA)) };
-		pContext->IASetVertexBuffers(0, 2, vertexBuffers, strides, offsets);
-		pContext->IASetIndexBuffer(mesh->GetIndexBuffer().Get(), mesh->GetIndexFormat(), 0);
-		pContext->IASetPrimitiveTopology(mesh->GetPrimitiveType());
-		if (FAILED(BindMapMeshTextures(pContext, *item.textureCache, item.meshIndex)))
+		const size_t featureIndex = static_cast<size_t>(renderFeature);
+		if (featureIndex >= RENDER_FEATURE_COUNT || vertexShader == nullptr)
 			return E_FAIL;
 
-		pContext->DrawIndexedInstancedIndirect(
-			argsBuffer,
-			drawIndex * static_cast<uint32_t>(sizeof(D3D11_DRAW_INDEXED_INSTANCED_INDIRECT_ARGS)));
-		++s_FrameStats.iDrawCalls;
-	}
+		const auto& drawIndices = m_DrawIndicesByFeature[featureIndex];
+		if (drawIndices.empty())
+			return S_OK;
+
+		pContext->IASetInputLayout(vertexShader->GetInputLayout().Get());
+		pContext->VSSetShader(vertexShader->GetVertexShader().Get(), nullptr, 0);
+
+		for (const uint32_t drawIndex : drawIndices)
+		{
+			if (drawIndex >= m_DrawItems.size())
+				return E_FAIL;
+
+			const auto& item = m_DrawItems[drawIndex];
+			const auto& mesh = item.model->GetMeshes()[item.meshIndex];
+			ID3D11Buffer* vertexBuffers[] = { mesh->GetVertexBuffer().Get(), visibleInstanceBuffer };
+			uint32_t strides[] = { mesh->GetVertexStride(), static_cast<uint32_t>(sizeof(MAPMESH_INSTANCE_DATA)) };
+			uint32_t offsets[] = { 0, item.instanceOffset * static_cast<uint32_t>(sizeof(MAPMESH_INSTANCE_DATA)) };
+
+			pContext->IASetVertexBuffers(0, 2, vertexBuffers, strides, offsets);
+			pContext->IASetIndexBuffer(mesh->GetIndexBuffer().Get(), mesh->GetIndexFormat(), 0);
+			pContext->IASetPrimitiveTopology(mesh->GetPrimitiveType());
+			if (FAILED(BindMapMeshTextures(pContext, *item.textureCache, item.meshIndex)))
+				return E_FAIL;
+
+			pContext->DrawIndexedInstancedIndirect(
+				argsBuffer,
+				drawIndex * static_cast<uint32_t>(sizeof(D3D11_DRAW_INDEXED_INSTANCED_INDIRECT_ARGS)));
+			++s_FrameStats.iDrawCalls;
+		}
+
+		return S_OK;
+	};
+
+	if (FAILED(RenderFeature(EMapMeshRenderFeature::Static, vertexStaticShader)))
+		return E_FAIL;
+	if (FAILED(RenderFeature(EMapMeshRenderFeature::Foliage, vertexFoliageShader)))
+		return E_FAIL;
 
 	return S_OK;
 }
@@ -356,6 +392,8 @@ void CMapMeshInstancingRenderer::ClearFrameScratchBuffers()
 	m_DrawBatchIndices.clear();
 	m_IndirectArgs.clear();
 	m_DrawItems.clear();
+	for (auto& drawIndices : m_DrawIndicesByFeature)
+		drawIndices.clear();
 }
 
 void CMapMeshInstancingRenderer::ReleaseInstancingResources()

@@ -460,9 +460,6 @@
     <Filter Include="ShaderFiles\TestModel\Compute">
       <UniqueIdentifier>{0464bfd6-5af4-491a-81f0-6208e5bb7163}</UniqueIdentifier>
     </Filter>
-    <Filter Include="GameObject\Volumetric">
-      <UniqueIdentifier>{3a4a0639-9eae-4888-8957-77e469aa351d}</UniqueIdentifier>
-    </Filter>
     <Filter Include="GameObject\Camera\ShadowCamera">
       <UniqueIdentifier>{794170c2-61af-41b9-a487-94d95b3cc2f3}</UniqueIdentifier>
     </Filter>
@@ -586,6 +583,9 @@
       <Filter>99.Defines</Filter>
     </ClInclude>
     <ClInclude Include="..\Public\Engine_Base.h">
+      <Filter>99.Defines</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Public\Engine_BuildConfig.h">
       <Filter>99.Defines</Filter>
     </ClInclude>
     <ClInclude Include="..\Public\TimeProvider.h">
@@ -781,6 +781,9 @@
       <Filter>Collider\Sphere</Filter>
     </ClInclude>
     <ClInclude Include="..\Public\GameObjectManager.h">
+      <Filter>GameObject\Manager</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Public\GameObjectPoolManager.h">
       <Filter>GameObject\Manager</Filter>
     </ClInclude>
     <ClInclude Include="..\Public\CameraObject.h">
@@ -1141,9 +1144,6 @@
     <ClInclude Include="..\Public\ShadowCamera.h">
       <Filter>GameObject\Camera\ShadowCamera</Filter>
     </ClInclude>
-    <ClInclude Include="..\Public\VolumetricFog.h">
-      <Filter>GameObject\Volumetric</Filter>
-    </ClInclude>
     <ClInclude Include="..\public\Beam_CPU.h">
       <Filter>Particle\Beam</Filter>
     </ClInclude>
@@ -1263,6 +1263,9 @@
     </ClInclude>
     <ClInclude Include="..\public\BlastManager.h">
       <Filter>Blast</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\BTSubTreeNode.h">
+      <Filter>Component\BeHavior\Root\Composite\CompositeNode\ActionNode</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -1422,6 +1425,9 @@
     <ClCompile Include="..\Private\FontManager.cpp">
       <Filter>Font</Filter>
     </ClCompile>
+    <ClCompile Include="..\Private\Engine_BuildConfig.cpp">
+      <Filter>99.Defines</Filter>
+    </ClCompile>
     <ClCompile Include="..\Private\WorkerManager.cpp">
       <Filter>Worker</Filter>
     </ClCompile>
@@ -1465,6 +1471,9 @@
       <Filter>Collider\Sphere</Filter>
     </ClCompile>
     <ClCompile Include="..\Private\GameObjectManager.cpp">
+      <Filter>GameObject\Manager</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Private\GameObjectPoolManager.cpp">
       <Filter>GameObject\Manager</Filter>
     </ClCompile>
     <ClCompile Include="..\Private\CameraObject.cpp">
@@ -1789,9 +1798,6 @@
     <ClCompile Include="..\Private\ShadowCamera.cpp">
       <Filter>GameObject\Camera\ShadowCamera</Filter>
     </ClCompile>
-    <ClCompile Include="..\Private\VolumetricFog.cpp">
-      <Filter>GameObject\Volumetric</Filter>
-    </ClCompile>
     <ClCompile Include="..\private\LuaManager.cpp">
       <Filter>Lua</Filter>
     </ClCompile>
@@ -1887,6 +1893,9 @@
     </ClCompile>
     <ClCompile Include="..\private\ComBeHavior.cpp">
       <Filter>Component\BeHavior</Filter>
+    </ClCompile>
+    <ClCompile Include="..\private\BTSubTreeNode.cpp">
+      <Filter>Component\BeHavior\Root\Composite\CompositeNode\ActionNode</Filter>
     </ClCompile>
     <ClCompile Include="..\private\BlastManager.cpp">
       <Filter>Blast</Filter>
@@ -2056,6 +2065,12 @@
     </FxCompile>
     <FxCompile Include="..\ShaderFiles\UI\Cursor.hlsl">
       <Filter>ShaderFiles\UIShader</Filter>
+    </FxCompile>
+    <FxCompile Include="..\ShaderFiles\RayMarching\PS_Volumetric.hlsl">
+      <Filter>ShaderFiles\RayMarching</Filter>
+    </FxCompile>
+    <FxCompile Include="..\ShaderFiles\TestModel\Shader_VtxMesh_Instanced_Foliage.hlsl">
+      <Filter>ShaderFiles\TestModel</Filter>
     </FxCompile>
   </ItemGroup>
   <ItemGroup>

@@ -23,6 +23,7 @@
 #include "DbgLineRender.h"
 #include "Player_StateMachine.h"
 #include "Player_Locomotion_State.h"
+#include "Player_Fly_State.h"
 #include "Player_Jump_State.h"
 #include "Player_Roll_State.h"
 #include "Player_Attack_State.h"
@@ -46,11 +47,11 @@
 #include "UIManager.h"
 NS_USING(Client)
 
+
+
 void CPlayer::UpdateGUI()
 {
-	//static _float4 weaponColor;
-	//static _float3 weaponEmissiveColor;
-	//static _float weaponEIntensity;
+	
 	__super::UpdateGUI();
 
 
@@ -75,18 +76,11 @@ void CPlayer::UpdateGUI()
 
 	ImGui::DragInt("HP : ",&m_iHp,0.1f,0,100000);
 
+
 	if (m_pRagdollController)
 		m_pRagdollController->UpdateGUI();
 
-	//ImGui::ColorEdit4("Color", &weaponColor.x);
-	//ImGui::ColorEdit3("Emissive", &weaponEmissiveColor.x);
-	//ImGui::DragFloat("Emissive Intensity", &weaponEIntensity);
 
-	//if (ImGui::Button("Apply DashTrail")) {
-	//	auto a = CGameInstance::Get().GetParticle("Lightning_Trail", "Lightning_Trail");
-	//	static_cast<CTrail_CPU*>(a)->SetColor(weaponColor);
-	//	static_cast<CTrail_CPU*>(a)->SetEmissive(_float4(weaponEmissiveColor.x, weaponEmissiveColor.y, weaponEmissiveColor.z, weaponEIntensity));
-	//}
 
 }
 
@@ -186,6 +180,12 @@ HRESULT CPlayer::Initialize(void* pArg)
 
 		// TestModel은 생성 직후부터 CPU pose + VS skinning 경로를 사용한다.
 		m_pModelAnimator->SetEvaluationMode(CComAnimator::EVALUATION_MODE::CPU_GPU);
+
+		if (!m_pModelAnimator->Set_UpperBodyRootBone("SKT_Spine",3))
+		{
+			MSG_BOX("FAILED to Set UpperBodyRootBone");
+		}
+
 	}
 
 	{
@@ -379,6 +379,12 @@ HRESULT CPlayer::Initialize(void* pArg)
 		{
 			return E_FAIL;
 		}
+		if (!m_pStateMachine->AddPlayerState(
+			PLAYER_STATE::FLY,
+			CPlayer_Fly_State::Create()))
+		{
+			return E_FAIL;
+		}
 
 		if (!m_pStateMachine->SetInitialState(PLAYER_STATE::LOCOMOTION))
 		{
@@ -427,10 +433,31 @@ HRESULT CPlayer::Initialize(void* pArg)
 			static_cast<CTrail_CPU*>(a)->SetEmissive(_float4(182 / 255.f, 1.f, 241 / 255.f, 2.f));
 		}
 		{
-			auto a = CGameInstance::Get().GetParticle("Lightning_Trail", "Lightning_Trail");
-			static_cast<CTrail_CPU*>(a)->SetColor(_float4(67/255.f, 97 / 255.f, 174 / 255.f, 1.f));
-			static_cast<CTrail_CPU*>(a)->SetEmissive(_float4(51/255.f, 77 / 255.f, 126 / 255.f, 4.f));
+			auto a = CGameInstance::Get().GetParticle("RanrokTrail1", "RanrokTrail1");
+			static_cast<CTrail_CPU*>(a)->SetColor(_float4(182 / 255.f, 1.f, 241 / 255.f, 255 / 255.f));
+			static_cast<CTrail_CPU*>(a)->SetEmissive(_float4(255 / 255.f, 0.f, 0/ 255.f, 15.f));
 		}
+		{
+			auto a = CGameInstance::Get().GetParticle("RanrokTrail2", "RanrokTrail2");
+			static_cast<CTrail_CPU*>(a)->SetColor(_float4(182 / 255.f, 1.f, 241 / 255.f, 255 / 255.f));
+			static_cast<CTrail_CPU*>(a)->SetEmissive(_float4(255 / 255.f, 0.f, 0/ 255.f, 15.f));
+		}
+		{
+			auto a = CGameInstance::Get().GetParticle("RanrokTrail3", "RanrokTrail3");
+			static_cast<CTrail_CPU*>(a)->SetColor(_float4(182 / 255.f, 1.f, 241 / 255.f, 255 / 255.f));
+			static_cast<CTrail_CPU*>(a)->SetEmissive(_float4(255 / 255.f, 0.f, 0/ 255.f, 15.f));
+		}
+		{
+			auto a = CGameInstance::Get().GetParticle("RanrokTrail4", "RanrokTrail4");
+			static_cast<CTrail_CPU*>(a)->SetColor(_float4(182 / 255.f, 1.f, 241 / 255.f, 255 / 255.f));
+			static_cast<CTrail_CPU*>(a)->SetEmissive(_float4(255 / 255.f, 0.f, 0/ 255.f, 15.f));
+		}
+		{
+			auto a = CGameInstance::Get().GetParticle("RanrokTrail5", "RanrokTrail5");
+			static_cast<CTrail_CPU*>(a)->SetColor(_float4(182 / 255.f, 1.f, 241 / 255.f, 255 / 255.f));
+			static_cast<CTrail_CPU*>(a)->SetEmissive(_float4(255 / 255.f, 0.f, 0/ 255.f, 15.f));
+		}
+
 	}
 
 	{
@@ -448,8 +475,8 @@ HRESULT CPlayer::Initialize(void* pArg)
 	}
 
 	m_hAutoTarget = CHandle{};
-	return S_OK;
 
+	return S_OK;
 }
 
 #pragma region RAGDOLL
@@ -864,30 +891,41 @@ void CPlayer::PriorityUpdate(E::_float fTimeDelta)
 	}
 
 
-
-	if (CGameInstance::Get().KeyDown(DIK_1) && !m_bCoolTime_Num1) {
-		//if (TryUseSkillSlot(1))
-		if(m_pStateMachine->RequestState(PLAYER_STATE::ACCIO_SKILL))
-			m_bCoolTime_Num1 = true;
+	if (m_pStateMachine && CGameInstance::Get().KeyPressing(DIK_TAB) && CGameInstance::Get().KeyDown(DIK_3) && !m_bFlyRequested) {
+		SetFlyRequested(true);
+	}
+	else if (m_pStateMachine && CGameInstance::Get().KeyPressing(DIK_TAB) && CGameInstance::Get().KeyDown(DIK_3) && m_bFlyRequested) {
+		SetFlyRequested(false);
 	}
 
-	if (CGameInstance::Get().KeyDown(DIK_2) && !m_bCoolTime_Num2)
-	{
-		//if (TryUseSkillSlot(2))
-		if(m_pStateMachine->RequestState(PLAYER_STATE::DEPULSO_SKILL))
-			m_bCoolTime_Num2 = true;
-	}
-	if (CGameInstance::Get().KeyDown(DIK_3) && !m_bCoolTime_Num3)
-	{
-		//if (TryUseSkillSlot(3))
-		if(m_pStateMachine->RequestState(PLAYER_STATE::DESCENDO_SKILL))
-			m_bCoolTime_Num3 = true;
-	}	
+	if (!m_bFlyRequested) {
+		if (CGameInstance::Get().KeyDown(DIK_1) && !m_bCoolTime_Num1) {
+			//if (TryUseSkillSlot(1))
+			if (m_pStateMachine->RequestState(PLAYER_STATE::ACCIO_SKILL))
+				m_bCoolTime_Num1 = true;
+		}
 
-	if (CGameInstance::Get().KeyDown(DIK_4) && !m_bCoolTime_Num4) {
-		if(m_pStateMachine->RequestState(PLAYER_STATE::REPAIRO_SKILL))
-			m_bCoolTime_Num4 = true;
+		if (CGameInstance::Get().KeyDown(DIK_2) && !m_bCoolTime_Num2)
+		{
+			//if (TryUseSkillSlot(2))
+			if (m_pStateMachine->RequestState(PLAYER_STATE::DEPULSO_SKILL))
+				m_bCoolTime_Num2 = true;
+		}
+		if (CGameInstance::Get().KeyDown(DIK_3) && !m_bCoolTime_Num3)
+		{
+			//if (TryUseSkillSlot(3))
+			if (m_pStateMachine->RequestState(PLAYER_STATE::DESCENDO_SKILL))
+				m_bCoolTime_Num3 = true;
+		}
+
+		if (CGameInstance::Get().KeyDown(DIK_4) && !m_bCoolTime_Num4) {
+			if (m_pStateMachine->RequestState(PLAYER_STATE::REPAIRO_SKILL))
+				m_bCoolTime_Num4 = true;
+		}
+
 	}
+	
+
 
 	if (m_pStateMachine && CGameInstance::Get().KeyDown(DIK_H))
 		OnQueryHit(20);
@@ -1307,6 +1345,60 @@ void CPlayer::PrepareLocomotionResume()
 void CPlayer::Update(E::_float fTimeDelta)
 {
 	ZoneScopedN("Update TestModel");
+	{
+		// 연기 제거 요청by SM
+		if constexpr (false)
+		{
+			_float4 fpos = _float4(GetTransform().GetPosition().x, GetTransform().GetPosition().y, GetTransform().GetPosition().z, 1);
+			_vector pos = XMVectorSet(fpos.x, fpos.y, fpos.z, fpos.w);
+			_vector lastSpawnPos = XMVectorSet(m_vSpwanPos.x, m_vSpwanPos.y, m_vSpwanPos.z, 1.f);
+			_float distance = XMVectorGetX(
+				XMVector3Length(pos - lastSpawnPos));
+			_float3 deltaPos;
+			XMStoreFloat3(&deltaPos, lastSpawnPos - pos);
+			if (distance > m_fDistanceOffeset) {
+
+				CGameInstance::Get().PlayEffect(
+					"RanrokMoveSmoke", *GetTransform().GetWorldMatrix(), pos);
+				m_vSpwanPos = GetTransform().GetPosition();
+
+			}
+
+			const _matrix playerWorld = GetTransform().GetLoadedWorldMatrix();
+
+			auto TransformTrailPoint = [&playerWorld](const _float3& localPoint)
+				{
+					_float3 worldPoint{};
+					XMStoreFloat3(&worldPoint, XMVector3TransformCoord(XMLoadFloat3(&localPoint), playerWorld));
+					return worldPoint;
+				};
+
+			_float3 vstart{};
+			_float3 vend{};
+
+			vstart = TransformTrailPoint({ 0.f, 3.5f, 0.f });
+			vend = TransformTrailPoint({ 0.f, 2.5f, 0.f });
+			CGameInstance::Get().AddTrailPoint("RanrokTrail1", "RanrokTrail1", vstart, vend);
+
+			vstart = TransformTrailPoint({ 0.f, 1.5f, -3.f });
+			vend = TransformTrailPoint({ 0.f, 0.5f, -3.f });
+			CGameInstance::Get().AddTrailPoint("RanrokTrail2", "RanrokTrail2", vstart, vend);
+
+			vstart = TransformTrailPoint({ 0.f, 1.5f, 3.f });
+			vend = TransformTrailPoint({ 0.f, 0.5f, 3.f });
+			CGameInstance::Get().AddTrailPoint("RanrokTrail3", "RanrokTrail3", vstart, vend);
+
+			vstart = TransformTrailPoint({ 0.f, -0.5f, -2.f });
+			vend = TransformTrailPoint({ 0.f, -1.5f, -2.f });
+			CGameInstance::Get().AddTrailPoint("RanrokTrail4", "RanrokTrail4", vstart, vend);
+
+			vstart = TransformTrailPoint({ 0.f, -0.5f, 2.f });
+			vend = TransformTrailPoint({ 0.f, -1.5f, 2.f });
+			CGameInstance::Get().AddTrailPoint("RanrokTrail5", "RanrokTrail5", vstart, vend);
+		}
+		
+
+	}
 
 
 	if (nullptr == CGameInstance::Get().GetGameObjectByHandleT<CUIController>(m_UIHandle))
@@ -1320,7 +1412,7 @@ void CPlayer::Update(E::_float fTimeDelta)
 	InitializeSkillSlotUI();
 
 	_bool bApplyRootMotionTranslation{};
-	_float3 vRootMotionDelta{};
+	_float3 vRootMotionWorldDisplacement{};
 
 	for (auto iter = m_Projectiles.begin(); iter != m_Projectiles.end();)
 	{
@@ -1348,7 +1440,18 @@ void CPlayer::Update(E::_float fTimeDelta)
 
 		m_pModelAnimator->Update(fTimeDelta);
 		bApplyRootMotionTranslation = m_bRootMotionTranslationActive;
-		vRootMotionDelta = m_pModelAnimator->GetRootMotionDelta();
+		const _float3 vRootMotionDelta =
+			m_pModelAnimator->GetRootMotionDelta();
+
+		// Local 이동은 이번 프레임의 Root 회전을 적용하기 전 방향을
+		// 기준으로 월드 변환해야 Turn 중 이동 방향이 회전 후 방향으로
+		// 한 프레임 먼저 꺾이지 않는다.
+		const _vector vWorldDelta = XMVector3Rotate(
+			XMLoadFloat3(&vRootMotionDelta),
+			GetTransform().GetLoadedQuaternion());
+		XMStoreFloat3(
+			&vRootMotionWorldDisplacement,
+			vWorldDelta);
 
 		if (m_bRootMotionRotationActive)
 		{
@@ -1377,15 +1480,8 @@ void CPlayer::Update(E::_float fTimeDelta)
 		m_pComMoveIntent &&
 		!IsRagdollTransitioning())
 	{
-		const _vector vLocalDelta = XMLoadFloat3(&vRootMotionDelta);
-		const _vector vWorldDelta = XMVector3Rotate(
-			vLocalDelta,
-			GetTransform().GetLoadedQuaternion());
-
-		_float3 vWorldDisplacement{};
-		XMStoreFloat3(&vWorldDisplacement, vWorldDelta);
-
-		m_pComMoveIntent->AddExternalDisplacement(vWorldDisplacement);
+		m_pComMoveIntent->AddExternalDisplacement(
+			vRootMotionWorldDisplacement);
 	}
 
 	// [LSY] FixedUpdate에서 변경된 CCT 위치와 Update에서 적용한 회전을
@@ -1998,6 +2094,13 @@ void CPlayer::DelayFinish(_float fTimeDelta)
 			pUIController->CreateDeathScene();
 		}
 	}
+}
+
+void CPlayer::SetFlyRequested(_bool bRequested)
+{
+	m_bFlyRequested = bRequested;
+	if (bRequested && m_pStateMachine)
+		m_pStateMachine->RequestState(PLAYER_STATE::FLY);
 }
 
 E::UPtr<CPlayer> CPlayer::Create()

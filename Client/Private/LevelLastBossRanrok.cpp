@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "LevelLastBossRanrok.h"
+#include "LevelLastBossRanrokLoader.h"
 #include "GameInstance.h"
 #include "Level_Defines.h"
 #include "FlyCamera.h"
@@ -32,7 +33,9 @@ CLevelLastBossRanrok::~CLevelLastBossRanrok()
 
 HRESULT CLevelLastBossRanrok::Initialize()
 {
-	E::CGameInstance::Get().GameObjectAllReset();
+	Engine::CGameInstance::Get().GameObjectAllResetExceptLayers({
+		"00_ENGINE_CINEMATIC_CAMERA"
+		});
 
 	//GET_SINGLE(UIManager)->CreateFadeOut(2.f, 3.f);
 
@@ -51,8 +54,8 @@ HRESULT CLevelLastBossRanrok::Initialize()
 	//if (FAILED(SpawnPlayerCape(*hPlayer)))
 	//	return E_FAIL;
 
-	//if (FAILED(CGameInstance::Get().LoadMap("./Resources/json/MapSaved/Tomb12345", true)))
-	//	return E_FAIL;
+	if (FAILED(CGameInstance::Get().LoadMap(CLevelLastBossRanrokLoader::MAP_PATH, true)))
+		return E_FAIL;
 
 	//if (FAILED(SpawnStaticCollision()))
 	//	return E_FAIL;
@@ -134,12 +137,12 @@ HRESULT CLevelLastBossRanrok::SpawnFlyCamera()
 	{
 		E::CCameraObject::CAMERA_DESC Desc{};
 		Desc.eProj = E::CCameraObject::PROJ::PERSPECTIVE;
-		Desc.vAt = { 0.f, 0.f, 0.f };
-		Desc.vEye = { 0.f, 0.f, -5.f };
+		Desc.vAt = { -50.f, 325.f, -25.f };
+		Desc.vEye = { -50.f, 400.f, -200.f };
 		Desc.fAspect = { g_iWinSizeX / (E::_float)g_iWinSizeY };
 		Desc.fFovY = 75.f;
 		Desc.fNear = 0.1f;
-		Desc.fFar = 1000.f;
+		Desc.fFar = 5000.f;
 		Desc.sObjectTag = "FlyCam";
 
 		if (auto flyCam = E::CGameInstance::Get().AddGameObjectToLayer("CAMERAS", "Prototype_GameObject_FlyCamera",
@@ -148,6 +151,11 @@ HRESULT CLevelLastBossRanrok::SpawnFlyCamera()
 			if (FAILED(E::CGameInstance::Get().RegistCamera("FLY", flyCam.value())))
 			{
 				MSG_BOX("FailedToRegistCamera");
+				return E_FAIL;
+			}
+			if (FAILED(E::CGameInstance::Get().SetActiveCamera("FLY")))
+			{
+				MSG_BOX("FailedToActivateFlyCamera");
 				return E_FAIL;
 			}
 

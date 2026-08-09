@@ -46,9 +46,10 @@ public:
 	_bool MoveWithSweep(const _float3& vNextPosition);
 	_bool HandleSweepHit(const PX_SWEEP_RESULT& tHit);
 private:
-	void		Dead_Check();
+	void		Dead_Check(_float fTimeDetla);
 private:
 	_bool  m_bDead{ false };
+	_float m_fDeadTick{};
 	_float m_fSpeed{ 10.f };
 	_float m_fRadius{ 0.5f };
 	PX_QUERY_FILTER_DESC m_tQueryFilter{};

@@ -39,7 +39,9 @@ CLevelCharlesRookwood::~CLevelCharlesRookwood()
 
 HRESULT CLevelCharlesRookwood::Initialize()
 {
-	E::CGameInstance::Get().GameObjectAllReset();
+	E::CGameInstance::Get().GameObjectAllResetExceptLayers({
+		"00_ENGINE_CINEMATIC_CAMERA"
+	});
 
 	GET_SINGLE(UIManager)->CreateFadeOut(2.f, 3.f);
 
@@ -106,8 +108,22 @@ void CLevelCharlesRookwood::Update(E::_float fTimeDelta)
 			CGameObject::GAMEOBJECT_DESC Desc{};
 			Desc.sObjectTag = "UIController";
 
-			GET_SINGLE(UIManager)->SetUIController(E::CGameInstance::Get().AddGameObjectToLayer("LEVEL_CHARLES_ROOKWOOD", "Prototype_GameObject_UIController",
-				"UIController", &Desc));
+			auto uiControllerHandle = E::CGameInstance::Get().
+				AddGameObjectToLayer(
+					"LEVEL_CHARLES_ROOKWOOD",
+					"Prototype_GameObject_UIController",
+					"UIController",
+					&Desc);
+			GET_SINGLE(UIManager)->SetUIController(uiControllerHandle);
+
+			if (uiControllerHandle)
+			{
+				E::CGameInstance::Get().EventPublish(
+					FQuestUIGroupChanged{
+						.Group = QUEST_UI_GROUP::ROOKWOOD_TRIAL_01,
+						.Active = true
+					});
+			}
 		}
 	}
 

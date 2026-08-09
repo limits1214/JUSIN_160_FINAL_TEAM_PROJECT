@@ -204,8 +204,23 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="..\Public\BackGround.h" />
+    <ClInclude Include="..\public\BTDecEdgPatroll.h" />
+    <ClInclude Include="..\Public\BlackBoardKey.h" />
+    <ClInclude Include="..\public\BTDecEdgPhase.h" />
+    <ClInclude Include="..\public\BTDecEdgState.h" />
+    <ClInclude Include="..\public\BTEdgStateFinished.h" />
+    <ClInclude Include="..\public\DragonSkill.h" />
+    <ClInclude Include="..\public\EdgBreath.h" />
+    <ClInclude Include="..\public\EdgFireBall.h" />
+    <ClInclude Include="..\public\Edg_Combat.h" />
+    <ClInclude Include="..\public\Edg_Hit.h" />
+    <ClInclude Include="..\public\Edg_Phase.h" />
+    <ClInclude Include="..\public\Edg_Spawn.h" />
+    <ClInclude Include="..\public\EnderDragon.h" />
+    <ClInclude Include="..\public\EnderDragon_State.h" />
     <ClInclude Include="..\public\LevelLastBossRanrok.h" />
     <ClInclude Include="..\public\LevelLastBossRanrokLoader.h" />
+    <ClInclude Include="..\Public\Player_Fly_State.h" />
     <ClInclude Include="..\Public\SkyCloudyCube.h" />
     <ClInclude Include="..\public\BossMace.h" />
     <ClInclude Include="..\Public\BridgeCRW.h" />
@@ -320,6 +335,7 @@
     <ClInclude Include="..\public\TmbGurdianDead.h" />
     <ClInclude Include="..\public\TriggerCRW_ToBoss.h" />
     <ClInclude Include="..\Public\Mon_Weapon.h" />
+    <ClInclude Include="..\Public\UI_Structs.h" />
     <ClInclude Include="..\Public\VideoObject.h" />
     <ClInclude Include="Client.h" />
     <ClInclude Include="framework.h" />
@@ -329,8 +345,22 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\Private\BackGround.cpp" />
+    <ClCompile Include="..\private\EdgBreath.cpp" />
+    <ClCompile Include="..\private\EdgFireBall.cpp" />
     <ClCompile Include="..\private\LevelLastBossRanrok.cpp" />
     <ClCompile Include="..\private\LevelLastBossRanrokLoader.cpp" />
+    <ClCompile Include="..\private\BTDecEdgPatroll.cpp" />
+    <ClCompile Include="..\private\BTDecEdgPhase.cpp" />
+    <ClCompile Include="..\private\BTDecEdgState.cpp" />
+    <ClCompile Include="..\private\BTEdgStateFinished.cpp" />
+    <ClCompile Include="..\private\DragonSKill.cpp" />
+    <ClCompile Include="..\private\Edg_Combat.cpp" />
+    <ClCompile Include="..\private\Edg_Hit.cpp" />
+    <ClCompile Include="..\private\Edg_Phase.cpp" />
+    <ClCompile Include="..\private\Edg_Spawn.cpp" />
+    <ClCompile Include="..\private\EnderDragon.cpp" />
+    <ClCompile Include="..\private\EnderDragon_State.cpp" />
+    <ClCompile Include="..\Private\Player_Fly_State.cpp" />
     <ClCompile Include="..\Private\SkyCloudyCube.cpp" />
     <ClCompile Include="..\private\BossMace.cpp" />
     <ClCompile Include="..\private\BossTMB.cpp" />
@@ -452,6 +482,8 @@
     <Image Include="small.ico" />
   </ItemGroup>
   <ItemGroup>
+    <FxCompile Include="..\ShaderFiles\Shader_CPU_Player_Skill_Mesh.hlsl" />
+    <FxCompile Include="..\ShaderFiles\Shader_CPU_Player_Skill_Texture.hlsl" />
     <FxCompile Include="..\ShaderFiles\Shader_SkyCloudy.hlsl" />
     <FxCompile Include="..\ShaderFiles\Shader_CPU_ExtraEffect.hlsl" />
     <FxCompile Include="..\ShaderFiles\Shader_CPU_Lightning_Mesh.hlsl" />

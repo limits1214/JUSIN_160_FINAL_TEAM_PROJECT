@@ -221,3 +221,4 @@ PS_OUT PSMaceSphere(VS_OUT In)
 	Out.vDiffuse = float4(finalColor, 1.0f);
 	return Out;
 }
+

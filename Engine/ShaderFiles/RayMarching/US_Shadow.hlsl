@@ -55,9 +55,10 @@ cbuffer CB_CPU_SKINNING_MESH : register(b5)
 
 cbuffer CB_SHADOW : register(b11)
 {
-	uint CurrentShadowLightIndex;
-	uint CurrentPointFaceIndex;
-	float2 ShadowPadding;
+	uint	CurrentShadowLightIndex;
+	uint	CurrentPointFaceIndex;
+	uint	CurrentCascadeIndex;
+	float	ShadowPadding;
 }
 
 
@@ -128,10 +129,6 @@ struct VS_IN
 	float3 Position : POSITION;
 };
 
-struct VS_OUT
-{
-	float4 WorldPos : POSITION;
-};
 struct VS_POINT_OUT
 {
 	float4 Position : SV_POSITION;
@@ -140,18 +137,7 @@ struct VS_POINT_OUT
 struct VS_FINAL_OUT
 {
 	float4 Position : SV_POSITION;
-	float3 WorldPos : POSITION0;
 };
-
-VS_OUT VSMain_InstancedPoint(VS_SHADOW_INSTANCED_IN IN, uint _InstancedID : SV_INSTANCEID)
-{
-	VS_OUT OUT;
-	
-	const float4 SkinnedPosition = Compute_AnimModel_SkinnedPosition(IN, _InstancedID);
-	
-	OUT.WorldPos = mul(SkinnedPosition, gInstances[_InstancedID].WorldMatrix);
-	return OUT;
-}
 
 VS_FINAL_OUT VSMain_InstancedDirectional(VS_SHADOW_INSTANCED_IN IN, uint _InstancedID : SV_INSTANCEID)
 {
@@ -161,31 +147,22 @@ VS_FINAL_OUT VSMain_InstancedDirectional(VS_SHADOW_INSTANCED_IN IN, uint _Instan
 	
 	float4 WorldPosition = mul(SkinnedPosition, gInstances[_InstancedID].WorldMatrix);
 	
-	OUT.WorldPos = WorldPosition.xyz;
-	OUT.Position = mul(WorldPosition, g_matViewProj);
-	//OUT.Position = float4(IN.Position.xy * 0.1f, 0.5f, 1.0f);
+	uint LightViewProjIndex = 0;
+	
+	if (AffectedLight[CurrentShadowLightIndex].LightType == LIGHT_DIRECTIONAL) {
+		LightViewProjIndex = CurrentCascadeIndex;
+	}
+	
+	OUT.Position = mul(WorldPosition, AffectedLight[CurrentShadowLightIndex].g_LightViewProj[LightViewProjIndex]);
 	
 	return OUT;
 }
 
-VS_OUT VSMain(VS_IN IN)
-{
-    VS_OUT OUT;
-	
-	OUT.WorldPos = mul(float4(IN.Position, 1.0f), g_matWorld);
-	
-    return OUT;
-}
-VS_FINAL_OUT VSMain_Final(VS_IN IN)
+VS_FINAL_OUT VSMain_Directional(VS_IN IN)
 {
 	VS_FINAL_OUT OUT;
 	
-	float4 WorldPos = mul(float4(IN.Position, 1.0f), g_matWorld);
-	OUT.WorldPos	= WorldPos.xyz;
-	
-	float4 ViewPos	= mul(WorldPos, g_matView);
-	OUT.Position = mul(ViewPos, g_matProj);
-	//OUT.Position = float4(IN.Position.xy * 0.1f, 0.5f, 1.0f);
+	OUT.Position = mul(float4(IN.Position, 1.f), g_matWVP);
 	
 	return OUT;
 }
@@ -194,7 +171,7 @@ VS_POINT_OUT VSMain_PointFace(VS_IN IN)
 {
 	VS_POINT_OUT OUT;
 	
-	float4 WorldPos = mul(float4(IN.Position, 1.0f), g_matWorld);
+	float4 WorldPos = mul(float4(IN.Position, 1.f), g_matWorld);
 	OUT.WorldPos = WorldPos.xyz;
 	OUT.Position = mul(WorldPos, AffectedLight[CurrentShadowLightIndex].g_LightViewProj[CurrentPointFaceIndex]);
 
@@ -215,41 +192,9 @@ VS_POINT_OUT VSMain_InstancedPointFace(VS_SHADOW_INSTANCED_IN IN, uint _Instance
 	return OUT;
 }
 
-struct GS_OUT
-{
-	float4	Position	: SV_POSITION;
-	float3	WorldPos	: TEXCOORD0;
-    uint    LayerIndex  : SV_RenderTargetArrayIndex;
-};
-
-[maxvertexcount(18)]
-void GSMain(triangle VS_OUT IN[3], inout TriangleStream<GS_OUT> _OutStream)
-{
-	for (int Face = 0; Face < 6; ++Face) {
-		GS_OUT OUT;
-		OUT.LayerIndex = Face;
-		for (int v = 0; v < 3; ++v) {
-			OUT.Position = mul(IN[v].WorldPos, AffectedLight[CurrentShadowLightIndex].g_LightViewProj[Face]);
-			OUT.WorldPos = IN[v].WorldPos.xyz;
-			
-			_OutStream.Append(OUT);
-		}
-		_OutStream.RestartStrip();
-	}
-}
-float PSMain_Old(GS_OUT OUT) : SV_DEPTH
-{
-	float3	LightToPixel = OUT.WorldPos.xyz - AffectedLight[CurrentShadowLightIndex].Position;
-    float	Distance = length(LightToPixel);
-	
-	float	OuterRange = max(0.02f, AffectedLight[CurrentShadowLightIndex].OuterAttanuation);
-	float	Depth = Distance / OuterRange;
-	
-	return saturate(Depth);
-}
 float PSMain_Directional(VS_FINAL_OUT OUT) : SV_DEPTH
 {
-	return 0.f;	
+	return OUT.Position.z;
 }
 float PSMain_PointFace(VS_POINT_OUT OUT) : SV_DEPTH
 {

@@ -171,6 +171,13 @@ HRESULT CGameInstance::InitializeEngine(const ENGINE_DESC& EngineDesc, ComPtr<ID
 	{
 		return E_FAIL;
 	}
+
+	m_pGameObjectPoolManager = CGameObjectPoolManager::Create(
+		m_pGameObjectManager.get());
+	if (m_pGameObjectPoolManager == nullptr)
+	{
+		return E_FAIL;
+	}
 	LOG_MEMORY("Start m_pRenderer()");
 	m_pRenderer = CRenderer::Create(ppDevice.Get(), ppContext.Get());
 	if (m_pRenderer == nullptr)
@@ -332,6 +339,12 @@ void CGameInstance::UpdateGUI()
 	{
 		ZoneScopedN("GameObjectManager_UpdateGUI");
 		m_pGameObjectManager->UpdateGUI();
+	}
+
+	{
+		ZoneScopedN("GameObjectPoolManager_UpdateGUI");
+		if (m_pGameObjectPoolManager)
+			m_pGameObjectPoolManager->UpdateGUI();
 	}
 
 	{
@@ -536,6 +549,7 @@ void CGameInstance::Release_Engine()
 	m_pActionManager.reset();
 	m_pAnimEdit_Manager.reset();
 	m_pModel_Instance_Manager.reset();
+	m_pGameObjectPoolManager.reset();
 	if (m_pGameObjectManager)
 	{
 		m_pGameObjectManager->AllReset();
@@ -612,6 +626,7 @@ void CGameInstance::FrameStart(_float fTimeDelta)
 void CGameInstance::FrameEnd(_float fTimeDelta)
 {
 	m_pGameObjectManager->FrameEnd();
+	m_pGameObjectPoolManager->FrameEnd();
 	m_pLevelManager->FrameEnd(fTimeDelta);
 	m_pEventManager->FrameEnd();
 
@@ -1007,6 +1022,18 @@ void CGameInstance::GameObjectAllReset()
 	m_pGameObjectManager->AllReset();
 }
 
+size_t CGameInstance::GameObjectResetLayers(
+	std::span<const std::string_view> layerNames)
+{
+	return m_pGameObjectManager->ResetObjectsInLayers(layerNames);
+}
+
+size_t CGameInstance::GameObjectAllResetExceptLayers(
+	std::span<const std::string_view> excludedLayerNames)
+{
+	return m_pGameObjectManager->ResetAllObjectsExceptLayers(excludedLayerNames);
+}
+
 inline CGameObject* CGameInstance::GetGameObjectByHandle(const CHandle& handle)
 {
 	return m_pGameObjectManager->GetGameObjectByHandle(handle);
@@ -1166,10 +1193,8 @@ VOID	CGameInstance::Render_ChromaticRing(XMVECTOR _WorldPosition, _float _Durati
 	m_pRenderer->Render_ChromaticRing(_WorldPosition, _Duration, _Scale);
 }
 VOID	CGameInstance::Set_ChromaticRingOpacity(_float _Opacity) { m_pRenderer->Set_ChromaticRingOpacity(_Opacity); }
+VOID	CGameInstance::Apply_OutlineEffect(std::optional<CHandle> targetHandle) { m_pRenderer->Apply_OutlineEffect(targetHandle); }
 
-VOID	CGameInstance::Set_VolumetricFog(_float3 _Center, _float3 _Color, _float _Intensity, _float _Height, _float _StartPos, _float _EndPos, _float _Density) {
-	m_pRenderer->Set_VolumetricFog(_Center, _Color, _Intensity, _Height, _StartPos, _EndPos, _Density);
-}
 
 #pragma endregion
 
@@ -1297,6 +1322,20 @@ HRESULT	CGameInstance::Capture_ShadowMap() {
 VOID	CGameInstance::Notify_StaticShadowSceneChanged(const BoundingBox& ChangedBounds) {
 	m_pLightManager->Notify_StaticShadowSceneChanged(ChangedBounds);
 }
+
+_bool	CGameInstance::Evaluate_DirectionalLightCount() {
+	return m_pLightManager->Evaluate_DirectionalLightCount();
+}
+
+XMMATRIX CGameInstance::Get_CascadeShadowViewProj(uint32_t _Index) {
+	return m_pLightManager->Get_CascadeShadowViewProj(_Index);
+}
+XMFLOAT4 CGameInstance::Get_CascadeShadowSplits() {
+	return m_pLightManager->Get_CascadeShadowSplits();
+}
+CSM_DATA& CGameInstance::Get_MainDirectionalLightData() {
+	return m_pLightManager->Get_MainDirectionalLightData();
+}
 #pragma endregion
 #pragma endregion
 
@@ -1385,9 +1424,9 @@ _bool	CGameInstance::Has_ActiveDynamicShadowBatch() {
 #pragma endregion
 
 #pragma region MAPMESH_INSTANCE_RENDER
-HRESULT CGameInstance::PushMapObjectInstance(const SPtr<CResStaticModel>& pModel, const MAPMESH_INSTANCE_DATA& instanceData, MAPMESH_OCCLUSION_DATA& occlusionData)
+HRESULT CGameInstance::PushMapObjectInstance(const SPtr<CResStaticModel>& pModel, const MAPMESH_INSTANCE_DATA& instanceData, MAPMESH_OCCLUSION_DATA& occlusionData, EMapMeshRenderFeature renderFeature)
 {
-	return m_pMapMeshInstancingRenderer->PushMapObjectInstance(pModel, instanceData, occlusionData);
+	return m_pMapMeshInstancingRenderer->PushMapObjectInstance(pModel, renderFeature, instanceData, occlusionData);
 }
 // 인스턴싱 On/Off , 드로우 콜 GUI
 _bool CGameInstance::IsInstancingEnabled()

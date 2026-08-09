@@ -16,6 +16,7 @@ CPlayer_Magic_Bullet::CPlayer_Magic_Bullet()
 {
 }
 
+
 CPlayer_Magic_Bullet::~CPlayer_Magic_Bullet()
 {
 	StopFlightSound();

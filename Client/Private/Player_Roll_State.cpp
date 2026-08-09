@@ -89,9 +89,7 @@ void CPlayer_Roll_State::Update(CStateMachine* pStateMachine,_float fTimeDelta)
 		return;
 	}
 
-	const _float fAnimationRatio =
-		PlayerAnimationRatioGuard::Sanitize(
-			animator->GetPlayAnimRatio());
+	const _float fAnimationRatio = PlayerAnimationRatioGuard::Sanitize(animator->GetPlayAnimRatio());
 
 	if (player->HasRawMoveInput())
 	{
@@ -140,15 +138,8 @@ void CPlayer_Roll_State::Update(CStateMachine* pStateMachine,_float fTimeDelta)
 		}
 	}
 
-	const _float fMoveRatioEnd =
-		std::min(fAnimationRatio, m_fRollMoveEndRatio);
-	const _float fMoveTime =
-		PlayerAnimationRatioGuard::CalculateActiveDeltaTime(
-			m_fPreviousAnimRatio,
-			fAnimationRatio,
-			0.f,
-			m_fRollMoveEndRatio,
-			fTimeDelta);
+	const _float fMoveRatioEnd = std::min(fAnimationRatio, m_fRollMoveEndRatio);
+	const _float fMoveTime = PlayerAnimationRatioGuard::CalculateActiveDeltaTime(m_fPreviousAnimRatio, fAnimationRatio, 0.f,m_fRollMoveEndRatio, fTimeDelta);
 
 	if (fMoveTime > 0.f)
 	{

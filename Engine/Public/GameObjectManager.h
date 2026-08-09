@@ -3,6 +3,8 @@
 #include "GameObject.h"
 #include "Handle.h"
 #include "Slot.h"
+#include <span>
+#include <unordered_set>
 
 NS_BEGIN(Engine)
 
@@ -24,6 +26,12 @@ public:
 	void UpdateGUIDrawTreeNode( CGameObject* handle);
 private:
 	char m_GUISearchFilter[256] = {};
+	_bool m_bGUIEnableSearchInput{ false };
+	_bool m_bGUIShowInvalidLayerHandles{ false };
+	bool MatchesGUIFilter(std::string_view sText) const;
+	bool MatchesLayerObjectFilter(std::string_view sLayerName, CGameObject* pObj) const;
+	std::string GetGameObjectDebugLabel(CGameObject* pObj) const;
+	std::string GetInvalidLayerHandleDebugText(const CHandle& handle) const;
 	bool MatchesFilter(CGameObject* pObj) const;
 
 public:
@@ -52,10 +60,31 @@ public:
 
 public:
 	void AllReset();
+	size_t ResetObjectsInLayers(std::span<const std::string_view> layerNames);
+	size_t ResetAllObjectsExceptLayers(std::span<const std::string_view> excludedLayerNames);
 
 private:
-	void AllObjectsReset();
-	_bool m_bAllResetCalled{ false };
+	enum class RESET_LAYER_MODE : uint8_t
+	{
+		INCLUDE_ONLY,
+		EXCLUDE
+	};
+
+	// [LSY] 레이어 이름과 모드에 따라 일괄 제거할 오브젝트를 PendingDestroy 상태로 예약한다.
+	// INCLUDE_ONLY는 전달한 레이어만 제거하고, EXCLUDE는 전달한 레이어를 제외한 나머지를 제거한다.
+	// 존재하지 않는 레이어 이름은 무시하며, 반환값은 이번 호출에서 새로 제거 예약된 오브젝트 수다.
+	// 실제 오브젝트 해제와 레이어 컨테이너 정리는 안전한 FrameEnd 시점에 일괄 처리한다.
+	size_t RequestResetByLayers(
+		std::span<const std::string_view> layerNames,
+		RESET_LAYER_MODE eMode);
+	_bool DestroyAllPendingObjects();
+	_bool DestroyPendingObjectsInTree();
+	void RemoveInvalidLayerHandles();
+	_bool RemoveEmptyResetTargetLayers(
+		const std::unordered_set<std::string>& resetTargetLayers);
+
+	_bool m_bBatchResetPending{ false };
+	std::unordered_set<std::string> m_PendingResetTargetLayers{};
 
 public:
 	void FixedUpdate(_float fTimeDelta);

@@ -25,3 +25,10 @@
 #include "BTDecFlag.h" //맞은판정 플래그 있음
 #include "BTDecHitCnt.h"
 #include "BTDecIsPending.h"
+
+
+//드래곤용
+#include "BTDecEdgState.h"
+#include "BTEdgStateFinished.h"
+#include "BTDecEdgPhase.h"
+#include "BTDecEdgPatroll.h"

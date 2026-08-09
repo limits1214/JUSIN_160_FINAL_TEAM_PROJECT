@@ -2,6 +2,7 @@
 #include "BTAnimRoot.h"
 #include "ComAnimator.h" 
 #include "ComCharacterMotor.h"
+#include "ComCharacterMoveIntent.h"
 NS_USING(Client)
 
 CBTAnimRoot::CBTAnimRoot()
@@ -57,6 +58,9 @@ void CBTAnimRoot::Update_Gui()
 
 		ImGui::Text("SkillRatio");
 		ImGui::DragFloat2("##SKRaito", reinterpret_cast<_float*>(&m_fSkillRatio), 0.f, 1.f);
+
+		ImGui::Text("RotRatio");
+		ImGui::DragFloat2("##RotRatio", reinterpret_cast<_float*>(&m_vRotRatio), 0.1f, 0.f, 1.f);
 
 		ImGui::Text("AttMon Type");
 		if (auto pBT = Get_ComBT())
@@ -196,6 +200,7 @@ nlohmann::json CBTAnimRoot::Save_Node()
 {
 	nlohmann::json j = __super::Save_Node();
 
+	JsonSaveLoadManager::SaveJsonTypeFloat2(j, "RotRatio", m_vRotRatio);
 	SaveJsonValue(j, "EnableRatio", m_bRatio);
 	SaveJsonValue(j, "Loop", m_bLoop);
 	SaveJsonValue(j, "Blend", m_fBlend);
@@ -265,6 +270,7 @@ HRESULT CBTAnimRoot::Load_json(const nlohmann::json& j)
 {
 	__super::Load_json(j);
 
+	JsonSaveLoadManager::LoadJsonTypeFloat2(j, "RotRatio", m_vRotRatio);
 	LoadJsonValue(j, "Gravity Value", m_fGravity);
 	LoadJsonValue(j, "Gravity", m_bGravity);
 	LoadJsonValue(j, "Early", m_bEarly);
@@ -513,7 +519,18 @@ void CBTAnimRoot::Combo2(const _char* pName, FLAGTYPE& eType)
 		ImGui::EndCombo();
 	}
 }
+void CBTAnimRoot::Rotation(CComTransform* pTransform, CComCharacterMoveIntent* pMoveIntent, CGameObject* pTarget, _float fTimeDelta, _float fRotRatio)
+{
+	if (m_vRotRatio.x < fRotRatio && m_vRotRatio.y >= fRotRatio)
+	{
+		_float3 vFacingDirection{};
+		XMStoreFloat3(&vFacingDirection, pTarget->GetTransform().GetState(STATE::POSITION) - pTransform->GetState(STATE::POSITION));
+		const _float fTurnTime = std::max(m_Value.fTime, 0.001f);
+		pMoveIntent->SetFacingIntent(vFacingDirection, 180.f / fTurnTime);
+	}
 
+
+}
 void CBTAnimRoot::AddSound()
 {
 	if (ImGui::Button("Add Table"))

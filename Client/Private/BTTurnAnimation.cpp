@@ -75,11 +75,8 @@ EVALUATE CBTTurnAnimation::Evaluate(_float fTimeDelta)
 				_bool bFinished = pAnimator->GetFinish();
 
 				if (bFinished)
-				{
-					m_fTick = 0.f;
-					m_bTurn = false;
 					return m_eDebug = EVALUATE::SUCCESS;
-				}
+				
 			}
 		}
 	}
@@ -151,6 +148,7 @@ void CBTTurnAnimation::Abort()
 {
 	__super::Abort();
 	m_fTick = 0.f;
+	m_Value.iAnimIndex = -1;
 	m_bTurn = false;
 }
 _bool CBTTurnAnimation::SelectAngle( _float fAngle)
@@ -198,7 +196,8 @@ _bool CBTTurnAnimation::SelectAngle( _float fAngle)
 	}
 	else
 		return false;
-
+	if (m_Value.iAnimIndex < 0)
+		return false;
 	return true;
 }
 void CBTTurnAnimation::Turn(_float fTimeDelta)
@@ -207,6 +206,10 @@ void CBTTurnAnimation::Turn(_float fTimeDelta)
 void CBTTurnAnimation::OnEnter()
 {
 	__super::OnEnter();
+
+	m_fTick = 0.f;
+	m_Value.iAnimIndex = -1;
+	m_bTurn = false;
 }
 void CBTTurnAnimation::OnExit(EVALUATE eResult)
 {

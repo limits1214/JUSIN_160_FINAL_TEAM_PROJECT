@@ -75,7 +75,7 @@ namespace Engine
 	} SPOT_LIGHT;
 
 	typedef struct tagDynamicLight {
-		XMFLOAT4X4	g_LightViewProj[POINT_SHADOW_FACE_COUNT];
+		XMFLOAT4X4	g_LightViewProj[POINT_SHADOW_MAPCOUNT];
 
 		_float3		LightDirection;
 		_float		LightIntensity;
@@ -103,6 +103,20 @@ namespace Engine
 
 		_float3		LightPadding;
 	} EFFECT_LIGHT;
+
+	typedef struct tagTexture3D
+	{
+		ComPtr<ID3D11Texture3D>           pTexture;
+		ComPtr<ID3D11ShaderResourceView>  pSRV;
+		ComPtr<ID3D11UnorderedAccessView> pUAV;
+
+		void Reset()
+		{
+			pTexture.Reset();
+			pSRV.Reset();
+			pUAV.Reset();
+		}
+	} TEXTURE3D;
 
 	typedef struct tagPostProcess
 	{
@@ -286,10 +300,26 @@ namespace Engine
 	}MAPCHUNK_COORD;
 
 	//----------------------------MapMeshObject 인스턴싱------------------------
+	struct WIND_DESC
+	{
+		EWindType type = EWindType::None;
+		_float strength = 0.f;
+		_float speed = 1.f;
+		_float frequency = 1.f;
+		_float bendExponent = 2.f;
+		_float heightStart = 0.f;
+		_float heightEnd = 1.f;
+	};
+
 	typedef struct tagMapMeshInstanceData
 	{
 		_float4x4 world;
+		_float4 windParams; // strength, speed, frequency, bendExponent
+		_float2 windHeightParams; // local influence start Y, inverse influence height
+		uint32_t windType;
+		_float padding;
 	} MAPMESH_INSTANCE_DATA;
+	static_assert(sizeof(MAPMESH_INSTANCE_DATA) % 16 == 0);
 
 	typedef struct tagMapMeshOcclusionData
 	{
@@ -533,6 +563,15 @@ namespace Engine
 
 	}MODEL_INSTANCE_BATCH;
 
+	struct CSM_DATA
+	{
+		std::vector<ComPtr<ID3D11DepthStencilView>>		m_pShadowDSVList{};
+		ComPtr<ID3D11ShaderResourceView>				m_pShadowSRV{};
+		ComPtr<ID3D11Texture2D>							m_pTextureArray{};
+
+		std::optional<CHandle>							m_pLightHandle{};
+	};
+	
 
 	//----------------------------AnimationObject------------------------------------
 }

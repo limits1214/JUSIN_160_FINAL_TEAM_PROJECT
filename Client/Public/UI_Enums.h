@@ -1,5 +1,30 @@
 #pragma once
 
+#include <cstdint>
+
+enum class MINIMAP_MODE : uint32_t
+{
+	WORLD_MAP,
+	DUNGEON_FOG
+};
+
+enum class OBJECTIVE_ACTIVE_RULE : uint8_t
+{
+	MANUAL,
+	PROXIMITY,
+	MANUAL_OR_PROXIMITY,
+	MANUAL_AND_PROXIMITY
+};
+
+enum class QUEST_UI_GROUP : uint32_t
+{
+	NONE,
+	ROOKWOOD_TRIAL_01,
+	ROOKWOOD_TRIAL_02,
+	ROOKWOOD_TRIAL_03,
+	END
+};
+
 enum class BUTTON_EVENT
 {
 	NONE,

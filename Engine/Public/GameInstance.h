@@ -1,8 +1,10 @@
 #pragma once
+#include <initializer_list>
 #include "Engine_Defines.h"
 #include "ResourceManager.h"
 #include "WorkerManager.h"
 #include "GameObjectManager.h"
+#include "GameObjectPoolManager.h"
 #include "CameraManager.h"
 #include "ShaderManager.h"
 #include "DbgLineRender.h"
@@ -158,12 +160,6 @@ public:
 	CSoundManager* GetSoundManager() const { return m_pSoundManager.get(); }
 #pragma endregion
 
-#pragma region LIGHT_MANAGER
-public:
-	// LSY 변경: 콘텐츠 코드가 별칭 기반 배치 라이트 조회 및 런타임 제어 API를 사용한다.
-	CLightManager* GetLightManager() const { return m_pLightManager.get(); }
-#pragma endregion
-
 #pragma region FONT_MANAGER
 	void FontDraw(const StringID& fontName, const _tchar* pText, const _float2& vPosition, float fScale = 1.f, _fvector vColor = XMVectorSet(1.f, 1.f, 1.f, 1.f), _float fRotation = 0.f, const _float2& vOrigin = { 0.f, 0.f });
 	void FontAddLateDraw(RENDERGROUP eRenderGroup, const StringID& fontName, const _wstring& pText, const _float2& vPosition, float fScale = 1.f, _fvector vColor = XMVectorSet(1.f, 1.f, 1.f, 1.f), _float fRotation = 0.f, const _float2& vOrigin = { 0.f, 0.f });
@@ -201,6 +197,15 @@ public:
 #pragma region GAMEOBJECT_MANAGER
 public:
 	void GameObjectAllReset();
+	size_t GameObjectResetLayers(std::span<const std::string_view> layerNames);
+	size_t GameObjectAllResetExceptLayers(std::span<const std::string_view> excludedLayerNames);
+
+	template<typename TLayer>
+	size_t GameObjectResetLayers(std::initializer_list<TLayer> layerNames);
+
+	template<typename TLayer>
+	size_t GameObjectAllResetExceptLayers(std::initializer_list<TLayer> excludedLayerNames);
+
 	template<typename TLayer>
 	std::optional<CHandle> AddGameObjectToLayer(const StringID& iPrototypeLevelIndex, const StringID& svPrototypeTag, TLayer&& sLayerName, void* pArg = nullptr)
 	{
@@ -241,6 +246,10 @@ public:
 	T* GetFirstGameObjectByLayer(TLayer&& sLayerName) const
 	{
 		return m_pGameObjectManager->GetFirstGameObjectByLayer<T>(MagicEnumToStringView(std::forward<TLayer>(sLayerName)));
+	}
+	CGameObjectPoolManager* GetGameObjectPoolManager() const
+	{
+		return m_pGameObjectPoolManager.get();
 	}
 	//template<typename T, typename E> requires std::is_enum_v<E>
 	//T* GetFirstGameObjectByLayer(E layer) const
@@ -296,8 +305,7 @@ public:
 	VOID	Render_ChromaticRing(XMVECTOR _WorldPosition, _float _Duration, _float _Scale);
 	VOID	Set_ChromaticRingOpacity(_float _Opacity);
 
-	VOID	Set_VolumetricFog(_float3 _Center, _float3 _Color, _float _Intensity, _float _Height, _float _StartPos, _float _EndPos, _float _Density);
-
+	VOID	Apply_OutlineEffect(std::optional<CHandle> targetHandle);
 #pragma endregion
 
 
@@ -333,6 +341,12 @@ public:
 	HRESULT	Capture_ShadowMap();
 
 	VOID	Notify_StaticShadowSceneChanged(const BoundingBox& ChangedBounds);
+
+	_bool		Evaluate_DirectionalLightCount();
+
+	XMMATRIX	Get_CascadeShadowViewProj(uint32_t _Index);
+	XMFLOAT4	Get_CascadeShadowSplits();
+	CSM_DATA&	Get_MainDirectionalLightData();
 
 #pragma endregion
 
@@ -465,7 +479,7 @@ public:
 #pragma endregion
 
 #pragma region MAPMESH_INSTANCE_RENDER
-	HRESULT PushMapObjectInstance(const SPtr<CResStaticModel>& pModel, const MAPMESH_INSTANCE_DATA& instanceData, MAPMESH_OCCLUSION_DATA& occlusionData);
+	HRESULT PushMapObjectInstance(const SPtr<CResStaticModel>& pModel, const MAPMESH_INSTANCE_DATA& instanceData, MAPMESH_OCCLUSION_DATA& occlusionData, EMapMeshRenderFeature renderFeature = EMapMeshRenderFeature::Static);
 	// 인스턴싱 On/Off , 드로우 콜 GUI
 	_bool IsInstancingEnabled();
 	void SetInstancingEnabled(_bool bEnabled);
@@ -657,6 +671,7 @@ private:
 	UPtr<CTimeProvider> m_pTimeProvider{};
 	UPtr<CPrototypeManager> m_pPrototypeManager{};
 	UPtr<CGameObjectManager> m_pGameObjectManager{};
+	UPtr<CGameObjectPoolManager> m_pGameObjectPoolManager{};
 	UPtr<CCameraManager> m_pCameraManager{};
 	UPtr<CColliderManager> m_pColliderManager{};
 	UPtr<CRenderer> m_pRenderer{};
@@ -685,6 +700,38 @@ private:
 	UPtr<CEffectManager> m_pEffectManager{};
 	UPtr<CPathPlaybackEditor> m_pPathPlaybackEditor{};
 };
+
+template<typename TLayer>
+size_t CGameInstance::GameObjectResetLayers(
+	std::initializer_list<TLayer> layerNames)
+{
+	std::vector<std::string_view> layerNameViews{};
+	layerNameViews.reserve(layerNames.size());
+
+	for (const auto& layerName : layerNames)
+	{
+		layerNameViews.push_back(MagicEnumToStringView(layerName));
+	}
+
+	return GameObjectResetLayers(
+		std::span<const std::string_view>{ layerNameViews });
+}
+
+template<typename TLayer>
+size_t CGameInstance::GameObjectAllResetExceptLayers(
+	std::initializer_list<TLayer> excludedLayerNames)
+{
+	std::vector<std::string_view> layerNameViews{};
+	layerNameViews.reserve(excludedLayerNames.size());
+
+	for (const auto& layerName : excludedLayerNames)
+	{
+		layerNameViews.push_back(MagicEnumToStringView(layerName));
+	}
+
+	return GameObjectAllResetExceptLayers(
+		std::span<const std::string_view>{ layerNameViews });
+}
 
 template<typename TJoint>
 TJoint* CGameInstance::AddPxJoint(

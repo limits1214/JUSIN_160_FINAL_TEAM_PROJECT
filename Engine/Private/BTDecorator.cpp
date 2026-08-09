@@ -30,6 +30,25 @@ HRESULT CBTDecorator::Initalize(void* pArg)
     return S_OK;
 }
 
+HRESULT CBTDecorator::Save_SubTree(const _string& SavePath)
+{
+	if (nullptr == m_pDecorator)
+	{
+		MSG_BOX("Nob");
+		return E_FAIL;
+	}
+
+	nlohmann::json j;
+	j = Save_Node();
+
+	std::ofstream path(SavePath);
+	path << j.dump(4);
+	path.close();
+
+	return S_OK;
+	
+}
+
 EVALUATE CBTDecorator::Evaluate(_float fTimeDelta)
 {
 	if (m_pDecorator != nullptr)
@@ -47,6 +66,17 @@ void CBTDecorator::ResetDebug()
 	m_eDebug = EVALUATE::END;
 	if (m_pDecorator != nullptr)
 		m_pDecorator->ResetDebug();
+}
+
+
+void CBTDecorator::OnEnter()
+{
+
+}
+void CBTDecorator::OnExit(EVALUATE eResult)
+{
+	if (m_pDecorator)
+		m_pDecorator->AbortExecute();
 }
 nlohmann::json CBTDecorator::Save_Node()
 {

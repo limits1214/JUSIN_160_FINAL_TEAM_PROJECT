@@ -1,9 +1,12 @@
-#include "../ShaderDefines.hlsl"
+#include "../ShaderHeader/SH_CommonFunction.hlsli"
 
-Texture2D g_DiffuseTexture : register(t0);
-Texture2D g_NormalTexture : register(t1);
-Texture2D g_SMROTexture : register(t2);
+Texture2D g_DiffuseTexture	: register(t0);
+Texture2D g_NormalTexture	: register(t1);
+Texture2D g_SMROTexture		: register(t2);
 Texture2D g_EmissiveTexture : register(t3);
+
+Texture2D DefaultNoiseTexture : register(t13);
+static const float DissolveEdgeWidth = 0.025f;
 
 struct GPU_ANIM_INSTANCE_DATA
 {
@@ -97,54 +100,29 @@ struct PS_OUT
     float4 vEmissive : SV_TARGET3;
 };
 
-float3x3 Make_TBNMatrix(float3 _Normal, float3 _Tangent)
-{
-    float3 Normal = normalize(_Normal);
-    float3 Tangent = normalize(_Tangent);
-
-    Tangent = normalize(Tangent - dot(Tangent, Normal) * Normal);
-    
-    float3 BiNormal = normalize(cross(Normal, Tangent));
-    
-    return float3x3(Tangent, BiNormal, Normal);
-}
-float3 Compute_WorldNormal(Texture2D _NormalTex, float2 _TexCoord, float4 _InNormal, float4 _InTangent)
-{
-    float3 LocalNormal = _NormalTex.Sample(LinearWrap, _TexCoord).rgb;
-    LocalNormal = normalize(LocalNormal * 2.f - 1.f);
-    float3x3 TBN = Make_TBNMatrix(_InNormal.xyz, _InTangent.xyz);
-
-    float3 N = normalize(_InNormal.xyz);
-    float3 T = normalize(_InTangent.xyz);
-    
-    T = normalize(T - dot(T, N) * N);
-    float3 B = normalize(cross(N, T));
-    
-    float3 worldNormal = LocalNormal.x * T + LocalNormal.y * B + LocalNormal.z * N;
-
-    return normalize(worldNormal);
-}
 
 PS_OUT PSMain(PS_IN In)
 {
     PS_OUT Out;
 
     float4 fDiffuse = g_DiffuseTexture.Sample(LinearWrap, In.vTexcoord) * float4(AlbedoColor, ObjectAlpha);
-    float3 fNormal = Compute_WorldNormal(g_NormalTexture, In.vTexcoord, In.vNormal, In.vTangent) * NormalIntensity;
-    float3 fMRO = g_SMROTexture.Sample(LinearWrap, In.vTexcoord);
+	if (fDiffuse.a == 0.0f) discard;
+	
+	float3 fNormal			= Compute_WorldNormal(g_NormalTexture, In.vTexcoord, In.vNormal, In.vTangent) * NormalIntensity;
+    float3 fMRO				= g_SMROTexture.Sample(LinearWrap, In.vTexcoord);
     
-    float fFinalMetallic = fMRO.r * MetallicIntensity;
-    float fFinalRoughness = fMRO.g * RoughnessIntensity;
-    float fFinalAO = fMRO.b * AmbientIntensity;
+    float fFinalMetallic	= fMRO.r * MetallicIntensity;
+    float fFinalRoughness	= fMRO.g * RoughnessIntensity;
+    float fFinalAO			= fMRO.b * AmbientIntensity;
     
     float3 fEmissive = g_EmissiveTexture.Sample(LinearWrap, In.vTexcoord).rgb * EmissiveColor * EmissiveIntensity;
     
-    if (fDiffuse.a == 0.0f)
-        discard;
-
-    Out.vDiffuse = fDiffuse;
-    Out.vNormal = float4(fNormal * 0.5f + 0.5f, 1.f);
-    Out.vSMRO = float4(fFinalMetallic, fFinalRoughness, fFinalAO, 1.f);
-    Out.vEmissive = float4(fEmissive, 1.f);
-    return Out;
+	float3 fFinalEmissive = Apply_DissolveEffect(DefaultNoiseTexture, fEmissive, In.vTexcoord, DissolveEdgeWidth);
+    
+	Out.vDiffuse	= fDiffuse;
+    Out.vNormal		= float4(fNormal * 0.5f + 0.5f, 1.f);
+    Out.vSMRO		= float4(fFinalMetallic, fFinalRoughness, fFinalAO, 1.f);
+    Out.vEmissive	= float4(fEmissive, 1.f);
+    
+	return Out;
 }

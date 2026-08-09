@@ -3,6 +3,7 @@
 #include "BTDecorator.h"
 #include "BTComposite.h"
 #include "BTBlackboard.h"
+#include "BTSubTreeNode.h"
 CComBeHavior::CComBeHavior()
 {
 }
@@ -42,17 +43,22 @@ HRESULT CComBeHavior::Initialize(void* pArg)
 	proot->Set_OwnerName(m_ComponentName);
 	m_Root = std::move(ToUPtr(proot));
     m_NodeMap[m_iNodeID++] = m_Root.get();
-	
-	if (!pDesc->resBeHaviorMajor.empty() && !pDesc->resBeHaviorMinor.empty())
-		Load_DataByResource(pDesc->resBeHaviorMajor, pDesc->resBeHaviorMinor);
 
 	m_pBlackBoard = CBTBlackBoard::Create();
 	if (nullptr == m_pBlackBoard)
 		return E_FAIL;
+
+	if (!pDesc->resBeHaviorMajor.empty() && !pDesc->resBeHaviorMinor.empty())
+		Load_DataByResource(pDesc->resBeHaviorMajor, pDesc->resBeHaviorMinor);
+	else
+	{
+		Load_Data(pDesc->LoadPath);
+	}
+
 	
 	return S_OK;
 }
-void CComBeHavior::Set_NodeInfo(CBTRoot* pNode)
+void CComBeHavior::Set_NodeInfo(CBTRoot* pNode, std::vector<uint32_t>& SubTree)
 {
     BEHAVIOR eType = pNode->Get_GuiNodeInfo().eMyType;
 	pNode->Set_OwnerName(m_ComponentName);
@@ -67,15 +73,20 @@ void CComBeHavior::Set_NodeInfo(CBTRoot* pNode)
         for (auto& iter : pSrc)
         {
 			if(iter != nullptr)
-            Set_NodeInfo(iter.get());
+				Set_NodeInfo(iter.get(),SubTree);
         }
     }
     else if (eType == BEHAVIOR::DECORATOR)
     {
         auto pSrc = static_cast<CBTDecorator*>(pNode)->Get_Child().get();
 		if(pSrc != nullptr)
-        Set_NodeInfo(pSrc);
-    }
+			Set_NodeInfo(pSrc,SubTree);
+	}
+	else if (eType == BEHAVIOR::ACTION && pNode->GetMasterName() == "BTSubTree")
+	{
+
+		SubTree.push_back(pNode->Get_GuiNodeInfo().iID);
+	}
 }
 void CComBeHavior::ResetNode(CBTRoot* pNode)
 {
@@ -96,7 +107,16 @@ void CComBeHavior::ResetNode(CBTRoot* pNode)
 		if (nullptr != pSrc->Get_Child())
 			ResetNode(pSrc->Get_Child().get());
 	}
+	else if (eType == BEHAVIOR::ACTION && pNode->GetMasterName() == "BTSubTree")
+	{
+		auto pSrc = static_cast<CBTSubTreeNode*>(pNode);
+
+		if (nullptr != pSrc->Get_SubTreeNode())
+			ResetNode(pSrc->Get_SubTreeNode());
+	}
+
 }
+
 HRESULT CComBeHavior::Save_Data(const _string& filePath)
 {
 	if (m_Root->Get_Nodes()->empty() || m_Root->Get_Nodes()->front() == nullptr)
@@ -132,11 +152,24 @@ HRESULT CComBeHavior::Load_Data(const _string& filePath)
     file >> j;
     m_Root->Load_json(j);
     file.close();
-
+	
+	std::vector<uint32_t> SubTree;
 	for(auto& iter : *m_Root->Get_Nodes())
-		 Set_NodeInfo(iter.get());
+		 Set_NodeInfo(iter.get(),SubTree);
 	++m_iNodeID;
 
+
+	for (auto& iter : SubTree)
+	{
+		auto pSrc = Find_Node(iter);
+		if (nullptr != pSrc)
+		{
+			auto pNode = static_cast<CBTSubTreeNode*>(pSrc);
+			if (nullptr != pNode->Get_SubTreeNode())
+				pNode->ConnectNode(pNode->Get_SubTreeNode(),-1,this);
+		}
+	}
+	
     return S_OK;
 }
 HRESULT CComBeHavior::Load_DataByResource(const _string& restagMajor, const _string& restagMinor)
@@ -148,11 +181,22 @@ HRESULT CComBeHavior::Load_DataByResource(const _string& restagMajor, const _str
 		return E_FAIL;
 	}
 	m_Root->Load_json(pRes->Get_Json());
+	std::vector<uint32_t> SubTree;
 
 	for (auto& iter : *m_Root->Get_Nodes())
-		Set_NodeInfo(iter.get());
+		Set_NodeInfo(iter.get(), SubTree);
 	++m_iNodeID;
 
+	for (auto& iter : SubTree)
+	{
+		auto pSrc = Find_Node(iter);
+		if (nullptr != pSrc)
+		{
+			auto pNode = static_cast<CBTSubTreeNode*>(pSrc);
+			if (nullptr != pNode->Get_SubTreeNode())
+				pNode->ConnectNode(pNode->Get_SubTreeNode(), -1, this);
+		}
+	}
 	return S_OK;
 }
 CBTRoot* CComBeHavior::Find_Node(const uint32_t& iNode)
@@ -186,10 +230,12 @@ void CComBeHavior::Add_Node(CBTRoot* pParent,  uint32_t iSlot, UPtr<CBTRoot> pNo
 
 		pNode->Set_Handle(GetGameObject()->GetHandle());
 		pNode->Set_OwnerName(m_ComponentName);
+
 		RegistNode(pNode->Get_GuiNodeInfo().iID, pNode.get());
 		static_cast<CBTDecorator*>(pParent)->Set_Child(std::move(pNode));
 	}
 }
+
 
 CBTComposite* CComBeHavior::Get_Selector()
 {
@@ -199,10 +245,14 @@ CBTComposite* CComBeHavior::Get_Selector()
 
 void CComBeHavior::RegistNode(uint32_t iIndex, CBTRoot* pNode)
 {
-    auto iter = m_NodeMap.find(iIndex);
+	auto iter = m_NodeMap.find(iIndex);
 
-    if (iter == m_NodeMap.end())
-        m_NodeMap[iIndex] = pNode;
+	if (iter == m_NodeMap.end())
+	{
+		//pNode
+		m_NodeMap[iIndex] = pNode;
+	}
+        
 }
 
 void CComBeHavior::UnRegistNode(uint32_t iIndex)

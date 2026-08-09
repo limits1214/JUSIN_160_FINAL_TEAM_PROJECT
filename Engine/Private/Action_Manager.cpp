@@ -9,6 +9,7 @@
 #include "BTComposite.h"
 #include "BTRandSelector.h"
 #include "BTReactiveSelector.h"
+#include "BTSubTreeNode.h"
 CAction_Manager::CAction_Manager()
 {
 }
@@ -24,6 +25,7 @@ HRESULT CAction_Manager::Initialize()
 	CGameInstance::Get().AddPrototype(NODEGROUP::SEQUENCE,		"BTSequnce",	  CBTSecqunce::Create(nullptr));
 	CGameInstance::Get().AddPrototype(NODEGROUP::RAND_SELECTOR, "BTRandSelector", CBTRandSelector::Create(nullptr));
 	CGameInstance::Get().AddPrototype(NODEGROUP::SELECTOR, "BTReactiveSelector", CBTReactiveSelector::Create(nullptr));
+	CGameInstance::Get().AddPrototype(NODEGROUP::ACTION,"BTSubTree",CBTSubTreeNode::Create());
 	return S_OK;
 }
 void CAction_Manager::Show_Action_NodeWidget(CBTRoot* pNode)

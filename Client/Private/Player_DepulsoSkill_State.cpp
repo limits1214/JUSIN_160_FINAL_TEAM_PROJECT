@@ -6,6 +6,8 @@
 #include "ComSound.h"
 #include "PlayerAnimationRatioGuard.h"
 #include "Monster.h"
+#include "Player_Weapon.h"
+#include "Trail_CPU.h"
 NS_USING(Client)
 
 void CPlayer_DepulsoSkill_State::Enter(CStateMachine* pStateMachine)
@@ -51,13 +53,22 @@ void CPlayer_DepulsoSkill_State::Enter(CStateMachine* pStateMachine)
 	pPlayer->SetCurrentMoveSpeed(0.f);
 	pPlayer->SetPlayerCurSKill(PLAYER_SKILL_TYPE::DEPULSO);
 	if (auto pMonster = CGameInstance::Get().GetGameObjectByHandleT<CMonster>(pPlayer->GetTargetHandle()))
+	{
 		pMonster->Check_Table(PLAYER_SKILL_TYPE::DEPULSO);
+	
+	}
 
 	m_ePhase = PHASE::CAST;
 	m_fAnimRatio = 0.f;
 	m_fPreviousAnimRatio = 0.f;
-	CGameInstance::Get().PlayEffect("Depulso", *pPlayer->GetTransform().GetWorldMatrix());
 
+	{
+		{
+			auto a = CGameInstance::Get().GetParticle("Lightning_Trail", "Lightning_Trail");
+			static_cast<CTrail_CPU*>(a)->SetColor(_float4(67 / 255.f, 97 / 255.f, 174 / 255.f, 1.f));
+			static_cast<CTrail_CPU*>(a)->SetEmissive(_float4(51 / 255.f, 77 / 255.f, 126 / 255.f, 4.f));
+		}
+	}
 }
 
 void CPlayer_DepulsoSkill_State::CacheAnimationIndices(const CPlayer& player)
@@ -66,7 +77,7 @@ void CPlayer_DepulsoSkill_State::CacheAnimationIndices(const CPlayer& player)
 		return;
 
 	// 고쳐야 할거 
-	m_DepulsoCast_Animation = FindAnimationIndex(player, "AN_ProfessorSharp_MasterRig_Hu_Cmbt_Atk_Charge_Depulso_anm.bin");
+	m_DepulsoCast_Animation = FindAnimationIndex(player, "AN_ProfessorSharp_MasterRig_Hu_Cmbt_Atk_Cast_Fwd_Lht_01_anm.bin");
 	m_DepulsoEnd_Animation = FindAnimationIndex(player, "AN_ProfessorSharp_MasterRig_Hu_Cmbt_Atk_Charge_Depulso_anm.bin");
 	m_AttackFail_Animation = FindAnimationIndex(player, "AN_ProfessorSharp_MasterRig_Hu_Cmbt_LF_Atk_Heavy_Fail_anm.bin");
 
@@ -105,6 +116,7 @@ void CPlayer_DepulsoSkill_State::Update(CStateMachine* pStateMachine, _float fTi
 			if (!PlayRandomTargetAttack(*pPlayer))
 				RequestLocomotion(pStateMachine);
 			m_fAnimRatio = 0.f;
+	
 		}
 		break;
 
@@ -117,6 +129,16 @@ void CPlayer_DepulsoSkill_State::Update(CStateMachine* pStateMachine, _float fTi
 				ATTACK_MOVE_START_RATIO,
 				ATTACK_MOVE_END_RATIO,
 				fTimeDelta);
+		auto* pWeapon = CGameInstance::Get().GetGameObjectByHandleT<CPlayer_Weapon>(pPlayer->GetWeaponHandle());
+
+		if (!pWeapon)
+			return;
+
+		const _float4x4 spawnWorld = pWeapon->GetSpawnWorldMatrix();
+		_float3 vstart, vend;
+		vstart = _float3(spawnWorld._41, spawnWorld._42 + 0.2f, spawnWorld._43);
+		vend = _float3(spawnWorld._41, spawnWorld._42 - 0.2f, spawnWorld._43);
+		CGameInstance::Get().AddTrailPoint("Lightning_Trail", "Lightning_Trail", vstart, vend);
 
 		if (fMoveTime > 0.f)
 		{
@@ -144,6 +166,30 @@ void CPlayer_DepulsoSkill_State::Update(CStateMachine* pStateMachine, _float fTi
 			}*/
 
 			// 밀기 시작
+
+			if (auto pMonster = CGameInstance::Get().GetGameObjectByHandleT<CMonster>(pPlayer->GetTargetHandle()))
+			{
+				_vector monsterPos = XMVectorSet(pMonster->GetHurtBoxPosition().x, pMonster->GetHurtBoxPosition().y, pMonster->GetHurtBoxPosition().z, 1);
+				_float3 camPos = CGameInstance::Get().GetActiveCamera()->GetTransform().GetPosition();
+				_vector vCamPos = XMVectorSet(camPos.x, camPos.y, camPos.z, 1);
+
+				_vector dirToCam = vCamPos - monsterPos;
+				dirToCam = XMVectorSetY(dirToCam, 0.f);
+				dirToCam = XMVector3Normalize(dirToCam);
+
+				float spawnOffset = 5.5f;
+				_vector spawnPos = monsterPos + dirToCam * spawnOffset;
+
+				float yaw = atan2f(XMVectorGetX(dirToCam), XMVectorGetZ(dirToCam));
+				_matrix effectMatrix = XMMatrixRotationY(yaw);
+				effectMatrix.r[3] = XMVectorSetW(spawnPos, 1.f);
+
+				_float4x4 storedMatrix;
+				XMStoreFloat4x4(&storedMatrix, effectMatrix);
+
+				CGameInstance::Get().PlayEffect("Depulso", storedMatrix);
+			}
+			
 			m_ePhase = PHASE::PUSH;
 			pAnimator->Play_Anim(m_DepulsoCast_Animation, false, 0.2f);
 		}

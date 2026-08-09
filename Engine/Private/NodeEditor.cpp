@@ -5,6 +5,7 @@
 #include "BTActionNode.h"
 #include "BTDecorator.h"
 #include "ComBeHavior.h"
+#include "BTSubTreeNode.h"
 CNodeEditor::CNodeEditor()
 {
 }
@@ -14,15 +15,9 @@ CNodeEditor::~CNodeEditor()
 	ax::NodeEditor::DestroyEditor(m_pNodeContext);
 }
 
-//using namespace ax;
 HRESULT CNodeEditor::Initialize()
 {
-	//ImGuiIO& io = ImGui::GetIO();
-	//
-	//m_FontRegular = io.Fonts->AddFontFromFileTTF(
-	//	"./Resources/SampleClient/Fonts/NeoDunggeunmoPro-Regular.ttf",
-	//	15.f);
-
+	
 	ax::NodeEditor::Config config;
 	config.SettingsFile = nullptr;
 
@@ -171,6 +166,19 @@ void CNodeEditor::Show_Editor()
 						m_bReName = true;
 						ImGui::SetKeyboardFocusHere();	
 					}
+					if (ImGui::Selectable("CreateSubTree..", false, ImGuiSelectableFlags_DontClosePopups))
+					{
+						if (pNode->Get_GuiNodeInfo().eMyType != BEHAVIOR::ACTION)
+						{
+							m_bSubNode = true;
+						}
+					}
+
+					if (m_bSubNode)
+					{
+						SaveSubNodePopUp(pNode);
+					}
+						
 				}
 				else
 				{
@@ -503,6 +511,18 @@ void CNodeEditor::Draw_Node(int32_t& iNode_hovered_in_list, int32_t& iNode_hover
 		Draw_Node(iNode_hovered_in_list, iNode_hovered_in_scene, fNode_Slot_Radius, fNode_Window_Padding, bOpen_Context_Menu, io, pNode->Get_Child().get());
 
 	}
+	else if (pCurNode->Get_GuiNodeInfo().eMyType == BEHAVIOR::ACTION && pCurNode->GetMasterName() == "BTSubTree")
+	{
+		
+		auto pNode = static_cast<CBTSubTreeNode*>(pCurNode);
+		
+		if (pNode->ShowSubTree() && nullptr != pNode->Get_SubTreeNode())
+		{
+			Draw_Node(iNode_hovered_in_list, iNode_hovered_in_scene, fNode_Slot_Radius, fNode_Window_Padding, bOpen_Context_Menu, io, pNode->Get_SubTreeNode());
+
+		}
+			
+	}
 	ImGui::PopID();
 
 
@@ -689,8 +709,6 @@ void CNodeEditor::SavePopUp()
 				{
 					bfalse = true;
 					MSG_BOX("File Name Blink");
-				
-					
 				}
 			}
 		
@@ -709,6 +727,65 @@ void CNodeEditor::SavePopUp()
 		if (ImGui::Button("Cancle"))
 		{
 			m_bSaveLoad = false;
+			ImGui::CloseCurrentPopup();
+		}
+
+		ImGui::EndPopup();
+	}
+}
+
+void CNodeEditor::SaveSubNodePopUp(CBTRoot* pRoot)
+{
+	if (nullptr == pRoot)
+		return;
+	
+	_string     PathName = "./Resources/json/Behavior/SubTree/";
+	_char		NameBuffer[64]{};
+	_char		NameSrc[64]{};
+	_float2		ViewPortSize = CGameInstance::Get().GetClientScreenSize();
+	ImGui::SetNextWindowPos(
+		ImVec2(ViewPortSize.x * 0.5f, ViewPortSize.y * 0.5f),
+		ImGuiCond_Appearing,
+		ImVec2(0.5f, 0.5f) // pivot (중앙 기준)
+	);
+	ImGui::OpenPopup("File Save SubTree");
+
+	if (ImGui::BeginPopup("File Save SubTree", ImGuiWindowFlags_AlwaysAutoResize))
+	{
+		ImGui::Text("FileName");
+		if (ImGui::InputText("##FileName", &NameBuffer[0], IM_ARRAYSIZE(NameBuffer))) //이름 입력
+		{
+			m_AddNodeName = PathName + NameBuffer + (".json");
+			m_SaveName = NameBuffer;
+		}
+
+		if (ImGui::Button("Ok"))
+		{
+			
+			_bool bfalse{ false };
+			for (auto& iter : std::filesystem::recursive_directory_iterator(PathName))
+			{
+				if (iter.path().filename().stem() == "")
+				{
+					bfalse = true;
+					MSG_BOX("File Name Blink");
+				}
+			}
+
+			if (!bfalse)
+			{
+				m_bSubNode = false;
+				if (FAILED(pRoot->Save_SubTree(m_AddNodeName)))
+				{
+
+				}
+				else MSG_BOX("Successed Save");
+				ImGui::CloseCurrentPopup();
+			}
+		} ImGui::SameLine(100.f);
+		if (ImGui::Button("Cancle"))
+		{
+			m_bSubNode = false;
 			ImGui::CloseCurrentPopup();
 		}
 
@@ -976,7 +1053,15 @@ void CNodeEditor::Recursive_Call_Node(class CBTRoot* pParent)
 
 
 			if ((*pNode->Get_Nodes())[i]->Get_GuiNodeInfo().eMyType != BEHAVIOR::ACTION)
-			Recursive_Call_Node(pNodeArray[i].get());
+				Recursive_Call_Node(pNodeArray[i].get());
+			else if (BEHAVIOR::ACTION == (*pNode->Get_Nodes())[i]->Get_GuiNodeInfo().eMyType &&
+				(*pNode->Get_Nodes())[i]->GetMasterName() == "BTSubTree")
+			{
+				auto pSubTree = static_cast<CBTSubTreeNode*>(pNodeArray[i].get());
+				if(nullptr != pSubTree && pSubTree->ShowSubTree())
+				Recursive_Call_Node(pSubTree->Get_SubTreeNode());
+			}
+				
 		}
 	}
 	else if (BEHAVIOR::DECORATOR == eType)
@@ -991,10 +1076,27 @@ void CNodeEditor::Recursive_Call_Node(class CBTRoot* pParent)
 			pNode_out = &pParent->Get_GuiNodeInfo();
 			Draw_NodeLine(pChild->GetDebugType(),pNode_inp->GetStartSlotPos(), pNode_out->GetEndSlotPos(iParentIndex, pParent->Get_GuiNodeLink().SlotEnd.size()));
 
-			if ((pNode->Get_GuiNodeInfo().eMyType != BEHAVIOR::ACTION))
+			if ((pNode->Get_GuiNodeInfo().eMyType != BEHAVIOR::ACTION) )
 				Recursive_Call_Node(pChild.get());
+			else if (pChild->Get_GuiNodeInfo().eMyType == BEHAVIOR::ACTION && pChild->GetMasterName() == "BTSubTree")
+			{
+				auto pSub = static_cast<CBTSubTreeNode*>(pChild.get());
+				
+				if(nullptr!= pSub && pSub->ShowSubTree())
+					Recursive_Call_Node(pSub->Get_SubTreeNode());
+			}
+				
 		}
 		
+	}
+	else if (BEHAVIOR::ACTION == eType && pParent->GetMasterName() == "BTSubTree")
+	{
+		auto pNode = static_cast<CBTSubTreeNode*>(pParent);
+		if (nullptr != pNode && pNode->ShowSubTree() && nullptr != pNode->Get_SubTreeNode())
+		{
+			Recursive_Call_Node(pNode->Get_SubTreeNode());
+		}
+			
 	}
 	
 }
@@ -1051,7 +1153,6 @@ void CNodeEditor::Add_NodeToTmp(UPtr<class CBTRoot>& pRoot)
 			}
 		}
 }
-
 
 UPtr<CNodeEditor> CNodeEditor::Create()
 {

@@ -24,7 +24,9 @@ CLevelHogwartWorld::CLevelHogwartWorld()
 HRESULT CLevelHogwartWorld::Initialize()
 {
 	auto& gameInstance = E::CGameInstance::Get();
-	gameInstance.GameObjectAllReset();
+	gameInstance.GameObjectAllResetExceptLayers({
+		"00_ENGINE_CINEMATIC_CAMERA"
+	});
 
 	if (FAILED(gameInstance.Initialize_EffectLight(15)))
 		return E_FAIL;

@@ -429,7 +429,7 @@ PS_OUT PSOnlyForDistortion(VS_OUT In)
 	if (vDistortionColor.r <0.51f)
 		discard;
 	float2 distortion = vDistortionColor.rg * 2.0f - 1.0f;
-	float distortionStrength = 0.05f * In.vColor.a ;
+	float distortionStrength = 0.15f * In.vColor.a ;
 
 	distortion *= distortionStrength;
 	float4 distortedBackground = g_BackgroundTex.Sample(LinearClamp, screenUV + distortion); 
@@ -560,6 +560,45 @@ PS_OUT PSPortal(VS_OUT In)
 
 	float finalAlpha = circleMask * In.vColor.a * ObjectAlpha;
 
+	clip(finalAlpha - 0.01f);
+
+	Out.vDiffuse = float4(finalColor, finalAlpha);
+	return Out;
+}
+PS_OUT PSCircleMask(VS_OUT In)
+{
+	PS_OUT Out = (PS_OUT) 0;
+
+
+	float4 colorTex = g_DiffuseTexture.Sample(LinearWrap, In.vTexcoord);
+	if (all(colorTex.rgb < 0.2f))
+		discard;
+	float circleMask = g_AnyTexture.Sample(LinearClamp, In.vTexcoord).r;
+	circleMask = smoothstep(0.05f, 0.2f, circleMask);
+
+	float2 centeredUV = In.vTexcoord * 2.0f - 1.0f;
+	float distanceToCenter = length(centeredUV);
+	
+
+
+	float luminance = dot(colorTex.rgb, float3(0.299f, 0.587f, 0.114f));
+
+	float3 originalColor = colorTex.rgb;
+	float3 saturatedColor = lerp(luminance.xxx, originalColor, 1.35f);
+	float3 portalColor = max(saturatedColor, 0.0f);
+
+
+	float ratio = saturate(In.life / max(In.maxLife, 0.0001f));
+	float4 lerpedEmissive = lerp(In.vEmissive, In.vEndEmissive, ratio);
+	float3 emissiveColor = lerpedEmissive.rgb * lerpedEmissive.a;
+
+	float3 finalColor = portalColor * In.vColor.rgb;
+	finalColor += originalColor * emissiveColor * circleMask;
+	finalColor *= circleMask;
+
+	float finalAlpha = circleMask * In.vColor.a * ObjectAlpha;
+	finalAlpha = pow(saturate(finalAlpha), 2.2f);
+	
 	clip(finalAlpha - 0.01f);
 
 	Out.vDiffuse = float4(finalColor, finalAlpha);

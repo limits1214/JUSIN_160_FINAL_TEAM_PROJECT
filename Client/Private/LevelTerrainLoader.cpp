@@ -20,7 +20,11 @@
 #include "GurdianWeapon.h"
 #include "BossTMB.h"
 #include "StarBurst.h"
-
+#include "EnderDragon.h"
+#include "BossMace.h"
+#include "EnderDragon_State.h"
+#include "EdgFireBall.h"
+#include "EdgBreath.h"
 // UI
 #include "UIController.h"
 #include "EffectUI.h"
@@ -183,26 +187,6 @@ std::future<bool> CLevelTerrainLoader::Load()
 				}
 			}
 
-			//TombBos
-			{
-				if (auto res = CGameInstance::Get().AddResourceT<E::CResModel>(LEVEL::TERRAIN, "Model_Resource_TombProtector",
-					CResModel::Create("./Resources/SampleClient/Models/Skeleton/Tomb_Protector/SK_Tomb_Protector.bin")))
-				{
-					E::CResModel::DESC pDesc{};
-					pDesc.PreTransformMatrix = XMMatrixScaling(1.f, 1.f, 1.f) * XMMatrixRotationY(XMConvertToRadians(180.f));
-					if (FAILED(res->Load(pDesc)))
-					{
-						MSG_BOX("LEVEL_CREATURE Failed Model_Resource_TombProtector");
-						return false;
-					}
-				}
-
-				if (FAILED(E::CGameInstance::Get().AddPrototype(LEVEL::TERRAIN, PROTO_GAMEOBJECT::Prototype_GameObject_BossTMB, CBossTMB::Create())))
-				{
-					MSG_BOX("LEVEL_CREATURE Failed Prototype_GameObject_BossTMB");
-					return false;
-				}
-			}
 
 			if (auto res = CGameInstance::Get().AddResourceT<E::CResModel>(LEVEL::TERRAIN, "PLAYER_MODEL_RESROUCE", CResModel::Create("./Resources/SampleClient/Models/Skeleton/professor/SK_professor.bin"))) {
 
@@ -246,101 +230,7 @@ std::future<bool> CLevelTerrainLoader::Load()
 				MSG_BOX("TERRAIN Failed Prototype_GameObject_PlayerMagicBullet");
 				return false;
 			}
-			if (FAILED(E::CGameInstance::Get().AddPrototype(
-				LEVEL::TERRAIN, PROTO_GAMEOBJECT::Prototype_GameObject_BossStarBurst, CBoss_StarBurst::Create())))
-			{
-				MSG_BOX("TERRAIN Failed Prototype_GameObject_BossStarBurst");
-				return false;
-			}
-
-			if (FAILED(E::CGameInstance::Get().AddPrototype(
-				LEVEL::TERRAIN,
-				PROTO_GAMEOBJECT::Prototype_GameObject_TombBossBullet,
-				CTombBossBullet::Create())))
-			{
-				MSG_BOX("TERRAIN Failed Prototype_GameObject_TombBossBullet");
-				return false;
-			}
-			//TombGurDian
-			{
-				if (auto res = CGameInstance::Get().AddResourceT<E::CResModel>(LEVEL::TERRAIN, "Model_Resource_TMBGurdian",
-					CResModel::Create("./Resources/SampleClient/Models/Skeleton/Tomb_Grunt/SK_Tomb_Grunt.bin")))
-				{
-					E::CResModel::DESC pDesc{};
-					pDesc.PreTransformMatrix = XMMatrixScaling(1.f, 1.f, 1.f) * XMMatrixRotationY(XMConvertToRadians(180.f));
-					if (FAILED(res->Load(pDesc)))
-					{
-						MSG_BOX("LEVEL_CREATURE Failed Model_Resource_TMBGurdian");
-						return false;
-					}
-				}
-
-				if (FAILED(E::CGameInstance::Get().AddPrototype(LEVEL::TERRAIN, PROTO_GAMEOBJECT::Prototype_GameObject_TMBGurdian, CTmbGurdian::Create())))
-				{
-					MSG_BOX("LEVEL_CREATURE Failed Prototype_GameObject_TMBGurdian");
-					return false;
-				}
-
-			}
-			//TombGurDianDead
-			{
-				for (uint32_t i = 0; i < 13; ++i)
-				{
-					std::string path = "./Resources/SampleClient/Models/Static/SM_Med_" + std::to_string(i) + ".bin";
-					StringID resTag = "Static_Med_Debris_" + std::to_string(i);
-					if (auto res = CGameInstance::Get().AddResourceT<E::CResStaticModel>(LEVEL::TERRAIN, resTag,
-						CResStaticModel::Create(path))) {
-
-						E::CResStaticModel::DESC pDesc{};
-						pDesc.PreTransformMatrix = XMMatrixIdentity();
-
-						if (FAILED(res->Load(pDesc)))
-						{
-							MSG_BOX("LEVEL_CREATURE Failed Static_Med_Debris");
-						}
-					}
-				}
-				if (FAILED(E::CGameInstance::Get().AddPrototype(
-					LEVEL::TERRAIN, PROTO_GAMEOBJECT::Prototype_GameObject_TmbGurdianDead, CTmbGurdianDead::Create())))
-				{
-					MSG_BOX("LEVEL_CREATURE Failed Prototype_GameObject_TmbGurdianDead");
-					return false;
-				}
-				if (auto res = CGameInstance::Get().AddResourceT<E::CResStaticModel>(LEVEL::TERRAIN, "Model_Resource_Mace",
-					CResStaticModel::Create("./Resources/SampleClient/Models/Static/SM_Tomb_Mace.bin"))) {
-
-					E::CResStaticModel::DESC pDesc{};
-					pDesc.PreTransformMatrix = XMMatrixScaling(0.01f, 0.01f, 0.01f);
-
-					if (FAILED(res->Load(pDesc)))
-					{
-						MSG_BOX("LEVEL_CREATURE Failed Static_Mace_Model_Resource");
-						return false;
-					}
-				}
-				if (auto res = CGameInstance::Get().AddResourceT<E::CResStaticModel>(LEVEL::TERRAIN, "Model_Resource_Sword",
-					CResStaticModel::Create("./Resources/SampleClient/Models/Static/SM_Tomb_Sword.bin"))) {
-
-					E::CResStaticModel::DESC pDesc{};
-					pDesc.PreTransformMatrix = XMMatrixScaling(0.01f, 0.01f, 0.01f);
-
-					if (FAILED(res->Load(pDesc)))
-					{
-						MSG_BOX("LEVEL_CREATURE Failed Static_Sword_Model_Resource");
-						return false;
-					}
-				}
-				if (FAILED(E::CGameInstance::Get().AddPrototype(LEVEL::TERRAIN, PROTO_GAMEOBJECT::Prototype_GameObject_Mace, CGurdianWeapon::Create())))
-				{
-					MSG_BOX("LEVEL_CREATURE Failed Prototype_GameObject_Mace");
-					return false;
-				}
-				if (FAILED(E::CGameInstance::Get().AddPrototype(LEVEL::TERRAIN, PROTO_GAMEOBJECT::Prototype_GameObject_Sword, CGurdianWeapon::Create())))
-				{
-					MSG_BOX("LEVEL_CREATURE Failed Prototype_GameObject_Sword");
-					return false;
-				}
-			}
+			MonsterLoad_InWorker();
 			// 워커 스레드 종료
 			return  true;
 		});
@@ -369,7 +259,6 @@ _bool CLevelTerrainLoader::UILoad()
 
 			const char* targetDirectories[] = {
 				"./Resources/SampleClient/Textures/UI/UITexture/PlayScreen",
-				"./Resources/SampleClient/Textures/UI/UITexture/SpellType",
 				"./Resources/SampleClient/Textures/UI/UITexture/SpellSlot",
 				"./Resources/SampleClient/Textures/UI/UITexture/DeadScene",
 				"./Resources/SampleClient/Textures/UI/UITexture/Cursor"
@@ -444,4 +333,174 @@ _bool CLevelTerrainLoader::UILoad()
 		}
 	}
 	return true;
+}
+HRESULT CLevelTerrainLoader::MonsterLoad_InWorker()
+{
+	//TombBos
+	{
+		if (auto res = CGameInstance::Get().AddResourceT<E::CResModel>(LEVEL::TERRAIN, "Model_Resource_TombBoss",
+			CResModel::Create("./Resources/SampleClient/Models/Skeleton/Tomb_Protector/SK_Tomb_Protector.bin")))
+		{
+			E::CResModel::DESC pDesc{};
+			pDesc.PreTransformMatrix = XMMatrixScaling(1.f, 1.f, 1.f) * XMMatrixRotationY(XMConvertToRadians(180.f));
+			if (FAILED(res->Load(pDesc)))
+			{
+				MSG_BOX("LEVEL_CREATURE Failed Model_Resource_TombBoss");
+				return E_FAIL;
+			}
+		}
+
+		if (FAILED(E::CGameInstance::Get().AddPrototype(LEVEL::TERRAIN, PROTO_GAMEOBJECT::Prototype_GameObject_BossTMB, CBossTMB::Create())))
+		{
+			MSG_BOX("LEVEL_CREATURE Failed Prototype_GameObject_BossTMB");
+			return E_FAIL;
+		}
+
+		if (auto res = CGameInstance::Get().AddResourceT<E::CResStaticModel>(LEVEL::TERRAIN, "Model_Resource_BossWeapon",
+			CResStaticModel::Create("./Resources/SampleClient/Models/Static/SM_BossWeapon.bin")))
+		{
+			E::CResStaticModel::DESC pDesc{};
+			pDesc.PreTransformMatrix = XMMatrixScaling(0.01f, 0.01f, 0.01f);
+
+			if (FAILED(res->Load(pDesc)))
+			{
+				MSG_BOX("BOSS_CHARLES_ROOKWOOD Failed Static_Model_Resource_BossWeapon");
+				return E_FAIL;
+			}
+		}
+		if (FAILED(E::CGameInstance::Get().AddPrototype(LEVEL::TERRAIN, PROTO_GAMEOBJECT::Prototype_GameObject_BossWeapon, CBossMace::Create())))
+		{
+			MSG_BOX("BOSS_CHARLES_ROOKWOOD Failed Prototype_GameObject_BossWeapon");
+			return E_FAIL;
+		}
+	}
+	//BOSSSTAR
+	{
+		if (FAILED(E::CGameInstance::Get().AddPrototype(
+			LEVEL::TERRAIN, PROTO_GAMEOBJECT::Prototype_GameObject_BossStarBurst, CBoss_StarBurst::Create())))
+		{
+			MSG_BOX("TERRAIN Failed Prototype_GameObject_BossStarBurst");
+			return E_FAIL;
+		}
+	}
+	//BOSSBULLET
+	{
+		if (FAILED(E::CGameInstance::Get().AddPrototype(
+			LEVEL::TERRAIN,
+			PROTO_GAMEOBJECT::Prototype_GameObject_TombBossBullet, CTombBossBullet::Create())))
+		{
+			MSG_BOX("TERRAIN Failed Prototype_GameObject_TombBossBullet");
+			return E_FAIL;
+		}
+	}
+	//TombGurDian
+	{
+		if (auto res = CGameInstance::Get().AddResourceT<E::CResModel>(LEVEL::TERRAIN, "Model_Resource_TMBGurdian",
+			CResModel::Create("./Resources/SampleClient/Models/Skeleton/Tomb_Grunt/SK_Tomb_Grunt.bin")))
+		{
+			E::CResModel::DESC pDesc{};
+			pDesc.PreTransformMatrix = XMMatrixScaling(1.f, 1.f, 1.f) * XMMatrixRotationY(XMConvertToRadians(180.f));
+			if (FAILED(res->Load(pDesc)))
+			{
+				MSG_BOX("LEVEL_CREATURE Failed Model_Resource_TMBGurdian");
+				return E_FAIL;
+			}
+		}
+
+		if (FAILED(E::CGameInstance::Get().AddPrototype(LEVEL::TERRAIN, PROTO_GAMEOBJECT::Prototype_GameObject_TMBGurdian, CTmbGurdian::Create())))
+		{
+			MSG_BOX("LEVEL_CREATURE Failed Prototype_GameObject_TMBGurdian");
+			return false;
+		}
+
+	}
+	//TombGurDianDead
+	{
+		for (uint32_t i = 0; i < 13; ++i)
+		{
+			std::string path = "./Resources/SampleClient/Models/Static/SM_Med_" + std::to_string(i) + ".bin";
+			StringID resTag = "Static_Med_Debris_" + std::to_string(i);
+			if (auto res = CGameInstance::Get().AddResourceT<E::CResStaticModel>(LEVEL::TERRAIN, resTag,
+				CResStaticModel::Create(path))) {
+
+				E::CResStaticModel::DESC pDesc{};
+				pDesc.PreTransformMatrix = XMMatrixIdentity();
+
+				if (FAILED(res->Load(pDesc)))
+				{
+					MSG_BOX("LEVEL_CREATURE Failed Static_Med_Debris");
+				}
+			}
+		}
+		if (FAILED(E::CGameInstance::Get().AddPrototype(
+			LEVEL::TERRAIN, PROTO_GAMEOBJECT::Prototype_GameObject_TmbGurdianDead, CTmbGurdianDead::Create())))
+		{
+			MSG_BOX("LEVEL_CREATURE Failed Prototype_GameObject_TmbGurdianDead");
+			return false;
+		}
+	}
+	//TombWeapon
+	{
+		if (auto res = CGameInstance::Get().AddResourceT<E::CResStaticModel>(LEVEL::TERRAIN, "Model_Resource_Mace",
+			CResStaticModel::Create("./Resources/SampleClient/Models/Static/SM_Tomb_Mace.bin"))) {
+
+			E::CResStaticModel::DESC pDesc{};
+			pDesc.PreTransformMatrix = XMMatrixScaling(0.01f, 0.01f, 0.01f);
+
+			if (FAILED(res->Load(pDesc)))
+			{
+				MSG_BOX("LEVEL_CREATURE Failed Static_Mace_Model_Resource");
+				return E_FAIL;
+			}
+		}
+		if (auto res = CGameInstance::Get().AddResourceT<E::CResStaticModel>(LEVEL::TERRAIN, "Model_Resource_Sword",
+			CResStaticModel::Create("./Resources/SampleClient/Models/Static/SM_Tomb_Sword.bin"))) {
+
+			E::CResStaticModel::DESC pDesc{};
+			pDesc.PreTransformMatrix = XMMatrixScaling(0.01f, 0.01f, 0.01f);
+
+			if (FAILED(res->Load(pDesc)))
+			{
+				MSG_BOX("LEVEL_CREATURE Failed Static_Sword_Model_Resource");
+				return E_FAIL;
+			}
+		}
+		if (FAILED(E::CGameInstance::Get().AddPrototype(LEVEL::TERRAIN, PROTO_GAMEOBJECT::Prototype_GameObject_Mace, CGurdianWeapon::Create())))
+		{
+			MSG_BOX("LEVEL_CREATURE Failed Prototype_GameObject_Mace");
+			return E_FAIL;
+		}
+		if (FAILED(E::CGameInstance::Get().AddPrototype(LEVEL::TERRAIN, PROTO_GAMEOBJECT::Prototype_GameObject_Sword, CGurdianWeapon::Create())))
+		{
+			MSG_BOX("LEVEL_CREATURE Failed Prototype_GameObject_Sword");
+			return E_FAIL;
+		}
+
+	}
+	//Dragon	
+	{ 
+		if (auto res = CGameInstance::Get().AddResourceT<E::CResModel>(LEVEL::TERRAIN, "Model_Resource_Dragon",
+			CResModel::Create("./Resources/SampleClient/Models/Skeleton/Dragon/SK_Dragon.bin"))) {
+		
+			E::CResModel::DESC pDesc{};
+			pDesc.PreTransformMatrix = XMMatrixScaling(3.f, 3.f, 3.f) * XMMatrixRotationY(XMConvertToRadians(180.f));
+		
+			if (FAILED(res->Load(pDesc)))
+			{
+				MSG_BOX("TERRAIN Failed Model_Resource_Dragon");
+				return E_FAIL;
+			}
+		}
+		if (FAILED(E::CGameInstance::Get().AddPrototype(LEVEL::TERRAIN, PROTO_GAMEOBJECT::Prototype_GameObject_Dragon, CEnderDragon::Create())))
+		{
+			MSG_BOX("TERRAIN Failed Prototype_GameObject_Dragon");
+			return E_FAIL;
+		}
+		if (FAILED(CGameInstance::Get().AddPrototype(LEVEL::TERRAIN, "Prototype_Component_Dragon_FSM",CEnderDragon_State::Create()))) return E_FAIL;
+		if (FAILED(CGameInstance::Get().AddPrototype(LEVEL::TERRAIN, PROTO_GAMEOBJECT::Prototype_GameObject_Dragon_FireBall, CEdgFireBall::Create()))) return E_FAIL;
+		if (FAILED(CGameInstance::Get().AddPrototype(LEVEL::TERRAIN, PROTO_GAMEOBJECT::Prototype_GameObject_Dragon_Breath, CEdgBreath::Create()))) return E_FAIL;
+
+	}
+
+	return S_OK;
 }

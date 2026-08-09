@@ -52,6 +52,7 @@ private:
 	float m_fScatterScaleMin = 0.8f;
 	float m_fScatterScaleMax = 1.2f;
 	bool m_bScatterRandomYaw = true;
+	E::WIND_DESC m_ScatterWindDesc{};
 	std::string m_ScatterModelGroup{};
 	std::string m_ScatterModelTag{};
 	std::optional<E::_float3> m_PreviousScatterHit{};

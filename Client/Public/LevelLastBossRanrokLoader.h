@@ -6,7 +6,7 @@ NS_BEGIN(Client)
 class CLevelLastBossRanrokLoader
 {
 public:
-	static constexpr const char* MAP_PATH = "./Resources/json/MapSaved/Tomb12345";
+	static constexpr const char* MAP_PATH = "./Resources/json/MapSaved/RanrokBoss";
 
 	static std::future<bool> Load();
 	static std::future<bool> UnLoad();

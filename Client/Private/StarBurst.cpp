@@ -83,7 +83,9 @@ void CBoss_StarBurst::FixedUpdate(E::_float fTimeDelta)
 }
 
 void CBoss_StarBurst::Update(E::_float fTimeDelta) {
-	if (m_pLightEffectID == INVALID_EFFECT_INSTANCE_ID || m_bDead)  {
+
+	Dead_Check(fTimeDelta);
+	if (m_pLightEffectID == INVALID_EFFECT_INSTANCE_ID || m_bDead || m_fDeadTick >5.f)  {
 		SetPendingDestroy();
 		return;
 	}
@@ -264,8 +266,10 @@ _bool CBoss_StarBurst::HandleSweepHit(
 	return false;
 }
 
-void CBoss_StarBurst::Dead_Check()
+void CBoss_StarBurst::Dead_Check(_float fTimeDelta)
 {
+	m_fDeadTick += fTimeDelta;
+
 	if (auto iter = CGameInstance::Get().GetGameObjectByHandle(m_hOwner))
 	{
 		if (auto pBT = iter->GetComponent<CComBeHavior>("Com_BT"))

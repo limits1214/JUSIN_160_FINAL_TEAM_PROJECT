@@ -3,7 +3,7 @@
 #include "Client_Defines.h"
 
 NS_BEGIN(Client)
-enum class TOMB_SKILL { JUMP_START, JUMP_END,SLASH,SMASH,SKIP,HIT_ACCIO, STING,END };
+enum class TOMB_SKILL { JUMP_START, JUMP_END,SLASH,SMASH,SKIP,HIT_ACCIO, STING, HIT_DESCENDO,END };
 class CTmbGurdian final : public CMonster
 {
 public:

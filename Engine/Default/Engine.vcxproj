@@ -245,6 +245,7 @@
     <ClInclude Include="..\public\BTDecorator.h" />
     <ClInclude Include="..\public\BTRandSelector.h" />
     <ClInclude Include="..\public\BTReactiveSelector.h" />
+    <ClInclude Include="..\public\BTSubTreeNode.h" />
     <ClInclude Include="..\Public\CinematicAsset.h" />
     <ClInclude Include="..\Public\CinematicCamera.h" />
     <ClInclude Include="..\Public\CinematicSystem.h" />
@@ -339,6 +340,7 @@
     <ClInclude Include="..\Public\DInputManager.h" />
     <ClInclude Include="..\Public\Engine_Assimp_Enum.h" />
     <ClInclude Include="..\Public\Engine_Base.h" />
+    <ClInclude Include="..\Public\Engine_BuildConfig.h" />
     <ClInclude Include="..\Public\Engine_Defines.h" />
     <ClInclude Include="..\Public\Engine_Enum.h" />
     <ClInclude Include="..\Public\Engine_Function.h" />
@@ -355,6 +357,7 @@
     <ClInclude Include="..\public\GameInstance.h" />
     <ClInclude Include="..\Public\GameObject.h" />
     <ClInclude Include="..\Public\GameObjectManager.h" />
+    <ClInclude Include="..\Public\GameObjectPoolManager.h" />
     <ClInclude Include="..\Public\GraphicDevice.h" />
     <ClInclude Include="..\Public\Handle.h" />
     <ClInclude Include="..\Public\ImguiManager.h" />
@@ -458,7 +461,6 @@
     <ClInclude Include="..\public\Trail_CPU.h" />
     <ClInclude Include="..\Public\UICamera.h" />
     <ClInclude Include="..\Public\UIObject.h" />
-    <ClInclude Include="..\Public\VolumetricFog.h" />
     <ClInclude Include="..\Public\WorkerManager.h" />
     <ClInclude Include="..\Public\Engine_PhysxDefines.h" />
     <ClInclude Include="..\Public\IPhysicsSync.h" />
@@ -591,6 +593,7 @@
     <ClCompile Include="..\private\BTDecorator.cpp" />
     <ClCompile Include="..\private\BTRandSelector.cpp" />
     <ClCompile Include="..\private\BTReactiveSelector.cpp" />
+    <ClCompile Include="..\private\BTSubTreeNode.cpp" />
     <ClCompile Include="..\Private\CinematicAsset.cpp" />
     <ClCompile Include="..\Private\CinematicCamera.cpp" />
     <ClCompile Include="..\Private\CinematicSystem.cpp" />
@@ -689,9 +692,11 @@
     <ClCompile Include="..\Private\DInputManager.cpp" />
     <ClCompile Include="..\Private\FlyCamera.cpp" />
     <ClCompile Include="..\Private\FontManager.cpp" />
+    <ClCompile Include="..\Private\Engine_BuildConfig.cpp" />
     <ClCompile Include="..\private\GameInstance.cpp" />
     <ClCompile Include="..\Private\GameObject.cpp" />
     <ClCompile Include="..\Private\GameObjectManager.cpp" />
+    <ClCompile Include="..\Private\GameObjectPoolManager.cpp" />
     <ClCompile Include="..\Private\GraphicDevice.cpp" />
     <ClCompile Include="..\Private\ImguiManager.cpp" />
     <ClCompile Include="..\Private\Level.cpp" />
@@ -792,7 +797,6 @@
     <ClCompile Include="..\private\Trail_CPU.cpp" />
     <ClCompile Include="..\Private\UICamera.cpp" />
     <ClCompile Include="..\Private\UIObject.cpp" />
-    <ClCompile Include="..\Private\VolumetricFog.cpp" />
     <ClCompile Include="..\Private\WorkerManager.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
@@ -806,6 +810,7 @@
   <ItemGroup>
     <FxCompile Include="..\ShaderFiles\Particle\CS_ChangeColorByOwner.hlsl" />
     <FxCompile Include="..\ShaderFiles\Particle\CS_TransformOwner.hlsl" />
+    <FxCompile Include="..\ShaderFiles\RayMarching\PS_Volumetric.hlsl" />
     <FxCompile Include="..\ShaderFiles\Terrain\Shader_Terrain.hlsl">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
@@ -905,6 +910,7 @@
     <FxCompile Include="..\ShaderFiles\TestModel\Shader_VtxAnimMesh_CPU_Skinning_Instanced.hlsl" />
     <FxCompile Include="..\ShaderFiles\TestModel\Shader_VtxAnimMesh_Instanced.hlsl" />
     <FxCompile Include="..\ShaderFiles\TestModel\Shader_VtxMesh_Instanced.hlsl" />
+    <FxCompile Include="..\ShaderFiles\TestModel\Shader_VtxMesh_Instanced_Foliage.hlsl" />
     <FxCompile Include="..\ShaderFiles\TestModel\Shader_VtxMesh_NonInstanced.hlsl" />
     <FxCompile Include="..\ShaderFiles\TestModel\Shader_VtxPartObject.hlsl" />
     <FxCompile Include="..\ShaderFiles\UI\9SliceUI.hlsl" />

@@ -4,11 +4,46 @@
 
 #include "TmbGurdian.h"
 #include "Player.h"
+#include "ClientEvents.h"
 NS_USING(Client)
 
 HRESULT CTriggerCRW_SpawnMonster1::Initialize(void* pArg)
 {
 	return CPhysXCollisionProxyObject::Initialize(pArg);
+}
+
+void CTriggerCRW_SpawnMonster1::Update(E::_float fTimeDelta)
+{
+	CPhysXCollisionProxyObject::Update(fTimeDelta);
+
+	{
+		// (임시) 몬스터 소환시 2마리 사망후 퀘스트 종료
+		constexpr size_t expectedMonsterCount = 2;
+		if (!m_bSpawned || m_bTrialCompleted ||
+			m_vSpawnedMonsterHandles.size() != expectedMonsterCount)
+			return;
+
+		const _bool allMonstersDefeated = std::all_of(
+			m_vSpawnedMonsterHandles.begin(),
+			m_vSpawnedMonsterHandles.end(),
+			[](CHandle monsterHandle)
+			{
+				auto* monster = E::CGameInstance::Get().
+					GetGameObjectByHandleT<CMonster>(monsterHandle);
+				return !monster || monster->Get_CurrentHp() <= 0;
+			});
+
+		if (!allMonstersDefeated)
+			return;
+
+		m_bTrialCompleted = true;
+		E::CGameInstance::Get().EventPublish(
+			FQuestUIGroupChanged{
+				.Group = QUEST_UI_GROUP::ROOKWOOD_TRIAL_01,
+				.Active = false
+			});
+	}
+
 }
 
 void CTriggerCRW_SpawnMonster1::OnTriggerEnter(
@@ -44,6 +79,8 @@ void CTriggerCRW_SpawnMonster1::OnTriggerEnter(
 					MSG_BOX("Create TmbGurdian Failed in Terrain");
 					return ;
 				}
+
+				m_vSpawnedMonsterHandles.push_back(*NormalTmb);
 			}
 			{
 				CTmbGurdian::TMBGURDIAN_DESC TmbGurdianDesc{};
@@ -66,6 +103,8 @@ void CTriggerCRW_SpawnMonster1::OnTriggerEnter(
 					MSG_BOX("Create TmbGurdian Failed in Terrain");
 					return ;
 				}
+
+				m_vSpawnedMonsterHandles.push_back(*NormalTmb);
 			}
 		}
 	}

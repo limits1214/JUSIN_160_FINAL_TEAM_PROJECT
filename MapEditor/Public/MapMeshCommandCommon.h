@@ -15,6 +15,7 @@ struct MAPMESH_OBJECT_SNAPSHOT
 	E::_float3 position{};
 	E::_float4 rotation{ 0.f, 0.f, 0.f, 1.f };
 	E::_float3 scale{ 1.f, 1.f, 1.f };
+	E::WIND_DESC windDesc{};
 };
 
 std::optional<MAPMESH_OBJECT_SNAPSHOT> MakeMapMeshObjectSnapshot(const E::CHandle& handle);

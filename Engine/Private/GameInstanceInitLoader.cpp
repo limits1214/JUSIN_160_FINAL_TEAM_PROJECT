@@ -1302,6 +1302,15 @@ HRESULT CGameInstanceInitLoader::LoadShader()
 				return E_FAIL;
 			}
 		}
+
+		if (auto res = CGameInstance::Get().AddResourceT<E::CResVertexShader>(TAG_RES_GRP_PERMANENT_SHADER, "VS_TestModelNonAnim_Instanced_Foliage", "./ShaderFiles/TestModel/Shader_VtxMesh_Instanced_Foliage.hlsl"))
+		{
+			if (FAILED(res->Load()))
+			{
+				return E_FAIL;
+			}
+		}
+
 		if (auto res = CGameInstance::Get().AddResourceT<E::CResPixelShader>(TAG_RES_GRP_PERMANENT_SHADER, "PS_TestModelNonAnim_Instanced", "./ShaderFiles/TestModel/Shader_VtxMesh_Instanced.hlsl"))
 		{
 			if (FAILED(res->Load()))

@@ -30,7 +30,9 @@ CLevelLogo::~CLevelLogo()
 
 HRESULT CLevelLogo::Initialize()
 {
-	E::CGameInstance::Get().GameObjectAllReset();
+	E::CGameInstance::Get().GameObjectAllResetExceptLayers({
+		"00_ENGINE_CINEMATIC_CAMERA"
+	});
 	//Engine::CGameInstance::Get().GameObjectLayerInitialize(E::ETOUI(LEVEL_LOADING_LAYERS::END), LevelLoadingLayersToString);
 
 	//{

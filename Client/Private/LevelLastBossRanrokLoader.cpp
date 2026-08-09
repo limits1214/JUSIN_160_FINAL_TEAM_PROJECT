@@ -33,44 +33,43 @@ NS_USING(Client)
 
 std::future<bool> CLevelLastBossRanrokLoader::Load()
 {
-	return E::CGameInstance::Get().WorkerEnqueueWithFuture("LOADING_CharlesRookwood", []()
+	return E::CGameInstance::Get().WorkerEnqueueWithFuture(
+		"LOADING_LastBossRanrok",
+		[]()
 		{
-			// Map Load
-			//if (FAILED(E::CGameInstance::Get().LoadMapResources(MAP_PATH)))
-			//{
-			//	return false;
-			//}
+			if (FAILED(E::CGameInstance::Get().LoadMapResources(MAP_PATH)))
+				return false;
 
-			//if (!UILoad_InWorker())
-			//{
-			//	return false;
-			//}
+			if (!UILoad_InWorker())
+			{
+				return false;
+			}
 
-			//if (FAILED(E::CGameInstance::Get().LoadCinematic("AcientThunderAttack")))
-			//{
-			//	return false;
-			//}
+			if (FAILED(E::CGameInstance::Get().LoadCinematic("AcientThunderAttack")))
+			{
+				return false;
+			}
 
-			//if (FAILED(E::CGameInstance::Get().LoadCinematic("Lightning")))
-			//{
-			//	return false;
-			//}
+			if (FAILED(E::CGameInstance::Get().LoadCinematic("Lightning")))
+			{
+				return false;
+			}
 
-			//if (FAILED(LoadPlayer_InWorker()))
-			//{
-			//	return false;
-			//}
+			if (FAILED(LoadPlayer_InWorker()))
+			{
+				return false;
+			}
 
-			//if (FAILED(LoadPlayerCape_InWorker()))
-			//{
-			//	return false;
-			//}
+			if (FAILED(LoadPlayerCape_InWorker()))
+			{
+				return false;
+			}
 
-			//if (FAILED(MonsterLoad_InWorker()))
-			//{
-			//	MSG_BOX("Create Failed Monster in CharlesRookwood");
-			//	return false;
-			//}
+			if (FAILED(MonsterLoad_InWorker()))
+			{
+				MSG_BOX("Create Failed Monster in CharlesRookwood");
+				return false;
+			}
 
 			return true;
 		});
@@ -294,6 +293,7 @@ _bool CLevelLastBossRanrokLoader::UILoad_InWorker()
 			return false;
 		}
 	}
+	return true;
 }
 HRESULT CLevelLastBossRanrokLoader::MonsterLoad_InWorker()
 {
@@ -399,4 +399,6 @@ HRESULT CLevelLastBossRanrokLoader::MonsterLoad_InWorker()
 			return E_FAIL;
 		}
 	}
+
+	return S_OK;
 }

@@ -18,6 +18,7 @@ class CComCharacterMotor;
 class CComPxRigidBody;
 class CComPxSphereCollider;
 class CComSound;
+class CBTBlackBoard;
 NS_END
 
 
@@ -122,7 +123,7 @@ public:
 	const int32_t				Get_MaxHp()		const { return m_iMaxHp; }
 	virtual const _float		Get_Damage() { return 0.f; }
 	void						Set_Emissive(_float fEmissive) { m_fPreEmissive = m_fIntensive = fEmissive; }
-	_bool						Activate_PendingHit();
+	virtual _bool				Activate_PendingHit();
 	const MON_HIT_INFO			Get_ActiveHitInfo()const { return m_ActiveMonTable; }
 	const MON_HIT_INFO			Get_PendingHitInfo() const { return m_PendingMonTable; }
 	_bool						Is_PendingHit() { return m_bPending; }
@@ -134,20 +135,23 @@ public:
 	uint32_t					GetNormalCnt() {return m_iNormalHitCnt;}
 	CGameObject*				Get_Target() { return CGameInstance::Get().GetGameObjectByHandle(m_TargetHandle); }
 
-	SOUND_ID 						Play_Sound(const MONSOUND& MonSound);
+	SOUND_ID 					Play_Sound(const MONSOUND& MonSound);
 	virtual void				Skill_Finished();
 	virtual _string				Get_SkillName(ATTMON SkillNode) { return ""; };
 	virtual void				Set_AttTable(ATTMON eType, _float2 fSkillRatio) {};
 	void						Get_SoundKey(_string& CursoundName);
-
+	const _float4x4*					Get_CombineBoneMatrix(int32_t iBoneIndex);
+	CComAnimator*				Get_Animator();
+	CComCharacterMoveIntent*	Get_MoveIntent();
+	CBTBlackBoard*				Get_BlackBoard();
 protected:
-
 	uint32_t					Find_SkillNum(ATTMON eType);
-	_bool						Check_Flag(uint32_t iFlag);
+	 _bool						Check_Flag(uint32_t iFlag);
 	virtual	void				Damaged(PLAYER_SKILL_TYPE eType);
 	void						Update_HurtBox();
+	virtual void				Flag_Check(_float fTimeDelta);
 private:
-	void						Flag_Check(_float fTimeDelta);
+	void						Cancle_Attack();
 	void						StartEmissive() { if (m_bWork) return;  m_bEmissive = true; }
 	void						EmissiveFadeOut(_float fTimeDelta);
 // 민수 추가 ----------------------------------------------------------
@@ -185,7 +189,7 @@ protected:
 	_float2								m_fSkillRatio{ };
 	uint32_t							m_iCurrentInstanceCount{}, m_iHitCnt{}, m_iNormalHitCnt{}, m_iCurEffectID{}, m_iPreSkill{}, m_iCurSkill{};
 	_float								m_fIntensive{}, m_fPreEmissive{}, m_fAlpha{}, m_fTimeTick{}, m_fDamage{};
-	int32_t								m_iHp{}, m_iMaxHp{},m_iColliderBoneIndex{};;
+	int32_t								m_iHp{}, m_iMaxHp{}, m_iColliderBoneIndex{}, m_iEventBoneIndex{-1};
 	_bool								m_bEmissive{ false }, m_bWork{ false },m_bSkillLoop{ false }, m_bSkipAtt{false};
 	_string								m_SocketName{}, m_CurEffectName{};
 	ATTMON								m_eAttType{ ATTMON::END },m_eLastSkillTable{ ATTMON::END };

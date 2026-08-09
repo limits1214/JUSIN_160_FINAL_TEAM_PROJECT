@@ -250,6 +250,28 @@ void CTerrainGUI::UpdateGUI(E::_float fTimeDelta)
 		ImGui::SliderFloat("Stamp Spacing", &m_fScatterSpacing, 0.5f, 30.f, "%.1f");
 		ImGui::DragFloatRange2("Random Scale", &m_fScatterScaleMin, &m_fScatterScaleMax, 0.01f, 0.05f, 5.f, "Min %.2f", "Max %.2f");
 		ImGui::Checkbox("Random Yaw", &m_bScatterRandomYaw);
+
+		ImGui::Separator();
+		ImGui::TextUnformatted("Scatter Wind");
+		ImGui::PushID("ScatterWind");
+		int32_t windType = static_cast<int32_t>(m_ScatterWindDesc.type);
+		constexpr const char* windTypeNames[] = { "None", "Grass", "Tree" };
+		if (ImGui::Combo("Wind Type", &windType, windTypeNames, static_cast<int32_t>(std::size(windTypeNames))))
+			m_ScatterWindDesc.type = static_cast<E::EWindType>(windType);
+		ImGui::DragFloat("Strength", &m_ScatterWindDesc.strength, 0.01f, 0.f, 10.f, "%.3f");
+		ImGui::DragFloat("Speed", &m_ScatterWindDesc.speed, 0.01f, 0.f, 10.f, "%.3f");
+		ImGui::DragFloat("Frequency", &m_ScatterWindDesc.frequency, 0.01f, 0.f, 10.f, "%.3f");
+		ImGui::DragFloat("Bend Exponent", &m_ScatterWindDesc.bendExponent, 0.05f, 0.1f, 8.f, "%.3f");
+		ImGui::DragFloatRange2(
+			"Height Weight Range",
+			&m_ScatterWindDesc.heightStart,
+			&m_ScatterWindDesc.heightEnd,
+			0.01f,
+			0.f,
+			1.f,
+			"Start %.2f",
+			"End %.2f");
+		ImGui::PopID();
 	}
 
 	if (m_bTexturePaintEnabled)
@@ -456,6 +478,7 @@ void CTerrainGUI::UpdateGUI(E::_float fTimeDelta)
 					snapshot.position = worldPosition;
 					snapshot.rotation = rotation;
 					snapshot.scale = { objectScale, objectScale, objectScale };
+					snapshot.windDesc = m_ScatterWindDesc;
 					if (auto handle = SpawnMapMeshObject(snapshot))
 					{
 						m_ScatterSnapshots.push_back(snapshot);

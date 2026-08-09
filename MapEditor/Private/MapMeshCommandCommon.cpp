@@ -33,6 +33,7 @@ std::optional<MAPMESH_OBJECT_SNAPSHOT> Client::MakeMapMeshObjectSnapshot(const E
 	snapshot.position = transform.GetPosition();
 	snapshot.rotation = transform.GetQuaternion();
 	snapshot.scale = transform.GetScale();
+	snapshot.windDesc = object->GetWindDesc();
 	return snapshot;
 }
 
@@ -44,6 +45,7 @@ std::optional<E::CHandle> Client::SpawnMapMeshObject(const MAPMESH_OBJECT_SNAPSH
 	desc.modelResTag = snapshot.modelResTag;
 	desc.protoGroupTag = snapshot.protoGroupTag;
 	desc.prototypeTag = snapshot.prototypeTag;
+	desc.windDesc = snapshot.windDesc;
 
 	auto handle = E::CGameInstance::Get().AddGameObjectToLayer(
 		desc.protoGroupTag, desc.prototypeTag, snapshot.layerTag, &desc);

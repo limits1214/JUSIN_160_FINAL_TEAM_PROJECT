@@ -336,6 +336,38 @@ HRESULT CMainAppLoader::Load_Particle_Resources()
 			return E_FAIL;
 		}
 	}
+	if (auto res = CGameInstance::Get().AddResource("PERMANENT_PARTICLE_VSSHADER", "VS_VTX_CPU_Player_Skill_Mesh", CResVertexShader::Create("./ShaderFiles/Shader_CPU_Player_Skill_Mesh.hlsl")))
+	{
+		if (!res)
+		{
+			MSG_BOX("");
+			return E_FAIL;
+		}
+	}
+	if (auto res = CGameInstance::Get().AddResource("PERMANENT_PARTICLE_PSSHADER", "PS_VTX_CPU_Player_Skill_Mesh", CResPixelShader::Create("./ShaderFiles/Shader_CPU_Player_Skill_Mesh.hlsl")))
+	{
+		if (!res)
+		{
+			MSG_BOX("");
+			return E_FAIL;
+		}
+	}
+	if (auto res = CGameInstance::Get().AddResource("PERMANENT_PARTICLE_VSSHADER", "VS_VTX_CPU_Player_Skill_Texture", CResVertexShader::Create("./ShaderFiles/Shader_CPU_Player_Skill_Texture.hlsl")))
+	{
+		if (!res)
+		{
+			MSG_BOX("");
+			return E_FAIL;
+		}
+	}
+	if (auto res = CGameInstance::Get().AddResource("PERMANENT_PARTICLE_PSSHADER", "PS_VTX_CPU_Player_Skill_Texture", CResPixelShader::Create("./ShaderFiles/Shader_CPU_Player_Skill_Texture.hlsl")))
+	{
+		if (!res)
+		{
+			MSG_BOX("");
+			return E_FAIL;
+		}
+	}
 	////////// -- 광윤 추가 -- //////////
 	if (nullptr == CGameInstance::Get().AddResource("PERMANENT_PARTICLE_VSSHADER", "VS_VTX_CPU_LIGHTNING_TEX", CResVertexShader::Create("./ShaderFiles/Shader_CPU_Lightning_Tex.hlsl")))	return E_FAIL;
 
@@ -448,7 +480,7 @@ HRESULT CMainAppLoader::Create_ActionNode()
 		return E_FAIL;
 	if (FAILED(CGameInstance::Get().AddPrototype(NODEGROUP::ACTION, "BTCinematic", CBTCinematic::Create())))
 		return E_FAIL;
-	
+
 	if (FAILED(CGameInstance::Get().AddPrototype(NODEGROUP::ANIMATION, "BTRandMoveAnim", CBTRandMoveAnim::Create())))
 		return E_FAIL;
 	if (FAILED(CGameInstance::Get().AddPrototype(NODEGROUP::ANIMATION, "BTAnimation", CBTAnimation::Create())))
@@ -478,11 +510,24 @@ HRESULT CMainAppLoader::Create_ActionNode()
 		return E_FAIL;
 	if (FAILED(CGameInstance::Get().AddPrototype(NODEGROUP::DECORATOR, "BTDecHitCnt", CBTDecHitCnt::Create())))
 		return E_FAIL;
+
+	//-------------------------------------------------Dragon-----------------------------------------------------//
+	if (FAILED(CGameInstance::Get().AddPrototype(NODEGROUP::ACTION, "BTEdgStateFinished", CBTEdgStateFinished::Create())))
+		return E_FAIL;
+	if (FAILED(CGameInstance::Get().AddPrototype(NODEGROUP::DECORATOR, "BTDecEdgPatroll", CBTDecEdgPatroll::Create())))
+		return E_FAIL;
+	if (FAILED(CGameInstance::Get().AddPrototype(NODEGROUP::DECORATOR, "BTDecEdgState", CBTDecEdgState::Create())))
+		return E_FAIL;
+	if (FAILED(CGameInstance::Get().AddPrototype(NODEGROUP::DECORATOR, "BTDecEdgPhase", CBTDecEdgPhase::Create())))
+		return E_FAIL;
+	
+	//-------------------------------------------------------------------------------------------------------------//
+		
 	if (auto res = CGameInstance::Get().AddResource("BTJSON", "TOMB_BT_GURDIAN3", CResJson::Create("./Resources/json/BeHavior/GurDian3.json")))
 	{
 		if (FAILED(res->Load()))
 		{
-			MSG_BOX("");
+			MSG_BOX("LOAD FAILED TOMB_BT_GURDIAN3 JSON");
 			return E_FAIL;
 		}
 	}
@@ -490,15 +535,81 @@ HRESULT CMainAppLoader::Create_ActionNode()
 	{
 		if (FAILED(res->Load()))
 		{
-			MSG_BOX("");
+			MSG_BOX("LOAD FAILED TOMB_BT_GURDIANKNIGHT JSON");
 			return E_FAIL;
 		}
 	}
+
 	if (auto res = CGameInstance::Get().AddResource("BTJSON", "TOMB_BT_TOMBBOSS", CResJson::Create("./Resources/json/BeHavior/TombBoss.json")))
 	{
 		if (FAILED(res->Load()))
 		{
-			MSG_BOX("");
+			MSG_BOX("LOAD FAILED TOMB_BT_TOMBBOSS JSON");
+			return E_FAIL;
+		}
+	}
+	if (auto res = CGameInstance::Get().AddResource("BTJSON", "ENDERDRAGON", CResJson::Create("./Resources/json/BeHavior/DragonTest.json")))
+	{
+		if (FAILED(res->Load()))
+		{
+			MSG_BOX("LOAD FAILED ENDERDRAGON JSON");
+			return E_FAIL;
+		}
+	}
+	////서브트리
+	if (auto res = CGameInstance::Get().AddResource("BTSUBJSON", "FIREBALL", CResJson::Create("./Resources/json/BeHavior/SubTree/SubTreeTest.json")))
+	{
+		if (FAILED(res->Load()))
+		{
+			MSG_BOX("LOAD FAILED FIREBALL JSON");
+			return E_FAIL;
+		}
+	}
+	if (auto res = CGameInstance::Get().AddResource("BTSUBJSON", "BRESSSHORT", CResJson::Create("./Resources/json/BeHavior/SubTree/BressShort.json")))
+	{
+		if (FAILED(res->Load()))
+		{
+			MSG_BOX("LOAD FAILED BRESSSHORT JSON");
+			return E_FAIL;
+		}
+	}
+	if (auto res = CGameInstance::Get().AddResource("BTSUBJSON", "BRESSLONG", CResJson::Create("./Resources/json/BeHavior/SubTree/BressLong.json")))
+	{
+		if (FAILED(res->Load()))
+		{
+			MSG_BOX("LOAD FAILED BRESSLONG JSON");
+			return E_FAIL;
+		}
+	}
+	if (auto res = CGameInstance::Get().AddResource("BTSUBJSON", "RANDOMBALL", CResJson::Create("./Resources/json/BeHavior/SubTree/RandomBall.json")))
+	{
+		if (FAILED(res->Load()))
+		{
+			MSG_BOX("LOAD FAILED RANDOMBALL JSON");
+			return E_FAIL;
+		}
+	}
+	if (auto res = CGameInstance::Get().AddResource("BTSUBJSON", "MOVELEFT", CResJson::Create("./Resources/json/BeHavior/SubTree/MoveLeft.json")))
+	{
+		if (FAILED(res->Load()))
+		{
+			MSG_BOX("LOAD FAILED MOVELEFT JSON");
+			return E_FAIL;
+		}
+	}
+	if (auto res = CGameInstance::Get().AddResource("BTSUBJSON", "MOVERIGHT", CResJson::Create("./Resources/json/BeHavior/SubTree/MoveRight.json")))
+	{
+		if (FAILED(res->Load()))
+		{
+			MSG_BOX("LOAD FAILED MOVERIGHT JSON");
+			return E_FAIL;
+		}
+	}
+	if (auto res = CGameInstance::Get().AddResource("BTSUBJSON", "BOSSDOLJIN", CResJson::Create("./Resources/json/BeHavior/SubTree/BossDoljin.json")))
+	{
+		if (FAILED(res->Load()))
+		{
+			MSG_BOX("LOAD FAILED BOSSDOLJIN JSON");
 			return E_FAIL;
 		}
 	}

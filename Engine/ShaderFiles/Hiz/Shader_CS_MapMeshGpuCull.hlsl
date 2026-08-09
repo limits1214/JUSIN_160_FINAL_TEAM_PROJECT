@@ -1,6 +1,10 @@
 struct MAPMESH_INSTANCE_DATA
 {
     float4x4 world;
+	float4 windParams; // strength, speed, frequency, bendExponent
+	float2 windHeightParams;
+	uint windType;
+	float padding;
 };
 
 struct MAPMESH_OCCLUSION_DATA
@@ -15,10 +19,10 @@ StructuredBuffer<MAPMESH_INSTANCE_DATA> gInputInstances : register(t0);
 StructuredBuffer<MAPMESH_OCCLUSION_DATA> gOcclusionData : register(t1);
 Texture2D<float> gPrevHiz : register(t2);
 
-// RWStructureBuffer·Î ÇÏ¸é ºñ´Â ÀÎµ¦½º°¡ ÀÖÀ½. AppendStructuredBuffer·Î ¾ĞÃà
+// RWStructureBufferë¡œ í•˜ë©´ ë¹„ëŠ” ì¸ë±ìŠ¤ê°€ ìˆìŒ. AppendStructuredBufferë¡œ ì••ì¶•
 AppendStructuredBuffer<MAPMESH_INSTANCE_DATA> gVisibleInstances : register(u0);
 
-// ÀÎ½ºÅÏ½º¸¶´Ù ´Ù¸¥µ¥ÀÌÅÍ°¡ ¾Æ´Ñ, °øÅë°ªÀº »ó¼ö¹öÆÛ·Î
+// ì¸ìŠ¤í„´ìŠ¤ë§ˆë‹¤ ë‹¤ë¥¸ë°ì´í„°ê°€ ì•„ë‹Œ, ê³µí†µê°’ì€ ìƒìˆ˜ë²„í¼ë¡œ
 cbuffer CB_MapMeshGpuCull : register(b0)
 {
     float4x4 gMatViewProj;

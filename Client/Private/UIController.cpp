@@ -7,6 +7,8 @@
 #include "Button.h"
 #include "Cursor.h"
 #include "Monster.h"
+#include "MiniMap.h"
+#include "ClientEvents.h"
 
 NS_USING(Client)
 
@@ -31,6 +33,8 @@ HRESULT CUIController::Initialize(void* pArg)
 		return E_FAIL;
 
 	CreatePlayScreen();
+	BindMiniMap();
+	SubscribeQuestUIEvents();
 	ActivePlayScreen = true;
 	
 	{
@@ -64,6 +68,9 @@ void CUIController::PriorityUpdate(E::_float fTimeDelta)
 
 void CUIController::Update(E::_float fTimeDelta)
 {
+	BindMiniMap();
+	ApplyPendingQuestUIGroups();
+
 	if (!CursorCreate)
 	{
 
@@ -217,6 +224,100 @@ void CUIController::CreatePlayScreen()
 
 	/*******정적 유아이*******/
 	m_PlaySceneStatic = GET_SINGLE(UIManager)->LoadPrefab("StaticPlayScreen");
+}
+
+_bool CUIController::SetQuestUIGroupActive(
+	QUEST_UI_GROUP group, _bool active)
+{
+	const size_t index = static_cast<size_t>(group);
+	if (group == QUEST_UI_GROUP::NONE ||
+		group == QUEST_UI_GROUP::END ||
+		index >= QUEST_UI_GROUP_COUNT)
+		return false;
+
+	if (m_QuestUIGroupStates[index] != active)
+	{
+		m_QuestUIGroupStates[index] = active;
+		m_QuestUIGroupDirty[index] = true;
+	}
+
+	ApplyPendingQuestUIGroups();
+	return true;
+}
+
+void CUIController::BindMiniMap()
+{
+	if (m_hMiniMap && E::CGameInstance::Get().
+		GetGameObjectByHandleT<CMiniMap>(*m_hMiniMap))
+		return;
+
+	m_hMiniMap = std::nullopt;
+	std::vector<CHandle> pendingHandles = m_PlaySceneStatic;
+	for (size_t i = 0; i < pendingHandles.size(); ++i)
+	{
+		const CHandle handle = pendingHandles[i];
+		if (E::CGameInstance::Get().
+			GetGameObjectByHandleT<CMiniMap>(handle))
+		{
+			m_hMiniMap = handle;
+			for (size_t groupIndex = 1;
+				groupIndex < QUEST_UI_GROUP_COUNT; ++groupIndex)
+			{
+				m_QuestUIGroupDirty[groupIndex] = true;
+			}
+			return;
+		}
+
+		auto* uiObject = E::CGameInstance::Get().
+			GetGameObjectByHandleT<CUIObject>(handle);
+		if (!uiObject)
+			continue;
+
+		const auto& children = uiObject->GetChildren();
+		pendingHandles.insert(
+			pendingHandles.end(), children.begin(), children.end());
+	}
+}
+
+void CUIController::SubscribeQuestUIEvents()
+{
+	if (m_iQuestUIListenerID != 0)
+		return;
+
+	m_iQuestUIListenerID = E::CGameInstance::Get().
+		EventSubscribe<FQuestUIGroupChanged>(
+			GetHandle(),
+			[this](const FQuestUIGroupChanged& event)
+			{
+				SetQuestUIGroupActive(event.Group, event.Active);
+			});
+}
+
+void CUIController::ApplyPendingQuestUIGroups()
+{
+	if (!m_hMiniMap)
+		return;
+
+	auto* miniMap = E::CGameInstance::Get().
+		GetGameObjectByHandleT<CMiniMap>(*m_hMiniMap);
+	if (!miniMap)
+	{
+		m_hMiniMap = std::nullopt;
+		return;
+	}
+
+	for (size_t index = 1; index < QUEST_UI_GROUP_COUNT; ++index)
+	{
+		if (!m_QuestUIGroupDirty[index])
+			continue;
+
+		const auto group = static_cast<QUEST_UI_GROUP>(index);
+		if (miniMap->SetContentGroupActive(
+			group, m_QuestUIGroupStates[index]))
+		{
+			m_QuestUIGroupDirty[index] = false;
+		}
+	}
 }
 
 void CUIController::CreateSpellType()
@@ -817,6 +918,19 @@ void CUIController::PlayAlphaUP(CHandle pHandle, float delaytime, float playTime
 			pUI->SetAlpha(currentValue);
 			pUI->CalcUICoord();
 		}, nullptr, EEaseType::Linear, delaytime);
+}
+
+void CUIController::Free()
+{
+	if (m_iQuestUIListenerID != 0)
+	{
+		E::CGameInstance::Get().
+			EventUnsubscribe<FQuestUIGroupChanged>(m_iQuestUIListenerID);
+		m_iQuestUIListenerID = 0;
+	}
+
+	m_hMiniMap = std::nullopt;
+	CGameObject::Free();
 }
 
 E::UPtr<CUIController> CUIController::Create()

@@ -118,6 +118,13 @@ void CGameObject::UpdateGUI()
     {
         SetPendingDestroy();
     }
+
+	_bool bManagedUpdateEnabled = IsManagedUpdateEnabled();
+	if (ImGui::Checkbox("Managed Update", &bManagedUpdateEnabled))
+	{
+		SetManagedUpdateEnabledCascade(bManagedUpdateEnabled);
+	}
+
     //ImGui::Text("dest: %s", m_bPendingDestroy ? "true" : "false");
     if (ImGui::TreeNode("Components"))
     {
@@ -173,6 +180,49 @@ void CGameObject::SetPendingDestroy(_bool b)
 void CGameObject::SetPendingDestroyCascade(_bool b)
 {
     MyTreeDFS(this, [&](auto pObj) {pObj->SetPendingDestroy(b); });
+}
+
+void CGameObject::SetManagedUpdateEnabled(_bool bEnabled)
+{
+	if (m_bManagedUpdateEnabled == bEnabled)
+		return;
+
+	m_bManagedUpdateEnabled = bEnabled;
+
+	if (m_bManagedUpdateEnabled)
+		OnManagedUpdateEnabled();
+	else
+		OnManagedUpdateDisabled();
+}
+
+void CGameObject::SetManagedUpdateEnabledCascade(_bool bEnabled)
+{
+	MyTreeDFS(this, [bEnabled](CGameObject* pObject)
+	{
+		pObject->SetManagedUpdateEnabled(bEnabled);
+	});
+}
+
+_bool CGameObject::AcquireFromPool(void* pArg)
+{
+	// [LSY] 이전 사용에서 남은 PhysX 동기화 결과를 재사용하지 않는다.
+	m_PhysXSyncData = {};
+	m_bPhysXSynced = false;
+
+	if (m_bPendingDestroy || !OnAcquireFromPool(pArg))
+		return false;
+
+	SetManagedUpdateEnabledCascade(true);
+	return true;
+}
+
+void CGameObject::ReleaseToPool()
+{
+	SetManagedUpdateEnabledCascade(false);
+	// [LSY] 비활성 객체에 이전 PhysX 결과가 남지 않도록 정리한다.
+	m_PhysXSyncData = {};
+	m_bPhysXSynced = false;
+	OnReleaseToPool();
 }
 
 void CGameObject::SyncActivePhysXData(const PX_SYNC_DATA& syncData)

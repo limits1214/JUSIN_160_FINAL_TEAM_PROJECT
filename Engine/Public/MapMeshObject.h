@@ -11,7 +11,6 @@ class CResStaticModel;
 class CResVertexShader;
 class CMapMeshGpuCuller;
 
-
 class ENGINE_DLL CMapMeshObject : public CGameObject
 {
 public:
@@ -30,6 +29,7 @@ public:
 		std::string modelResTag;
 		std::string protoGroupTag;
 		std::string prototypeTag;
+		WIND_DESC windDesc;
 	} MAP_MESH_OBJECT_DESC;
 
 public:
@@ -51,6 +51,8 @@ public:
 	const std::string& GetModelResourceGroup() const { return m_modelResourceGroup; }
 	const std::string& GetModelResourceTag() const { return m_modelResourceTag; }
 	HRESULT SetModelResource(const std::string& modelGroupTag, const std::string& modelResTag);
+	const WIND_DESC& GetWindDesc() const { return m_WindDesc; }
+	void SetWindDesc(const WIND_DESC& windDesc) { m_WindDesc = windDesc; }
 
 public:
 	void SetRenderEnable(_bool enable) { m_bRenderEnable = enable; }
@@ -69,6 +71,9 @@ private:
 	_float3 m_fEmissiveColor		= { 1.f, 1.f, 1.f };		// Emissive 색상. 텍스쳐가 있으면 {1.f, 1.f, 1.f} = 원색
 	_float	m_fEmissiveIntensity	= 0.f;						// Emissive 강도,
 	_float	m_fObjectAlpha			= 1.f;						// Object의 투명도,
+
+private:
+	WIND_DESC m_WindDesc {};
 
 public:
 	static UPtr<CMapMeshObject> Create();

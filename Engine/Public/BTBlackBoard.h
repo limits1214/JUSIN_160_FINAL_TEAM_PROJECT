@@ -30,9 +30,9 @@ T* Get_Value(const StringID& Key)
 	return std::any_cast<T>(&iter->second);
 }
 public:
-	_bool	Has_Value(const StringID& Key) const { return m_Values.contains(Key); }
-void	Remove_Value(const StringID& Key) { m_Values.erase(Key); }
-void	Clear_BlackBoard() { m_Values.clear(); }
+	_bool		Has_Value(const StringID& Key) const { return m_Values.contains(Key); }
+	void		Remove_Value(const StringID& Key) { m_Values.erase(Key); }
+	void		Clear_BlackBoard() { m_Values.clear(); }
 
 private:
 	std::unordered_map<StringID, std::any> m_Values;

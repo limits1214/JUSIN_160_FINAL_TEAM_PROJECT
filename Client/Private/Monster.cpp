@@ -121,10 +121,6 @@ HRESULT CMonster::Initialize(void* pArg)
 	}
 	{
 		CComSound::DESC Desc{};
-
-	// 모든 몬스터들이 고대마법에 공격캔슬하도록 구독
-	// CGameInstance::Get().EventSubscribe<FAcientMagicStart>(GetHandle(), [=]() { CancelAttack(); });
-
 		if (FAILED(AddComponentFromProto(
 			ES_EngineProtoMajorType::PERMANENT,
 			ES_EngineProtoComponent::Prototype_Component_ComSound,
@@ -134,6 +130,8 @@ HRESULT CMonster::Initialize(void* pArg)
 		{
 			return E_FAIL;
 		}
+
+		CGameInstance::Get().EventSubscribe<FAcientMagicStart>(GetHandle(), [=]() { Cancle_Attack(); });
 	}
 	return S_OK;
 }
@@ -431,7 +429,6 @@ _bool CMonster::Activate_PendingHit()
 		m_ActiveMonTable.eAttType == m_PendingMonTable.eAttType &&
 		m_ActiveMonTable.eHitType == m_PendingMonTable.eHitType;
 
-	//애니매이션 끊기용
 	if (!bSameHit)
 		++m_iHitCnt;
 
@@ -532,7 +529,29 @@ void CMonster::Get_SoundKey(_string& CurSoundName)
 	return;
 }
 
+const _float4x4* CMonster::Get_CombineBoneMatrix(int32_t iBoneIndex)
+{
+	if (iBoneIndex >= m_pComModelInstance->Get_CombinedBoneMatrices().size() || iBoneIndex < 0)
+		return nullptr;
 
+	return &m_pComModelInstance->Get_CombinedBoneMatrices()[iBoneIndex];
+}
+
+CComAnimator* CMonster::Get_Animator()
+{
+	return m_pModelAnimator;
+}
+
+CComCharacterMoveIntent* CMonster::Get_MoveIntent()
+{
+	return m_pMoveIntent;
+}
+
+CBTBlackBoard* CMonster::Get_BlackBoard()
+{
+	if (nullptr == m_pBeHavior) return nullptr;
+	return m_pBeHavior->Get_Blackboard();
+}
 void CMonster::Damaged(PLAYER_SKILL_TYPE eType)
 {
 	switch (eType)
@@ -614,6 +633,21 @@ void CMonster::Update_HurtBox()
 		m_pComRigidBody->SetKinematicTarget(
 			m_vHurtBoxPosition,
 			GetTransform().GetQuaternion());
+	}
+}
+
+void CMonster::Cancle_Attack()
+{
+	if (!Check_Flag(ETOUI(CBTRoot::BTFLAG::GROGY)) && !Check_Flag(ETOUI(CBTRoot::BTFLAG::NOCKDOWN)) && Is_Grounded())
+	{
+		if (m_iEventBoneIndex == -1)
+			return;
+		ReActiveTable();
+		m_pModelAnimator->Play_Anim(m_iEventBoneIndex, false, 0.1f);
+		//여기에 블랙보드로 잠금 하기
+		// 
+		//m_pComModelInstance->Play_Anim(m_Value.iAnimIndex, m_bLoop, m_fBlend);
+
 	}
 }
 

@@ -27,6 +27,7 @@ HRESULT CUIObject::Initialize(void* pArg)
 	m_UIINFO.SizeY = pDesc->fSizeY;
 	m_UIINFO.Alpha = pDesc->fAlpha;
 	m_UIINFO.Weight = pDesc->ResWeight;
+	m_UIINFO.Alpha = pDesc->fAlpha;
 	m_UIINFO.Restag = pDesc->ResTag;
 	m_UIINFO.Name = pDesc->Name;
 

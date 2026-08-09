@@ -36,7 +36,9 @@ CLevelBossCharlesRookwood::~CLevelBossCharlesRookwood()
 
 HRESULT CLevelBossCharlesRookwood::Initialize()
 {
-	E::CGameInstance::Get().GameObjectAllReset();
+	E::CGameInstance::Get().GameObjectAllResetExceptLayers({
+		"00_ENGINE_CINEMATIC_CAMERA"
+	});
 
 	GET_SINGLE(UIManager)->CreateFadeOut(2.f, 3.f);
 
@@ -82,10 +84,6 @@ HRESULT CLevelBossCharlesRookwood::Initialize()
 		return E_FAIL;
 
 	SubscribePlayerDeath(*hPlayer);
-
-	//CGameInstance::Get().Add_DirectionalLight({ 1.f, -1.f, 1.f }, { 1.f, 1.f, 1.f }, 10.f);
-
-	CGameInstance::Get().Set_VolumetricFog({-28.f, 15.f, 7.f }, { 120.f / 255.f, 255.f / 255.f, 255.f / 255.f }, 0.05f, 120.f, 250.f, 1000.f, 0.0005f);
 
 	return S_OK;
 }
@@ -406,8 +404,7 @@ HRESULT CLevelBossCharlesRookwood::SpawnMonster(std::optional<CHandle> hPlayer)
 		TmbDesc.sObjectTag = "BossTmb";
 		TmbDesc.LevelTag = MagicEnumToStringView(LEVEL::BOSS_CHARLES_ROOKWOOD);
 		XMStoreFloat3(&TmbDesc.vPos, XMVectorSet(-28, 15, 7, 1));
-		TmbDesc.ReSourceTag = "Model_Resource_TombProtector";
-
+		TmbDesc.ReSourceTag = "Model_Resource_TombBoss";
 		TmbDesc.resBeHaviorMajor = "BTJSON";
 		TmbDesc.resBeHaviorMinor = "TOMB_BT_TOMBBOSS";
 		TmbDesc.WeaponProtoName = MagicEnumToStringView(PROTO_GAMEOBJECT::Prototype_GameObject_BossWeapon);

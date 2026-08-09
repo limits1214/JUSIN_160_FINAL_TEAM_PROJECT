@@ -19,6 +19,7 @@
 #include "ComPxSphereCollider.h"
 #include "UIController.h"
 #include "UIManager.h"
+#include "BTBlackBoard.h"
 NS_USING(Client)
 
 namespace
@@ -363,6 +364,8 @@ const _float CTmbGurdian::Get_Damage()
 
 _bool CTmbGurdian::Check_Table(PLAYER_SKILL_TYPE eType)
 {
+	if (eType == PLAYER_SKILL_TYPE::END || eType == PLAYER_SKILL_TYPE::DEFAULT)
+		return false;
 
 	Damaged(eType);
 	if (eType == PLAYER_SKILL_TYPE::ATTACK)
@@ -400,8 +403,7 @@ _bool CTmbGurdian::Check_Table(PLAYER_SKILL_TYPE eType)
 	if (Check_Flag(ETOUI(CBTRoot::BTFLAG::SUPERARMOR)) && eType == PLAYER_SKILL_TYPE::ATTACK)
 		return false;
 
-	if (eType == PLAYER_SKILL_TYPE::END || eType == PLAYER_SKILL_TYPE::DEFAULT)
-		return false;
+	
 
 	MON_HIT_INFO HitInfo{};
 	m_pBeHavior->Set_Flag(ETOUI(CBTRoot::BTFLAG::HIT), FLAGTYPE::ADD);
@@ -671,13 +673,14 @@ HRESULT CTmbGurdian::Initialize(void* pArg)
 	m_MonSkillLists[ATTMON::SLOT2] = ETOUI(TOMB_SKILL::SLASH);
 	m_MonSkillLists[ATTMON::SLOT3] = ETOUI(TOMB_SKILL::SMASH);
 	m_MonSkillLists[ATTMON::SLOT4] = ETOUI(TOMB_SKILL::HIT_ACCIO);
-
+	m_MonSkillLists[ATTMON::SLOT5] = ETOUI(TOMB_SKILL::HIT_DESCENDO);
 	m_MonSkillLists[ATTMON::SKIP] = ETOUI(TOMB_SKILL::SKIP);
 
 
 	m_EffectNames[ETOUI(TOMB_SKILL::JUMP_START)] = "TombJumpStart";
 	m_EffectNames[ETOUI(TOMB_SKILL::JUMP_END)] = "TombJumpEnd";
 	m_EffectNames[ETOUI(TOMB_SKILL::HIT_ACCIO)] = "AccioGrab";
+	m_EffectNames[ETOUI(TOMB_SKILL::HIT_DESCENDO)] = "Descendo_Enemy";
 	m_pComTransform->SetRotation(XMVectorSet(MonDesc->vRot.x, MonDesc->vRot.y, MonDesc->vRot.z, 0.f), MonDesc->fAngle);
 	m_pComTransform->SetScale(XMVectorSet(MonDesc->vScale.x, MonDesc->vScale.y, MonDesc->vScale.z, 0));
 	GetTransform().Update();

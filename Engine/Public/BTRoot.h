@@ -35,6 +35,7 @@ protected:
 	virtual						void OnEnter() {};
 	virtual						void OnExit(EVALUATE eResult) {};
 public:
+	virtual HRESULT				Save_SubTree(const _string& SavePath);
 	GUINODE&					Get_GuiNodeInfo() { return m_GuiNode; }
 	GUINODE_LINK&				Get_GuiNodeLink() { return m_GuiLink; }
 	void						Set_Handle(CHandle Handle) { m_Handle = Handle; }
@@ -42,7 +43,7 @@ public:
 	virtual void				ResetDebug() { m_eDebug = EVALUATE::END; }
 	EVALUATE					GetDebugType() const {return m_eDebug;}
 
-
+	const _string& GetMasterName() { return m_MasterName; }
 public:
 	virtual nlohmann::json		Save_Node();
 	virtual HRESULT				Load_json(const nlohmann::json& j);

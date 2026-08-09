@@ -10,6 +10,7 @@ public:
 
 private:
 	static _bool UILoad();
+	static HRESULT MonsterLoad_InWorker();
 };
 
 NS_END

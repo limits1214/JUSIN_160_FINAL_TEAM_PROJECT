@@ -78,6 +78,8 @@ HRESULT CMapMeshObject::Initialize(void* pArg)
 		}
 	}
 
+	m_WindDesc = pDesc->windDesc;
+
 	return S_OK;
 }
 
@@ -126,13 +128,41 @@ void CMapMeshObject::LateUpdate(_float fTimeDelta)
 		MAPMESH_INSTANCE_DATA instanceData{};
 		MAPMESH_OCCLUSION_DATA occlusionData{};
 		XMStoreFloat4x4(&instanceData.world, GetTransform().GetLoadedCombinedWorldMatrix());
+		instanceData.windParams = {
+			m_WindDesc.strength,
+			m_WindDesc.speed,
+			m_WindDesc.frequency,
+			m_WindDesc.bendExponent
+		};
+
+		const auto& model = m_pComModelInstance->GetModel();
+		if (model != nullptr && model->HasLocalBounds())
+		{
+			const BoundingBox& localBounds = model->GetLocalBounds();
+			const _float modelMinY = localBounds.Center.y - localBounds.Extents.y;
+			const _float modelHeight = localBounds.Extents.y * 2.f;
+			const _float heightStart = std::clamp(m_WindDesc.heightStart, 0.f, 1.f);
+			const _float heightEnd = std::clamp(m_WindDesc.heightEnd, heightStart, 1.f);
+			const _float influenceHeight = modelHeight * (heightEnd - heightStart);
+
+			if (influenceHeight > 0.0001f)
+			{
+				instanceData.windHeightParams = {
+					modelMinY + modelHeight * heightStart,
+					1.f / influenceHeight
+				};
+			}
+		}
+		instanceData.windType = static_cast<uint32_t>(m_WindDesc.type);
+		const auto renderFeature = (instanceData.windType == static_cast<uint32_t>(EWindType::None))
+			? EMapMeshRenderFeature::Static : EMapMeshRenderFeature::Foliage;
 
 		BoundingBox boundingBox;
 		if (!GetOcclusionBounds(boundingBox))
 			return;
 		occlusionData.worldCenter = boundingBox.Center;
 		occlusionData.worldExtents = boundingBox.Extents;
-		CGameInstance::Get().PushMapObjectInstance(m_pComModelInstance->GetModel(), instanceData, occlusionData);
+		CGameInstance::Get().PushMapObjectInstance(m_pComModelInstance->GetModel(), instanceData, occlusionData, renderFeature);
 		//------------------------------------------------------------------------------------------------
 	}
 }

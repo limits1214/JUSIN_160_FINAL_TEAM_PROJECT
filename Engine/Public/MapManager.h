@@ -236,6 +236,7 @@ struct MAP_MESH_OBJECT_LOAD_DESC
 	_float3 position{};
 	_float4 rotation{ 0.f, 0.f, 0.f, 1.f };
 	_float3 scale{ 1.f, 1.f, 1.f };
+	WIND_DESC windDesc{};
 };
 
 struct PENDING_CHUNK_LOAD_RESULT

@@ -9,6 +9,17 @@ cbuffer CB_TIMEACCUMULATION : register(b11)
 	float g_fAccumulationTime;
 	float3 _pad;
 };
+
+Texture2D AlbedoMap : register(t0);
+Texture2D NormalMap : register(t1);
+Texture2D SMROMap : register(t2);
+Texture2D EmissiveMap : register(t3);
+Texture2D NoiseMap : register(t5);
+Texture2D DistortionMap : register(t6);
+Texture2D g_BackgroundTex : register(t7);
+Texture2D AnyTextureMap : register(t8);
+
+
 struct VS_IN
 {
 	float3 vPosition : POSITION;
@@ -88,16 +99,130 @@ VS_OUT VSMain(VS_IN In)
 
 	return Out;
 }
+// ---- 텍스처 기반 버텍스 디스토션(WPO 스타일) 파라미터 ----
+// 필요하면 상수버퍼로 빼서 인스턴스/머티리얼별로 노출하세요.
+static const float DistortTilingU = 1.0f;
+static const float DistortTilingV = 1.35f;
+static const float DistortSpeedU = 1.12f;
+static const float DistortSpeedV = 1.4875f;
+static const float DistortStrength = 0.91f;
+static const float DistortMipLevel = 0.0f; // VS는 자동 밉 계산이 없어서 명시 지정 필수
 
-Texture2D AlbedoMap : register(t0);
-Texture2D NormalMap : register(t1);
-Texture2D SMROMap : register(t2);
-Texture2D EmissiveMap : register(t3);
-Texture2D NoiseMap : register(t5);
-Texture2D DistortionMap : register(t6);
-Texture2D g_BackgroundTex : register(t7);
-Texture2D AnyTextureMap : register(t8);
+VS_OUT VSSwirlDistortTex_Old(VS_IN In)
+{
+	VS_OUT Out = (VS_OUT) 0;
 
+	float4x4 matWorld = float4x4(In.vWorld0, In.vWorld1, In.vWorld2, In.vWorld3);
+
+	float lifeRatio = saturate(In.life / max(In.maxLife, 0.0001f));
+	float bodyPosition = saturate(In.vTexcoord.y);
+
+	// 뿌리는 고정하고 끝으로 갈수록 강하게 움직인다.
+	float rootMask = smoothstep(0.05f, 0.3f, bodyPosition);
+	float tipMask = bodyPosition * bodyPosition;
+	float flexMask = rootMask * tipMask;
+
+	// 인스턴스마다 움직임이 겹치지 않도록 월드 위치로 Phase를 만든다.
+	float instancePhase = dot(matWorld[3].xyz, float3(0.173f, 0.317f, 0.271f));
+
+	float2 noiseUV = In.vTexcoord * float2(DistortTilingU, DistortTilingV);
+	noiseUV += float2(g_fAccumulationTime * DistortSpeedU, -g_fAccumulationTime * DistortSpeedV);
+	noiseUV += instancePhase;
+
+	float2 noise = AnyTextureMap.SampleLevel(LinearWrap, noiseUV, DistortMipLevel).rg;
+	noise = noise * 2.f - 1.f;
+		
+	float wavePhase = bodyPosition * 8.f - g_fAccumulationTime * 4.f + instancePhase;
+	float waveX = sin(wavePhase + noise.x * 2.f);
+	float waveZ = cos(wavePhase * 0.73f + noise.y * 2.f);
+
+	float3 localTangent = normalize(In.vTangent);
+	float3 localBinormal = normalize(In.vBinormal);
+	float3 localNormal = normalize(In.vNormal);
+
+	float3 localPosition = In.vPosition;
+
+	// 문어발처럼 좌우와 앞뒤 방향으로 휘어진다.
+	localPosition += localTangent * waveX * DistortStrength * flexMask;
+	localPosition += localBinormal * waveZ * DistortStrength * 0.65f * flexMask;
+
+	// 표면도 작게 꿈틀거리게 만든다.
+	localPosition += localNormal * noise.x * DistortStrength * 0.15f * flexMask;
+
+	float4 worldPosition = mul(float4(localPosition, 1.f), matWorld);
+
+	Out.vPosition = mul(worldPosition, g_matViewProj);
+	Out.vWorldPos = worldPosition.xyz;
+	Out.vScreenPos = Out.vPosition;
+	Out.vTexcoord = In.uvOffset + In.vTexcoord * In.uvSize;
+
+	float3x3 world3x3 = (float3x3) matWorld;
+
+	Out.vNormal = normalize(mul(In.vNormal, world3x3));
+	Out.vTangent = normalize(mul(In.vTangent, world3x3));
+	Out.vBinormal = normalize(mul(In.vBinormal, world3x3));
+
+	Out.vColor = In.vColor;
+	Out.vEmissive = In.vInstEmissive;
+	Out.vEndEmissive = In.vInstEndEmissive;
+	Out.life = In.life;
+	Out.maxLife = In.maxLife;
+	Out.iBehaviorType = In.iBehaviorType;
+
+	return Out;
+}
+
+VS_OUT VSSwirlDistortTex(VS_IN In)
+{
+	VS_OUT Out = (VS_OUT)0;
+	float4x4 matWorld = float4x4(In.vWorld0, In.vWorld1, In.vWorld2, In.vWorld3);
+	float3 localPosition = In.vPosition;
+
+	static const float TendrilRadius = 40.f;
+
+	float localRadius = length(localPosition);
+	float bodyPosition = saturate(localRadius / TendrilRadius);
+	float rootMask = smoothstep(0.15f, 0.35f, bodyPosition);
+	float bendMask = rootMask * bodyPosition * bodyPosition;
+	float instancePhase = dot(matWorld[3].xyz, float3(0.173f, 0.317f,
+	0.271f));
+	float2 noiseUV = localPosition.xz * 0.025f * float2(DistortTilingU, DistortTilingV);
+	noiseUV += float2(g_fAccumulationTime * DistortSpeedU, -g_fAccumulationTime * DistortSpeedV);
+	noiseUV += instancePhase;
+
+	float2 noise = AnyTextureMap.SampleLevel(LinearWrap, noiseUV, DistortMipLevel).rg * 2.f - 1.f;
+	float3 radialDirection = localPosition / max(localRadius, 0.0001f);
+	float3 sideAxis = cross(float3(0.f, 1.f, 0.f), radialDirection);
+	if (dot(sideAxis, sideAxis) < 0.0001f)
+		sideAxis = cross(float3(1.f, 0.f, 0.f), radialDirection);
+	sideAxis = normalize(sideAxis);
+	float3 bendAxis = normalize(cross(radialDirection, sideAxis));
+	float wave1 = sin(bodyPosition * 6.f - g_fAccumulationTime * 2.2f + instancePhase + noise.x);
+	float wave2 = cos(bodyPosition * 8.f + g_fAccumulationTime * 1.6f + instancePhase * 1.37f + noise.y);
+	float bendStrength = DistortStrength * 180.f;
+
+	localPosition += sideAxis * wave1 * bendStrength * bendMask;
+	localPosition += bendAxis * wave2 * bendStrength * 0.45f * bendMask;
+
+	float4 worldPosition = mul(float4(localPosition, 1.f), matWorld);
+	Out.vPosition = mul(worldPosition, g_matViewProj);
+	Out.vWorldPos = worldPosition.xyz;
+	Out.vScreenPos = Out.vPosition;
+	Out.vTexcoord = In.uvOffset + In.vTexcoord * In.uvSize;
+
+	float3x3 world3x3 = (float3x3)matWorld;
+	Out.vNormal = normalize(mul(In.vNormal, world3x3));
+	Out.vTangent = normalize(mul(In.vTangent, world3x3));
+	Out.vBinormal = normalize(mul(In.vBinormal, world3x3));
+	Out.vColor = In.vColor;
+	Out.vEmissive = In.vInstEmissive;
+	Out.vEndEmissive = In.vInstEndEmissive;
+	Out.life = In.life;
+	Out.maxLife = In.maxLife;
+	Out.iBehaviorType = In.iBehaviorType;
+
+	return Out;
+}
 struct PS_OUT
 {
 	float4 vDiffuse : SV_TARGET0;
@@ -305,5 +430,26 @@ PS_OUT PSAccio(VS_OUT In)
 	float3 finalRGB = texColor.rgb * In.vColor.rgb * lerpedEmissive.rgb * lerpedEmissive.a;
 	
 	Out.vDiffuse = float4(finalRGB,   In.vColor.a);
+	return Out;
+}
+PS_OUT PSMarble(VS_OUT In)
+{
+	PS_OUT Out = (PS_OUT) 0;
+
+    // 크랙 마스크 샘플링 (마블 텍스처: 검은 배경 + 흰 균열선)
+	
+	float2 uv = In.vTexcoord;
+	uv.y += g_fAccumulationTime * 0.1f;	
+	float crackMask = AnyTextureMap.Sample(LinearWrap, uv).g;
+	crackMask = saturate(pow(crackMask, 2.0f));
+    // 베이스는 인스턴스 컬러 그대로
+	float3 baseColor = In.vColor.rgb;
+
+    // 마스크 있는 부분만 In.vEmissive 색으로 발광 (알파를 강도로 사용)
+	float3 emissive = crackMask * In.vEmissive.rgb * In.vEmissive.a;
+
+	float3 finalColor = baseColor + emissive;
+
+	Out.vDiffuse = float4(finalColor, In.vColor.a);
 	return Out;
 }

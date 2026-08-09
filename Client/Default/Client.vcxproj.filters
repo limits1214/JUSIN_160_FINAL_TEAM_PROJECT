@@ -37,9 +37,6 @@
     <Filter Include="Loader\Level\Logo">
       <UniqueIdentifier>{7e9f7d17-14d6-4c04-adaf-777151b4c6b4}</UniqueIdentifier>
     </Filter>
-    <Filter Include="LuaFiles">
-      <UniqueIdentifier>{b4064650-231e-4716-9e83-871a50b3ff8f}</UniqueIdentifier>
-    </Filter>
     <Filter Include="ShaderFiles">
       <UniqueIdentifier>{6bd28087-0add-401b-9153-94d4f64a07f1}</UniqueIdentifier>
     </Filter>
@@ -283,6 +280,42 @@
     <Filter Include="GameObject\CharlesRookwood\Bridge">
       <UniqueIdentifier>{451893ab-e6f2-4e4c-8948-178bfb126954}</UniqueIdentifier>
     </Filter>
+    <Filter Include="GameObject\Monster\EnderDragon">
+      <UniqueIdentifier>{600f040f-9e9a-4f6f-ad98-590516d55cd1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="GameObject\Monster\EnderDragon\FSM">
+      <UniqueIdentifier>{70da8e1f-c9e1-4fbd-bcf0-6b5cad85c79e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="GameObject\Monster\EnderDragon\FSM\State">
+      <UniqueIdentifier>{c01c1934-1247-4acc-8613-950c785e6805}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="GameObject\AI\Decorator\Dragon">
+      <UniqueIdentifier>{211f61c0-ef20-4e26-b195-ead9ea88c9da}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="GameObject\AI\Decorator\Public">
+      <UniqueIdentifier>{533992f1-81b5-4cd3-81f5-8c4f69e0d391}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="GameObject\AI\BlackBoard">
+      <UniqueIdentifier>{92fa7c53-71ef-4ea5-aac9-d3f2c157335d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="GameObject\AI\Action\Dragon">
+      <UniqueIdentifier>{e39345c4-32e3-4026-9d39-6e428062c414}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="GameObject\UI\LuaFiles">
+      <UniqueIdentifier>{b4064650-231e-4716-9e83-871a50b3ff8f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="GameObject\Player\StateMachine\State\Player_Fly_State">
+      <UniqueIdentifier>{b78cf1cd-d217-4ee5-8a93-12d9a37ed1e6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="GameObject\Monster\EnderDragon\Skill">
+      <UniqueIdentifier>{60b180f7-c143-4768-868b-6ffdb32625dd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="GameObject\Monster\EnderDragon\Skill\FireBall">
+      <UniqueIdentifier>{50a07458-33d1-4dc5-8875-84dba5aa3208}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="GameObject\Monster\EnderDragon\Skill\Bress">
+      <UniqueIdentifier>{15ad6ff0-923c-4093-a6c9-78ea3f0340ef}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Client.h">
@@ -396,24 +429,6 @@
     <ClInclude Include="..\Public\BTAttackAnimation.h">
       <Filter>GameObject\AI\AnimRoot\Anim</Filter>
     </ClInclude>
-    <ClInclude Include="..\Public\BTDecFlag.h">
-      <Filter>GameObject\AI\Decorator</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Public\BTDecHitCnt.h">
-      <Filter>GameObject\AI\Decorator</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Public\BTDecInvert.h">
-      <Filter>GameObject\AI\Decorator</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Public\BTDecLier.h">
-      <Filter>GameObject\AI\Decorator</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Public\BTDecSearch.h">
-      <Filter>GameObject\AI\Decorator</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Public\BTDecTimer.h">
-      <Filter>GameObject\AI\Decorator</Filter>
-    </ClInclude>
     <ClInclude Include="..\Public\BTTurnSlow.h">
       <Filter>GameObject\AI\Action</Filter>
     </ClInclude>
@@ -446,9 +461,6 @@
     </ClInclude>
     <ClInclude Include="..\Public\BTOnlyFalse.h">
       <Filter>GameObject\AI\Flow</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Public\BTDecHp.h">
-      <Filter>GameObject\AI\Decorator</Filter>
     </ClInclude>
     <ClInclude Include="..\public\MyMagicSquareStep.h">
       <Filter>GameObject\CharlesRookwood\MyMagicSquareStep</Filter>
@@ -549,9 +561,6 @@
     <ClInclude Include="..\public\BTMonResetTable.h">
       <Filter>GameObject\AI\Action</Filter>
     </ClInclude>
-    <ClInclude Include="..\public\BTDecIsGround.h">
-      <Filter>GameObject\AI\Decorator</Filter>
-    </ClInclude>
     <ClInclude Include="..\public\RagdollTest.h">
       <Filter>GameObject\Terrain\RagdollTest</Filter>
     </ClInclude>
@@ -596,9 +605,6 @@
     </ClInclude>
     <ClInclude Include="..\Public\Player_Hit_State.h">
       <Filter>GameObject\Player\StateMachine\State\Player_Hit_State</Filter>
-    </ClInclude>
-    <ClInclude Include="..\public\BTDecIsPending.h">
-      <Filter>GameObject\AI\Decorator</Filter>
     </ClInclude>
     <ClInclude Include="..\public\MonEffectBall.h">
       <Filter>GameObject\Monster\Effect</Filter>
@@ -651,11 +657,86 @@
     <ClInclude Include="..\Public\TombBossBullet.h">
       <Filter>GameObject\Monster\TombBoss\SYChild</Filter>
     </ClInclude>
+    <ClInclude Include="..\public\EnderDragon.h">
+      <Filter>GameObject\Monster\EnderDragon</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\EnderDragon_State.h">
+      <Filter>GameObject\Monster\EnderDragon\FSM</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\Edg_Spawn.h">
+      <Filter>GameObject\Monster\EnderDragon\FSM\State</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\Edg_Combat.h">
+      <Filter>GameObject\Monster\EnderDragon\FSM\State</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Public\BTDecFlag.h">
+      <Filter>GameObject\AI\Decorator\Public</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Public\BTDecHitCnt.h">
+      <Filter>GameObject\AI\Decorator\Public</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Public\BTDecHp.h">
+      <Filter>GameObject\AI\Decorator\Public</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Public\BTDecInvert.h">
+      <Filter>GameObject\AI\Decorator\Public</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\BTDecIsGround.h">
+      <Filter>GameObject\AI\Decorator\Public</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\BTDecIsPending.h">
+      <Filter>GameObject\AI\Decorator\Public</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Public\BTDecLier.h">
+      <Filter>GameObject\AI\Decorator\Public</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Public\BTDecSearch.h">
+      <Filter>GameObject\AI\Decorator\Public</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Public\BTDecTimer.h">
+      <Filter>GameObject\AI\Decorator\Public</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\BTDecEdgState.h">
+      <Filter>GameObject\AI\Decorator\Dragon</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Public\BlackBoardKey.h">
+      <Filter>GameObject\AI\BlackBoard</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\BTEdgStateFinished.h">
+      <Filter>GameObject\AI\Action\Dragon</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\Edg_Hit.h">
+      <Filter>GameObject\Monster\EnderDragon\FSM\State</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\BTDecEdgPhase.h">
+      <Filter>GameObject\AI\Decorator\Dragon</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\Edg_Phase.h">
+      <Filter>GameObject\Monster\EnderDragon\FSM\State</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\BTDecEdgPatroll.h">
+      <Filter>GameObject\AI\Decorator\Dragon</Filter>
+    </ClInclude>
     <ClInclude Include="..\public\LevelLastBossRanrok.h">
       <Filter>Level\LastBossRanrok</Filter>
     </ClInclude>
     <ClInclude Include="..\public\LevelLastBossRanrokLoader.h">
       <Filter>Loader\Level\LastBossRanrok</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Public\Player_Fly_State.h">
+      <Filter>GameObject\Player\StateMachine\State\Player_Fly_State</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\DragonSkill.h">
+      <Filter>GameObject\Monster\EnderDragon\Skill</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\EdgFireBall.h">
+      <Filter>GameObject\Monster\EnderDragon\Skill\FireBall</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\EdgBreath.h">
+      <Filter>GameObject\Monster\EnderDragon\Skill\Bress</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Public\UI_Structs.h">
+      <Filter>99.Defines</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -758,24 +839,6 @@
     </ClCompile>
     <ClCompile Include="..\Private\BTCreatureFlag.cpp">
       <Filter>GameObject\AI\Flow</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Private\BTDecFlag.cpp">
-      <Filter>GameObject\AI\Decorator</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Private\BTDecHp.cpp">
-      <Filter>GameObject\AI\Decorator</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Private\BTDecInvert.cpp">
-      <Filter>GameObject\AI\Decorator</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Private\BTDecLier.cpp">
-      <Filter>GameObject\AI\Decorator</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Private\BTDecSearch.cpp">
-      <Filter>GameObject\AI\Decorator</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Private\BTDecTimer.cpp">
-      <Filter>GameObject\AI\Decorator</Filter>
     </ClCompile>
     <ClCompile Include="..\Private\BTOnlyTrue.cpp">
       <Filter>GameObject\AI\Flow</Filter>
@@ -915,20 +978,11 @@
     <ClCompile Include="..\private\BTMonResetTable.cpp">
       <Filter>GameObject\AI\Action</Filter>
     </ClCompile>
-    <ClCompile Include="..\private\BTDecIsGround.cpp">
-      <Filter>GameObject\AI\Decorator</Filter>
-    </ClCompile>
     <ClCompile Include="..\Private\Player_Magic_Bullet.cpp">
       <Filter>GameObject\Player\Player_Magic_Bullet</Filter>
     </ClCompile>
     <ClCompile Include="..\Private\Player_Hit_State.cpp">
       <Filter>GameObject\Player\StateMachine\State\Player_Hit_State</Filter>
-    </ClCompile>
-    <ClCompile Include="..\private\BTDecIsPending.cpp">
-      <Filter>GameObject\AI\Decorator</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Private\BTDecHitCnt.cpp">
-      <Filter>GameObject\AI\Decorator</Filter>
     </ClCompile>
     <ClCompile Include="..\private\MonEffectBall.cpp">
       <Filter>GameObject\Monster\Effect</Filter>
@@ -980,11 +1034,80 @@
     <ClCompile Include="..\Private\TombBossBullet.cpp">
       <Filter>GameObject\Monster\TombBoss\SYChild</Filter>
     </ClCompile>
+    <ClCompile Include="..\private\EnderDragon.cpp">
+      <Filter>GameObject\Monster\EnderDragon</Filter>
+    </ClCompile>
+    <ClCompile Include="..\private\EnderDragon_State.cpp">
+      <Filter>GameObject\Monster\EnderDragon\FSM</Filter>
+    </ClCompile>
+    <ClCompile Include="..\private\Edg_Spawn.cpp">
+      <Filter>GameObject\Monster\EnderDragon\FSM\State</Filter>
+    </ClCompile>
+    <ClCompile Include="..\private\Edg_Combat.cpp">
+      <Filter>GameObject\Monster\EnderDragon\FSM\State</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Private\BTDecFlag.cpp">
+      <Filter>GameObject\AI\Decorator\Public</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Private\BTDecHitCnt.cpp">
+      <Filter>GameObject\AI\Decorator\Public</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Private\BTDecHp.cpp">
+      <Filter>GameObject\AI\Decorator\Public</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Private\BTDecInvert.cpp">
+      <Filter>GameObject\AI\Decorator\Public</Filter>
+    </ClCompile>
+    <ClCompile Include="..\private\BTDecIsGround.cpp">
+      <Filter>GameObject\AI\Decorator\Public</Filter>
+    </ClCompile>
+    <ClCompile Include="..\private\BTDecIsPending.cpp">
+      <Filter>GameObject\AI\Decorator\Public</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Private\BTDecLier.cpp">
+      <Filter>GameObject\AI\Decorator\Public</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Private\BTDecSearch.cpp">
+      <Filter>GameObject\AI\Decorator\Public</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Private\BTDecTimer.cpp">
+      <Filter>GameObject\AI\Decorator\Public</Filter>
+    </ClCompile>
+    <ClCompile Include="..\private\BTDecEdgState.cpp">
+      <Filter>GameObject\AI\Decorator\Dragon</Filter>
+    </ClCompile>
+    <ClCompile Include="..\private\BTEdgStateFinished.cpp">
+      <Filter>GameObject\AI\Action\Dragon</Filter>
+    </ClCompile>
+    <ClCompile Include="..\private\Edg_Hit.cpp">
+      <Filter>GameObject\Monster\EnderDragon\FSM\State</Filter>
+    </ClCompile>
+    <ClCompile Include="..\private\BTDecEdgPhase.cpp">
+      <Filter>GameObject\AI\Decorator\Dragon</Filter>
+    </ClCompile>
+    <ClCompile Include="..\private\Edg_Phase.cpp">
+      <Filter>GameObject\Monster\EnderDragon\FSM\State</Filter>
+    </ClCompile>
+    <ClCompile Include="..\private\BTDecEdgPatroll.cpp">
+      <Filter>GameObject\AI\Decorator\Dragon</Filter>
+    </ClCompile>
     <ClCompile Include="..\private\LevelLastBossRanrok.cpp">
       <Filter>Level\LastBossRanrok</Filter>
     </ClCompile>
     <ClCompile Include="..\private\LevelLastBossRanrokLoader.cpp">
       <Filter>Loader\Level\LastBossRanrok</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Private\Player_Fly_State.cpp">
+      <Filter>GameObject\Player\StateMachine\State\Player_Fly_State</Filter>
+    </ClCompile>
+    <ClCompile Include="..\private\DragonSKill.cpp">
+      <Filter>GameObject\Monster\EnderDragon\Skill</Filter>
+    </ClCompile>
+    <ClCompile Include="..\private\EdgFireBall.cpp">
+      <Filter>GameObject\Monster\EnderDragon\Skill\FireBall</Filter>
+    </ClCompile>
+    <ClCompile Include="..\private\EdgBreath.cpp">
+      <Filter>GameObject\Monster\EnderDragon\Skill\Bress</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -1068,6 +1191,12 @@
     </ClCompile>
     <FxCompile Include="..\ShaderFiles\Shader_SkyCloudy.hlsl">
       <Filter>ShaderFiles\SkyBox</Filter>
+    </FxCompile>
+    <FxCompile Include="..\ShaderFiles\Shader_CPU_Player_Skill_Mesh.hlsl">
+      <Filter>ShaderFiles\Particle</Filter>
+    </FxCompile>
+    <FxCompile Include="..\ShaderFiles\Shader_CPU_Player_Skill_Texture.hlsl">
+      <Filter>ShaderFiles\Particle</Filter>
     </FxCompile>
   </ItemGroup>
 </Project>

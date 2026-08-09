@@ -4,6 +4,8 @@
 #include "UI_Enums.h"
 #include "GameObject.h"
 
+#include <array>
+
 NS_BEGIN(Engine)
 class CComConstantBuffer;
 class CButtonComponent;
@@ -68,6 +70,10 @@ public:
 	// ********** Death Button
 	void ClearDeathScene();
 
+	// ********** Quest UI
+	_bool SetQuestUIGroupActive(
+		QUEST_UI_GROUP group, _bool active);
+
 private: // ************ 계속 바뀌는 유아이 ******************* //
 	/*************플레이 화면 유아이******************/
 	CHandle m_SpellSlot[4] = {};
@@ -112,6 +118,14 @@ private:
 	// MonsterHP
 	_bool m_bMonsterHP{ false };
 
+	// Quest UI
+	static constexpr size_t QUEST_UI_GROUP_COUNT =
+		static_cast<size_t>(QUEST_UI_GROUP::END);
+	std::optional<CHandle> m_hMiniMap{ std::nullopt };
+	std::array<_bool, QUEST_UI_GROUP_COUNT> m_QuestUIGroupStates{};
+	std::array<_bool, QUEST_UI_GROUP_COUNT> m_QuestUIGroupDirty{};
+	uint64_t m_iQuestUIListenerID{};
+
 	//*********내부함수*************//
 private:
 	CUIObject* SafeGetOBJ(CHandle pHandle);
@@ -123,6 +137,12 @@ private:
 	void SetMonsterHPBool(_bool isHP) { m_bMonsterHP = isHP; }
 	void SetMonsterHPNull() { m_MonsterHP = std::nullopt; }
 	void UpdateMonsterHP();
+
+	/**********Quest UI************/
+private:
+	void BindMiniMap();
+	void SubscribeQuestUIEvents();
+	void ApplyPendingQuestUIGroups();
 
 	/**********모션************/
 	private:
@@ -137,6 +157,9 @@ private:
 public:
 	static E::UPtr<CUIController> Create();
 	E::UPtr<E::CPrototype> Clone(void* pArg) override;
+
+private:
+	void Free() override;
 };
 
 NS_END

@@ -46,7 +46,7 @@ namespace Engine
 
 	typedef struct tagConstantBufferLight
 	{
-		DYNAMIC_LIGHT	AffectedLight[MAX_LIGHT_COUNT];
+		DYNAMIC_LIGHT	AffectedLight[MAX_NORMAL_LIGHT_RENDER_COUNT];
 
 		XMFLOAT4X4		g_InvViewProj{};
 		uint32_t		LightCount{};
@@ -56,7 +56,7 @@ namespace Engine
 
 	typedef struct tagConstantBufferEffectLight
 	{
-		EFFECT_LIGHT	EffectLight[MAX_EFFECTLIGHT_COUNT];
+		EFFECT_LIGHT	EffectLight[MAX_EFFECT_LIGHT_RENDER_COUNT];
 
 		uint32_t		LightCount{};
 		_float3			LightPadding{};
@@ -67,7 +67,8 @@ namespace Engine
 	{
 		uint32_t	CurrentShadowLightIndex{};
 		uint32_t	CurrentPointFaceIndex{};
-		_float2		ShadowPadding{};
+		uint32_t	CurrentCascadeIndex{};
+		_float		ShadowPadding{};
 	} CB_SHADOW;
 	static_assert(sizeof(CB_SHADOW) % 16 == 0);
 
@@ -182,6 +183,13 @@ namespace Engine
 		_float2	mapOffset;
 		float	mapRotation;
 		float	mapScale;
+		uint32_t mapMode;
+		float smokeIntensity;
+		float smokeSpeed;
+		float smokeTime;
+		uint32_t battleZoneCount;
+		_float3 battleZonePadding;
+		_float4 battleZones[8];
 	}CB_MINIMAP;
 	static_assert(sizeof(CB_MINIMAP) % 16 == 0);
 
@@ -191,6 +199,20 @@ namespace Engine
 		_float2	g_padding;
 	};
 	static_assert(sizeof(CB_BLOOM) % 16 == 0);
+
+	struct CB_FROXEL
+	{
+		_float3	g_fFroxelGridSize;
+		_float	g_fNearZ;
+
+		_float	g_fFarZ;
+		_float2	g_fScreenResolution;
+		_float  g_fSliceDepthRatio;
+
+		_float2	g_fHalfScreenResolution;
+		_float2	FroxelPadding1;
+	};
+	static_assert(sizeof(CB_FROXEL) % 16 == 0);
 
 	struct CB_VLFOG
 	{
@@ -203,9 +225,29 @@ namespace Engine
 		_float	g_fFogStartPos;
 		_float	g_fFogEndPos;
 		_float	g_fFogDensity;
-		_float	FogPadding;
+		_float	g_fFogNoiseScale;
+
+		_float3	g_fFogLightDirection;
+		_float	g_fFogAnisotropyGA;
+
+		_float3	g_fFogLightColor;
+		_float	g_fFogAnisotropyGB;
+
+		_float	g_fFogScatteringWeight;
+		_float	g_fFogBaseHeight;
+		_float	g_fFogHeightFallOff;
+		_float	g_fFogPadding;
 	};
 	static_assert(sizeof(CB_VLFOG) % 16 == 0);
+
+	struct CB_CSM
+	{
+		_matrix g_mShadowViewProj[4];
+		_float4 g_fCascadeSplits;
+		_float2 g_fShadowMapSize;
+		_float2 g_fShadowBias;
+	};
+	static_assert(sizeof(CB_CSM) % 16 == 0);
 
 	struct CB_LENSFLARE
 	{

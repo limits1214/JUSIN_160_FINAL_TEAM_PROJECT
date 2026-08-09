@@ -174,10 +174,26 @@ void CTrail_CPU::AddPoint(const _float3& vStart, const _float3& vEnd)
 		_float3 currCenter = { (vStart.x + vEnd.x) * 0.5f,
 								(vStart.y + vEnd.y) * 0.5f,
 								(vStart.z + vEnd.z) * 0.5f };
+		const float trailWidth = sqrtf(DistanceSq(vStart, vEnd));
+		const float minSampleDistance = std::max(0.02f, trailWidth * 0.1f);
+		const float centerDistance = sqrtf(DistanceSq(prevCenter, currCenter));
+		const float deltaX = currCenter.x - prevCenter.x;
+		const float deltaZ = currCenter.z - prevCenter.z;
+		const float horizontalDistance = sqrtf(deltaX * deltaX + deltaZ * deltaZ);
+		const float maxConnectDistance = std::max(2.f, trailWidth * 2.f);
 
-		XMVECTOR v0 = XMLoadFloat3(&prevCenter);
-		XMVECTOR v1 = XMLoadFloat3(&currCenter);
-		m_fTotalDistance += XMVectorGetX(XMVector3Length(v1 - v0));
+		if (centerDistance < minSampleDistance)
+			return;
+
+		if (horizontalDistance > maxConnectDistance)
+		{
+			Clear();
+			m_fTotalDistance = 0.f;
+		}
+		else
+		{
+			m_fTotalDistance += centerDistance;
+		}
 	}
 	m_bHasLastPoint = true;
 	m_vLastStart = vStart;
@@ -236,9 +252,13 @@ void CTrail_CPU::AddPoint(const _float3& vStart, const _float3& vEnd)
 				else
 				{
 					widthDir = XMVector3Normalize(widthDir);
-				
-					if (XMVectorGetX(XMVector3Dot(camRight, widthDir)) < 0.f)
+					XMVECTOR prevWidthDir = XMLoadFloat3(&prev.vWidthDir);
+
+					if (XMVectorGetX(XMVector3LengthSq(prevWidthDir)) > 1e-6f &&
+						XMVectorGetX(XMVector3Dot(prevWidthDir, widthDir)) < 0.f)
+					{
 						widthDir = -widthDir;
+					}
 				}
 				
 				XMStoreFloat3(&frame.vWidthDir, widthDir);
@@ -414,44 +434,24 @@ void CTrail_CPU::BuildTrailGeometry()
 {
 	m_vecVertices.clear();
 
+	const uint32_t iCount = static_cast<uint32_t>(m_dequeFrames.size());
 
-	uint32_t iCount = (uint32_t)m_dequeFrames.size();
-	if (iCount < 2)
+	if (iCount < 2 || !m_pParticleTexture)
 		return;
 
-	const _bool bBillboard =
-		!m_Desc.bShrinkWidth ||
-		m_Desc.eAlignMode == TRAIL_ALIGN_MODE::VIEW;
-
-
-	float fUVTileScale = 0.5f;
-
-	// 카메라 월드 위치 + 역행렬을 루프 밖에서 한 번만 계산 (재사용)
-	//_float3 vCamPos = { 0.f, 0.f, 0.f };
-	//XMVECTOR camRight = XMVectorSet(1.f, 0.f, 0.f, 0.f); // 기본값 (LOCAL 모드에선 안 쓰임)
-
-	if (bBillboard)
-	{
-		auto pCam = CGameInstance::Get().GetActiveCamera();
-		if (pCam == nullptr)
-			return;
-		XMMATRIX matView = pCam->GetView();
-		XMMATRIX matViewInv = XMMatrixInverse(nullptr, matView);
-		//XMStoreFloat3(&vCamPos, matViewInv.r[3]);
-		//camRight = XMVector3Normalize(matViewInv.r[0]);
-	}
-
-	//XMVECTOR prevWidthDir = XMVectorZero();
-	//bool hasPrevWidth = false;
+	const _bool bBillboard = !m_Desc.bShrinkWidth || m_Desc.eAlignMode == TRAIL_ALIGN_MODE::VIEW;
+	const float newestDistance = m_dequeFrames.front().fDistance;
+	const float oldestDistance = m_dequeFrames.back().fDistance;
+	const float visibleDistance = std::max(newestDistance - oldestDistance, 0.001f);
 
 	for (uint32_t i = 0; i < iCount; ++i)
 	{
 		const auto& frame = m_dequeFrames[i];
+
 		float fAgeRatio = frame.fAge / m_Desc.fMaxDuration;
 		float fDeath = powf(fAgeRatio, 1.2f);
-		//float fDeath = fAgeRatio;
 		float fLifeRatio = 1.f - fDeath;
-		float t = frame.fDistance * fUVTileScale;
+		float t = (frame.fDistance - oldestDistance) / visibleDistance;
 		float fWidthScale = m_Desc.bShrinkWidth ? fLifeRatio : 1.f;
 		_float3 vTip, vBase;
 

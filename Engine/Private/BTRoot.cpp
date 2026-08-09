@@ -34,6 +34,11 @@ HRESULT CBTRoot::Initalize(void* pArg)
 	return S_OK;
 }
 
+HRESULT CBTRoot::Save_SubTree(const _string& SavePath)
+{
+	return S_OK;
+}
+
 
 nlohmann::json CBTRoot::Save_Node()
 {
@@ -54,14 +59,12 @@ nlohmann::json CBTRoot::Save_Node()
 	SaveJsonValue(j, "GuiLink_StartIndex", m_GuiLink.iStartIdx);
 	SaveJsonValue(j, "GuiLink_StartParentNode", m_GuiLink.ParentNode);
 	JsonSaveLoadManager::SaveJsonTypeString(j, "MasterName", m_MasterName);
-
 	return j;
 }
 HRESULT				CBTRoot::Load_json(const nlohmann::json& j)
 {
 	LoadJsonValue(j, "ID", m_GuiNode.iID);
 	LoadJsonValue(j, "fValue", m_GuiNode.fValue);
-
 	LoadJsonValue(j, "Abort", m_GuiNode.bAbort);
 	LoadJsonEnum(j, "Group", m_eGroup);
 	LoadJsonEnum(j, "GuiNode_BeHaviorType", m_GuiNode.eMyType);

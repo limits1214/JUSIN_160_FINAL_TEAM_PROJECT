@@ -31,6 +31,12 @@ public:
 		PX_FILTER_DESC tFilter{};
 	};
 
+	struct POOL_ACQUIRE_DESC
+	{
+		_float3 vPosition{};
+		_float4 vRotation{ 0.f, 0.f, 0.f, 1.f };
+	};
+
 private:
 	COilBarrel();
 	COilBarrel(const COilBarrel& prototype);
@@ -71,6 +77,12 @@ private:
 	CComPxDistanceJoint* m_pComPxDistanceJoint{};
 	SPtr<CResVertexShader> m_pResVertexShader{};
 	SPtr<CResPixelShader> m_pResPixelShader{};
+
+protected:
+	_bool OnAcquireFromPool(void* pArg) override;
+	void OnReleaseToPool() override;
+	void OnManagedUpdateEnabled() override;
+	void OnManagedUpdateDisabled() override;
 };
 
 NS_END

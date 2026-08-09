@@ -22,10 +22,11 @@ enum class PLAYER_STATE : uint32_t
 	SKILL_END,
 	HIT,
 	DEAD,
+	FLY,
 	END,
 };
 
-
+//FSM 훔쳐버리기
 class CPlayer_StateMachine final : public CStateMachine
 {
 public:

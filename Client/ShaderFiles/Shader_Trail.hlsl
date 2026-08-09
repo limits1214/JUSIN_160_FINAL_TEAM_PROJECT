@@ -252,3 +252,62 @@ PS_OUT PSRemoveBlack(VS_OUT In)
 
     return Out;
 }
+PS_OUT PSMarble(VS_OUT In)
+{
+	PS_OUT Out = (PS_OUT) 0;
+
+    // 1) 위습 텍스처 샘플링 — 필요하면 UV를 시간에 따라 흘러가듯 스크롤
+	float2 wispUV = In.vUV + float2(-g_fAccumulationTime * 0.3f, 0.f);
+	float wispMask = g_DiffuseTexture.Sample(LinearWrap, wispUV).r; // 검은 배경(0) + 흰 줄기(1)
+
+
+    // 3) 색은 인스턴스 이미시브 컬러로 (또는 In.vColor.rgb로 바꿔도 됨)
+	float3 tintColor = In.vEmissive.rgb * In.vEmissive.a;
+
+	float alpha = wispMask * In.vColor.a;
+	float3 finalColor = tintColor * wispMask;
+
+	Out.vDiffuse = float4(finalColor, alpha);
+	return Out;
+}
+PS_OUT PSDarkWispTrail(VS_OUT In)
+{
+	PS_OUT Out = (PS_OUT) 0;
+
+	float2 uv = In.vUV;
+	uv.x -= g_fAccumulationTime * 0.15f;
+
+	float2 noiseUV1 = float2(uv.x * 1.5f - g_fAccumulationTime * 0.2f, uv.y * 2.f);
+	float2 noiseUV2 = float2(uv.x * 3.f + g_fAccumulationTime * 0.13f, uv.y * 4.f);
+
+	float2 noise1 = g_DistortionTexture.Sample(LinearWrap, noiseUV1).rg * 2.f - 1.f;
+	float2 noise2 = g_DistortionTexture.Sample(LinearWrap, noiseUV2).rg * 2.f - 1.f;
+	float2 distortion = noise1 * 0.7f + noise2 * 0.3f;
+
+	float centerMask = 1.f - abs(uv.y * 2.f - 1.f);
+	centerMask = saturate(centerMask);
+
+	uv.x += distortion.x * 0.04f;
+	uv.y += distortion.y * 0.12f * centerMask;
+
+	
+
+	float3 textureColor = g_DiffuseTexture.Sample(LinearWrap, In.vUV).rgb;
+	float luminance = dot(textureColor, float3(0.299f, 0.587f, 0.114f));		
+
+	float bodyMask = smoothstep(0.01f, 0.2f, luminance);
+	float brightMask = smoothstep(0.4f, 0.85f, luminance);
+	   
+	float breakNoise = g_DistortionTexture.Sample(LinearWrap, noiseUV1 * 0.7f).b;
+	float breakMask = smoothstep(0.45f, 0.75f, breakNoise);
+
+	float alpha = bodyMask * breakMask * In.vColor.a;
+	float3 blackColor = float3(0.001f, 0.001f, 0.002f);
+	float3 emissiveColor = In.vEmissive.rgb * In.vEmissive.a;
+	float3 finalColor = blackColor + emissiveColor * brightMask * 8.f;
+	
+	clip(alpha - 0.01f);
+
+	Out.vDiffuse = float4(finalColor, alpha);
+	return Out;
+}

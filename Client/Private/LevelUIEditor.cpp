@@ -37,7 +37,9 @@ HRESULT CLevelUIEditor::Initialize()
 {
 	auto clientSize = CGameInstance::Get().GetClientScreenSize();
 
-	E::CGameInstance::Get().GameObjectAllReset();
+	E::CGameInstance::Get().GameObjectAllResetExceptLayers({
+		"00_ENGINE_CINEMATIC_CAMERA"
+	});
 
 	GET_SINGLE(UIManager)->CreateFadeOut();
 

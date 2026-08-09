@@ -25,7 +25,9 @@ CLevelMapEditor::~CLevelMapEditor()
 
 HRESULT CLevelMapEditor::Initialize()
 {
-	Engine::CGameInstance::Get().GameObjectAllReset();
+	Engine::CGameInstance::Get().GameObjectAllResetExceptLayers({
+		"00_ENGINE_CINEMATIC_CAMERA"
+	});
 
 	//{
 	//	CMapMeshObject::MAP_MESH_OBJECT_DESC Desc{};

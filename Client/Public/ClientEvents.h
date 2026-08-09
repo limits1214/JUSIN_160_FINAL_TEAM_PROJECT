@@ -1,5 +1,6 @@
 #pragma once
 #include "Client_Defines.h"
+#include "UI_Enums.h"
 
 NS_BEGIN(Client)
 
@@ -22,5 +23,11 @@ struct FPlayerDied
 };
 
 struct FAcientMagicStart {};
+
+struct FQuestUIGroupChanged
+{
+	QUEST_UI_GROUP Group{ QUEST_UI_GROUP::NONE };
+	_bool Active{ false };
+};
 
 NS_END

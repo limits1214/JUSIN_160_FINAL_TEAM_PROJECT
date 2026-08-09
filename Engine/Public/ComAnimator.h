@@ -321,13 +321,25 @@ public:
 	void	Update_ActionState(_float fTimeDelta, ANIMSTRUCT& AnimState);
 	void	Play_Anim(int32_t iAnimIndex, _bool bLoop=false, _float fBlendDuration = 0.1f);
 	void	Play_Action(int32_t iActionIndex, _float fBlendDuration);
+	void	Play_UpperAnim(int32_t iAnimIndex, _bool bLoop = false, _float fFadeDuration = 0.1f);
+	void	Stop_UpperAnim(_float fFadeDuration = 0.1f);
+	_bool	Set_UpperBodyRootBone(const _char* pBoneName, uint32_t iBlendDepth = 3);
+	_bool	IsUpperLayerActive() const { return m_UpperAnimState.IsValid() && m_fUpperLayerWeight > 0.f; }
 	void	Build_BoneMatrices_CPU(_float fTimeDelta);
 	_bool Sample_CombinedBoneMatrices(int32_t iAnimIndex, _float fTrackPosition, const std::vector<uint32_t>& boneChain, _float4x4& outMatrix) const;
 
 	void	Sample_Channel_CPU( CResModelChanel* pChannel, _float fTrackPosition, uint32_t& iCurrentKeyFrameIndex, std::vector<_float4x4>& OutLocalBoneMatrices);
 	_matrix Evaluate_ChannelMatrix_CPU(CResModelChanel* pChannel, _float fTrackPosition) const;
+	_matrix Evaluate_RootCombinedMatrix_CPU(const CResModelAnim* pAnim, _float fTrackPosition) const;
+	void Prepare_RootMotionCache(const CResModelAnim* pAnim, _float fTrackPosition);
+	void Apply_RootMotionFromCombined(_fmatrix currentRootCombined);
+	void Update_RootMotion_GPU(const CResModelAnim* pAnim, _float fPreviousTrackPosition);
+	void Invalidate_RootMotionCache();
 	_vector RemoveYRotation(_vector qRotation) const;
 	void	Blend_Anim(_float fTimeDelta);
+	void	Update_UpperLayer(_float fTimeDelta);
+	void	Build_UpperLocalPose();
+	void	Compose_FinalLocalPose();
 
 
 	// ActionUpdate
@@ -419,6 +431,16 @@ private:
 
 	std::vector<_float4x4>				m_LocalBoneMatrices;
 	std::vector<_float4x4>				m_BlendStartLocalMatrices;
+	std::vector<_float4x4>				m_UpperLocalBoneMatrices;
+	std::vector<_float4x4>				m_FinalLocalBoneMatrices;
+	std::vector<_float>					m_UpperBodyMask;
+
+	ANIMSTRUCT		m_UpperAnimState;
+	_float			m_fUpperLayerWeight{ 0.f };
+	_float			m_fUpperFadeStartWeight{ 0.f };
+	_float			m_fUpperFadeTargetWeight{ 0.f };
+	_float			m_fUpperFadeTime{ 0.f };
+	_float			m_fUpperFadeDuration{ 0.f };
 
 
 private:
@@ -427,6 +449,11 @@ private:
 	// 애니메이션 Local 기준 RootMotion
 	_float3 m_vRootMotionDelta{ 0.f, 0.f, 0.f };
 	_float4 m_qRootMotionRotationDelta{ 0.f, 0.f, 0.f, 1.f };
+	_float4x4 m_RawRootLocalMatrix{};
+	_float4x4 m_PreviousRootCombinedMatrix{};
+	_bool m_bRawRootLocalValid{ false };
+	_bool m_bPreviousRootCombinedValid{ false };
+	int32_t m_iRootMotionCacheAnimIndex{ -1 };
 
 
 public:

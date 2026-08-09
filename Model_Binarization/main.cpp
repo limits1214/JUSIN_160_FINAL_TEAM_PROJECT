@@ -26,6 +26,23 @@ int main(int argc, char* argv[])
 		return 0;
 	}
 
+	// Targeted skeletal conversion. This keeps the existing OriginData layout:
+	// <root>/Models/OriginData/Skeleton -> <root>/Models/Skeleton/<model>/.
+	if (argc > 1 && std::string(argv[1]) == "--skeletal-folder")
+	{
+		if (argc != 3)
+		{
+			cerr << "Usage: Model_Binarization.exe --skeletal-folder <OriginData/Skeleton>\n";
+			return 1;
+		}
+		if (FAILED(import->ImportFBXFolder("", argv[2])))
+		{
+			cerr << "Skeletal-folder conversion failed.\n";
+			return 1;
+		}
+		return 0;
+	}
+
 	// Dedicated whole-map conversion. The existing no-argument batch behavior is
 	// intentionally kept unchanged.
 	// Model_Binarization.exe --whole-map <input.fbx> <output-dir> <chunk-size>
@@ -63,8 +80,8 @@ int main(int argc, char* argv[])
 		return 0;
 	}
 
-	//import->ImportFBXFolder("","../../JUSIN_160_FINAL_TEAM_RESOURCE/SampleClient/Models/OriginData/Static");
-	import->ImportFBXFolder_ForMapJson("","../../JUSIN_160_FINAL_TEAM_RESOURCE/SampleClient/Models/OriginData/Static","../../JUSIN_160_FINAL_TEAM_RESOURCE/SampleClient/Models/StaticModelJson/");
+	import->ImportFBXFolder("","../../JUSIN_160_FINAL_TEAM_RESOURCE/SampleClient/Models/OriginData/Skeleton/");
+	//import->ImportFBXFolder_ForMapJson("","../../JUSIN_160_FINAL_TEAM_RESOURCE/SampleClient/Models/OriginData/Skeleton","../../JUSIN_160_FINAL_TEAM_RESOURCE/SampleClient/Models/StaticModelJson/");
 	//import->ImportFBXFolder_ForMapJson("","../../JUSIN_160_FINAL_TEAM_RESOURCE/SampleClient/Models/OriginData/Static/ParticleMeshes","../../JUSIN_160_FINAL_TEAM_RESOURCE/SampleClient/Models/ParticleModelJson");
 	return 0;
 }

@@ -1355,7 +1355,10 @@ std::vector<CHandle> UIManager::LoadPrefab(std::string name, std::string g_BaseP
 
 	if (!file.is_open())
 	{
-		MSG_BOX("파일 열기 실패");
+		/* ---- 광윤 수정 ---- */
+		std::string MSGBoxText = "Cannot Open json" + g_BasePath + name + ".json";
+		MessageBoxA(NULL, MSGBoxText.c_str(), "System Message", MB_OK);
+		/* ------------------- */
 		return m_vLoadPrefabRoot;
 	}
 

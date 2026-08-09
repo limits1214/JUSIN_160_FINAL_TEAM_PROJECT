@@ -41,6 +41,7 @@ private:
 	void		Load_FileList();
 	void		DragAllMove(CBTRoot* pRoot ,_float2 vPos);
 	void		SavePopUp();
+	void        SaveSubNodePopUp(CBTRoot* pRoot);
 	void		Widget(CBTRoot* pRoot , GUINODE* pNode, GUINODE_LINK* pLink,int32_t& iNode_hovered_in_list, int32_t& iNode_hovered_in_scene, const _float& fNode_Slot_Radius, const _float2& fNode_Window_Padding, _bool& bOpen_Context_Menu, ImGuiIO& io);
 	void		ShowWidgetByType(CBTRoot* pRoot);
 	void		Add_Node(BEHAVIOR eType, const _char* pPopupName, ImVec2 vPos);
@@ -51,6 +52,7 @@ private:
 	void		Recursive_Call_Node(class CBTRoot* pParent);
 	void		Pin(CBTRoot* pNode,_bool bPin);
 	void		Add_NodeToTmp(UPtr<class CBTRoot>& pRoot);
+
 private:
 	ax::NodeEditor::EditorContext*						m_pNodeContext{ nullptr };
 	std::vector<GUINODE>								m_Nodes;
@@ -65,7 +67,7 @@ private:
 	GUICURRENT_NODE										m_CurrentNode{};
 
 	_float2												m_vScroll{ 0,0 }, m_vOffset{};
-	_bool												m_binited{ false }, m_bShow_grid{ true }, m_bPopup{ false }, m_bPopupAction{ false }, m_bSaveLoad{ false },m_bReName{ false };;
+	_bool												m_binited{ false }, m_bShow_grid{ true }, m_bPopup{ false }, m_bPopupAction{ false }, m_bSaveLoad{ false }, m_bReName{ false }, m_bSubNode{ false };
 														
 	int32_t												m_iNodeSelect{ -1 }, iNodeID{0};
 														

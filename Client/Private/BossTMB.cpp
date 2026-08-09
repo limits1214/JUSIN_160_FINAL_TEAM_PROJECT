@@ -245,8 +245,6 @@ HRESULT CBossTMB::Initialize(void* pArg)
 	// 보스가 빛을 등지면 너무 어두워져서 전면만 추가 라이트 설치
 	AdditionalLightHandle = CGameInstance::Get().Allocate_EffectLight(GetTransform().GetLoadedPostion(), 500.f, { 0.47f, 1.f, 1.f }, 15.f, 20.f, 99999.f, { 0.f, 0.f, 0.f });
 	/*---------------------------------*/
-
-
 	m_iColliderBoneIndex = m_pComModelInstance->GetModel()->Get_BoneIndex("Spine1");
 	return S_OK;
 }
@@ -447,6 +445,7 @@ _bool CBossTMB::Check_Table(PLAYER_SKILL_TYPE eType)
 			}
 		}
 	}
+
 	if (eType == PLAYER_SKILL_TYPE::ATTACK)
 		return false;
 
@@ -497,7 +496,7 @@ void CBossTMB::Active_Dynamic_Effect()
 				if (iBoneIndex >= m_pComModelInstance->Get_CombinedBoneMatrices().size())
 					return;
 				_float4x4 BoneMat = m_pComModelInstance->Get_CombinedBoneMatrices()[iBoneIndex];
-				OverLabTest(XMLoadFloat4x4(&BoneMat).r[3], 300.f, 30);
+				OverLabTest(XMLoadFloat4x4(&BoneMat).r[3], 150.f, 30);
 			}
 		}
 

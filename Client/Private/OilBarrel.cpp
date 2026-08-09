@@ -230,10 +230,105 @@ _bool COilBarrel::ApplyPushForce(const _float3& vDirection, _float fStrength)
 		vNormalizedDirection.z * fStrength });
 }
 
+_bool COilBarrel::OnAcquireFromPool(void* pArg)
+{
+	const auto* pDesc = static_cast<POOL_ACQUIRE_DESC*>(pArg);
+	if (!pDesc || !m_pComPxRigidBody || !m_pComPxConvexCollider)
+		return false;
+
+	if (!m_pComPxRigidBody->SetPose(
+			pDesc->vPosition,
+			pDesc->vRotation) ||
+		!m_pComPxRigidBody->SetLinearVelocity({}) ||
+		!m_pComPxRigidBody->SetAngularVelocity({}))
+	{
+		return false;
+	}
+
+	GetTransform().SetPosition(pDesc->vPosition);
+	GetTransform().SetQuaternion(pDesc->vRotation);
+	GetTransform().Update();
+	return true;
+}
+
+void COilBarrel::OnReleaseToPool()
+{
+	// [LSY] 재사용 전에 다른 객체와 맺은 Joint 관계를 모두 끊는다.
+	if (m_pComPxRigidBody)
+		m_pComPxRigidBody->ReleaseConnectedJoints();
+
+	if (m_pComPxFixedJoint)
+	{
+		if (SUCCEEDED(DelComponent("ComPxFixedJoint")))
+			m_pComPxFixedJoint = nullptr;
+		else
+			DEBUG_LOG("[OilBarrelPool] Failed to remove FixedJoint component.\n");
+	}
+
+	if (m_pComPxDistanceJoint)
+	{
+		if (SUCCEEDED(DelComponent("ComPxDistanceJoint")))
+			m_pComPxDistanceJoint = nullptr;
+		else
+			DEBUG_LOG("[OilBarrelPool] Failed to remove DistanceJoint component.\n");
+	}
+}
+
+void COilBarrel::OnManagedUpdateEnabled()
+{
+	if (!m_pComPxRigidBody || !m_pComPxConvexCollider)
+		return;
+
+	const _bool bSimulationEnabled =
+		m_pComPxConvexCollider->SetSimulationEnabled(true);
+	const _bool bQueryEnabled =
+		m_pComPxConvexCollider->SetQueryEnabled(true);
+	const _bool bGravityEnabled =
+		m_pComPxRigidBody->SetGravityEnabled(true);
+	const _bool bAwake = m_pComPxRigidBody->WakeUp();
+
+	if (!bSimulationEnabled || !bQueryEnabled ||
+		!bGravityEnabled || !bAwake)
+	{
+		DEBUG_LOG("[OilBarrelPool] Failed to enable pooled object physics.\n");
+	}
+}
+
+void COilBarrel::OnManagedUpdateDisabled()
+{
+	if (!m_pComPxRigidBody || !m_pComPxConvexCollider)
+		return;
+
+	const _bool bLinearVelocityCleared =
+		m_pComPxRigidBody->SetLinearVelocity({});
+	const _bool bAngularVelocityCleared =
+		m_pComPxRigidBody->SetAngularVelocity({});
+	const _bool bSimulationDisabled =
+		m_pComPxConvexCollider->SetSimulationEnabled(false);
+	const _bool bQueryDisabled =
+		m_pComPxConvexCollider->SetQueryEnabled(false);
+	const _bool bGravityDisabled =
+		m_pComPxRigidBody->SetGravityEnabled(false);
+	const _bool bAsleep = m_pComPxRigidBody->PutToSleep();
+
+	if (!bLinearVelocityCleared || !bAngularVelocityCleared ||
+		!bSimulationDisabled || !bQueryDisabled ||
+		!bGravityDisabled || !bAsleep)
+	{
+		DEBUG_LOG("[OilBarrelPool] Failed to disable pooled object physics.\n");
+	}
+}
+
 _bool COilBarrel::CreateFixedJoint(
 	COilBarrel* pConnectedBarrel,
 	uint32_t iJointSubIndex)
 {
+	if (m_pComPxFixedJoint && !m_pComPxFixedJoint->IsValid())
+	{
+		if (SUCCEEDED(DelComponent("ComPxFixedJoint")))
+			m_pComPxFixedJoint = nullptr;
+	}
+
 	if (!m_pComPxRigidBody || m_pComPxFixedJoint)
 		return false;
 
@@ -269,6 +364,12 @@ _bool COilBarrel::CreateDistanceJoint(
 	_float fMaxDistance,
 	uint32_t iJointSubIndex)
 {
+	if (m_pComPxDistanceJoint && !m_pComPxDistanceJoint->IsValid())
+	{
+		if (SUCCEEDED(DelComponent("ComPxDistanceJoint")))
+			m_pComPxDistanceJoint = nullptr;
+	}
+
 	if (!m_pComPxRigidBody ||
 		m_pComPxDistanceJoint ||
 		!pConnectedBarrel ||

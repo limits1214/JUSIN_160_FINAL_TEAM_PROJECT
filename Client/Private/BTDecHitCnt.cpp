@@ -56,6 +56,7 @@ void CBTDecHitCnt::Update_Gui()
 }
 void CBTDecHitCnt::Abort()
 {
+	__super::Abort();
 }
 nlohmann::json CBTDecHitCnt::Save_Node()
 {

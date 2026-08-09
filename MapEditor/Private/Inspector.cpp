@@ -142,6 +142,39 @@ namespace
 
 			ImGui::EndCombo();
 		}
+
+		ImGui::Separator();
+		ImGui::TextUnformatted("Wind");
+
+		E::WIND_DESC windDesc = mapMeshObject.GetWindDesc();
+		int32_t windType = static_cast<int32_t>(windDesc.type);
+		constexpr const char* windTypeNames[] = { "None", "Grass", "Tree" };
+
+		_bool changed = ImGui::Combo(
+			"Wind Type", &windType, windTypeNames, static_cast<int32_t>(std::size(windTypeNames)));
+		changed |= ImGui::DragFloat("Strength", &windDesc.strength, 0.01f, 0.f, 10.f, "%.3f");
+		changed |= ImGui::DragFloat("Speed", &windDesc.speed, 0.01f, 0.f, 10.f, "%.3f");
+		changed |= ImGui::DragFloat("Frequency", &windDesc.frequency, 0.01f, 0.f, 10.f, "%.3f");
+		changed |= ImGui::DragFloat("Bend Exponent", &windDesc.bendExponent, 0.05f, 0.1f, 8.f, "%.3f");
+		changed |= ImGui::DragFloatRange2(
+			"Height Weight Range",
+			&windDesc.heightStart,
+			&windDesc.heightEnd,
+			0.01f,
+			0.f,
+			1.f,
+			"Start %.2f",
+			"End %.2f");
+		if (ImGui::IsItemHovered())
+		{
+			ImGui::SetTooltip("Vertices below Start stay fixed; vertices above End receive full wind strength.");
+		}
+
+		if (changed)
+		{
+			windDesc.type = static_cast<E::EWindType>(windType);
+			mapMeshObject.SetWindDesc(windDesc);
+		}
 	}
 }
 

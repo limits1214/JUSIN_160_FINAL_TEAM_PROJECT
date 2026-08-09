@@ -153,6 +153,30 @@ void CParticleManager::UpdateGUI()
 	ImGui::Combo("WhatKind", &whatKindIndex, whatKindNames, IM_ARRAYSIZE(whatKindNames));
 
 	ImGui::Separator();
+	
+	ImGui::Separator();
+	ImGui::Checkbox("ALPHA_BLEND", &alphaBlend);
+	ImGui::SameLine();
+	ImGui::Checkbox("ALPHA_ADD", &alphaAdd);
+	ImGui::SameLine();
+	ImGui::Checkbox("NONE_BLEND", &noneBlend);
+	ImGui::Separator();
+	if (alphaBlend)
+	{
+		alphaAdd = false;
+		noneBlend = false;
+		iSelectedBlend = 0;
+	}
+	else if (alphaAdd) {
+		alphaBlend = false;
+		noneBlend = false;
+		iSelectedBlend = 1;
+	}
+	else if (noneBlend) {
+		alphaAdd = false;
+		alphaBlend = false;
+		iSelectedBlend = 2;
+	}
 
 	// ---- 1. MESH일 때만: fbx 섹션 ----
 	if (whatKindIndex == 0)
@@ -3376,6 +3400,9 @@ uint32_t CParticleManager::Spawn(const std::vector<SPAWN_COMMAND>& templateComma
 			_float3 velT;
 			XMStoreFloat3(&velT, XMVector3TransformNormal(XMLoadFloat3(&p.velocity), matWorld));
 			p.velocity = velT;
+
+		
+
 			// rotMin/rotMax는 변환하지 않음
 			break;
 		}
@@ -3404,6 +3431,9 @@ uint32_t CParticleManager::Spawn(const std::vector<SPAWN_COMMAND>& templateComma
 		{
 			const PatternParamVariant& pattern = std::get<PatternParamVariant>(cmd.params);
 			auto spawnList = BuildSpawnData(pattern);
+			_vector forward = XMVector3TransformNormal(XMVectorSet(0.f, 0.f, 1.f, 0.f), matWorld);
+			float worldYaw = atan2f(XMVectorGetX(forward), XMVectorGetZ(forward));
+
 			for (PARTICLE_SPAWN_DATA& spawnData : spawnList)
 			{
 				XMStoreFloat3(&spawnData.position, XMVector3TransformCoord(XMLoadFloat3(&spawnData.position), matWorld));

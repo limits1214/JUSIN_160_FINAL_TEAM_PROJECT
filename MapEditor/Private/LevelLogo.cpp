@@ -22,7 +22,9 @@ CLevelLogo::~CLevelLogo()
 
 HRESULT CLevelLogo::Initialize()
 {
-	Engine::CGameInstance::Get().GameObjectAllReset();
+	Engine::CGameInstance::Get().GameObjectAllResetExceptLayers({
+		"00_ENGINE_CINEMATIC_CAMERA"
+	});
 
 	/*{
 		CBackGround::UIOBJECT_DESC Desc{};

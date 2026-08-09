@@ -24,6 +24,7 @@ const static float SpecularIntensity = 1.f;
 #define SCREENY 720
 
 #define POINTLIGHT_RESOLUTION 512
+#define SPOTLIGHT_RESOLUTION  512
 
 struct DirectionalLight
 {

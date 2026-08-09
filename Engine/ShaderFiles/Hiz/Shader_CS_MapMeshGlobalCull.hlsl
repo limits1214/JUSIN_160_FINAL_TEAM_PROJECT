@@ -1,6 +1,10 @@
 struct MAPMESH_INSTANCE_DATA
 {
     float4x4 world;
+	float4 windParams; // strength, speed, frequency, bendExponent
+	float2 windHeightParams;
+	uint windType;
+	float padding;
 };
 
 struct MAPMESH_OCCLUSION_DATA

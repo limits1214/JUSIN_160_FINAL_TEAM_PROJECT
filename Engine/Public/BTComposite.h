@@ -28,15 +28,15 @@ protected:
 	}NODE_VALUE;
 public:
 	std::vector<UPtr<CBTRoot>>* Get_Nodes() { return &m_Actions; }
-	
-	virtual EVALUATE		Evaluate(_float fTimeDelta) { return EVALUATE::SUCCESS; }
-	void					Abort() override;
-	void					Tick(_float fTimeDelta);
-	void					ResetDebug() override;
+	HRESULT						Save_SubTree(const _string& SavePath) override;
+	virtual EVALUATE			Evaluate(_float fTimeDelta) { return EVALUATE::SUCCESS; }
+	void						Abort() override;
+	void						Tick(_float fTimeDelta);
+	void						ResetDebug() override;
 public:
-	HRESULT					Add_Node(uint32_t iIndex, UPtr<CBTRoot> pNode);
-	virtual nlohmann::json  Save_Node() override;
-	virtual HRESULT			Load_json(const nlohmann::json& j);
+	HRESULT						Add_Node(uint32_t iIndex, UPtr<CBTRoot> pNode);
+	virtual nlohmann::json		Save_Node() override;
+	virtual HRESULT				Load_json(const nlohmann::json& j);
 protected:
 	NODE_VALUE				m_NodeValue{};
 

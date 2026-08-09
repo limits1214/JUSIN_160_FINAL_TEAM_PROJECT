@@ -16,29 +16,167 @@ CGameObjectManager::~CGameObjectManager()
 
 void CGameObjectManager::UpdateGUI()
 {
-	ImGui::Begin("GameObject_Manager");
-
-	if (ImGui::TreeNode("FreeSlots"))
+	if (!ImGui::Begin("GameObject_Manager"))
 	{
-		for (const auto& i : m_FreeSlots)
+		ImGui::End();
+		return;
+	}
+
+	std::vector<uint32_t> vecFreeSlotReferences(m_Objects.size(), 0);
+	size_t iInvalidFreeSlotCount = 0;
+	for (const size_t iFreeSlotIndex : m_FreeSlots)
+	{
+		if (iFreeSlotIndex >= m_Objects.size())
 		{
-			ImGui::Text("%i", i);
+			++iInvalidFreeSlotCount;
+			continue;
+		}
+
+		++vecFreeSlotReferences[iFreeSlotIndex];
+		if (m_Objects[iFreeSlotIndex].IsOccupied() ||
+			vecFreeSlotReferences[iFreeSlotIndex] > 1)
+		{
+			++iInvalidFreeSlotCount;
+		}
+	}
+
+	std::string sFreeSlotsLabel = "FreeSlots (" + std::to_string(m_FreeSlots.size()) +
+		" Entries";
+	if (iInvalidFreeSlotCount > 0)
+	{
+		sFreeSlotsLabel += ", " + std::to_string(iInvalidFreeSlotCount) + " Invalid";
+	}
+	sFreeSlotsLabel += ")###FreeSlots";
+
+	if (ImGui::TreeNode(sFreeSlotsLabel.c_str()))
+	{
+		for (const size_t iFreeSlotIndex : m_FreeSlots)
+		{
+			if (iFreeSlotIndex >= m_Objects.size())
+			{
+				ImGui::TextColored(
+					ImVec4{ 1.f, 0.35f, 0.35f, 1.f },
+					"[Invalid] Index: %zu | Slot: Out Of Range",
+					iFreeSlotIndex);
+				continue;
+			}
+
+			const auto& slot = m_Objects[iFreeSlotIndex];
+			const uint32_t iReferenceCount = vecFreeSlotReferences[iFreeSlotIndex];
+			if (slot.IsOccupied() || iReferenceCount > 1)
+			{
+				ImGui::TextColored(
+					ImVec4{ 1.f, 0.35f, 0.35f, 1.f },
+					"[Invalid] Index: %zu | Gen: %u | Slot: %s | References: %u",
+					iFreeSlotIndex,
+					slot.GetGeneration(),
+					slot.IsOccupied() ? "Occupied" : "Empty",
+					iReferenceCount);
+			}
+			else
+			{
+				ImGui::Text(
+					"Index: %zu | Gen: %u | Slot: Empty",
+					iFreeSlotIndex,
+					slot.GetGeneration());
+			}
 		}
 
 		ImGui::TreePop();
 	}
-	if (ImGui::TreeNode("Slots"))
+
+	size_t iOccupiedSlotCount = 0;
+	size_t iEmptySlotCount = 0;
+	size_t iUntrackedEmptySlotCount = 0;
+	for (size_t i = 0; i < m_Objects.size(); ++i)
+	{
+		if (m_Objects[i].IsOccupied())
+		{
+			++iOccupiedSlotCount;
+		}
+		else
+		{
+			++iEmptySlotCount;
+			if (vecFreeSlotReferences[i] == 0)
+				++iUntrackedEmptySlotCount;
+		}
+	}
+
+	std::string sSlotsLabel = "Slots (" + std::to_string(m_Objects.size()) + " Total, " +
+		std::to_string(iOccupiedSlotCount) + " Occupied, " +
+		std::to_string(iEmptySlotCount) + " Empty";
+	if (iUntrackedEmptySlotCount > 0)
+	{
+		sSlotsLabel += ", " + std::to_string(iUntrackedEmptySlotCount) + " Untracked";
+	}
+	sSlotsLabel += ")###Slots";
+
+	if (ImGui::TreeNode(sSlotsLabel.c_str()))
 	{
 		for (size_t i = 0; i < m_Objects.size(); ++i)
 		{
-			std::string occ = m_Objects[i].IsOccupied() ? "" : "[Empty]";
-			std::string a = "idx_" + std::to_string(i) + "_gen_" + std::to_string(m_Objects[i].GetGeneration());
-			occ += a;
-			if (ImGui::TreeNode(occ.c_str()))
+			auto& slot = m_Objects[i];
+			const bool bOccupied = slot.IsOccupied();
+			const uint32_t iFreeReferenceCount = vecFreeSlotReferences[i];
+			const bool bInvalidState =
+				(bOccupied && iFreeReferenceCount > 0) ||
+				(!bOccupied && iFreeReferenceCount != 1);
+			const bool bManagedUpdateDisabled =
+				bOccupied && !slot.Get()->IsManagedUpdateEnabled();
+
+			std::string sSlotLabel = bOccupied ? "[Occupied] " : "[Empty] ";
+			sSlotLabel += "Index: " + std::to_string(i) +
+				" | Gen: " + std::to_string(slot.GetGeneration());
+			if (bOccupied)
 			{
-				if (m_Objects[i].IsOccupied())
+				sSlotLabel += " | Type: " + std::string{ slot.Get()->GetTypeString() } +
+					" | Tag: " + std::string{ slot.Get()->GetObjectTag() };
+			}
+			else
+			{
+				sSlotLabel += iFreeReferenceCount == 1 ?
+					" | FreeList: Registered" :
+					" | FreeList: Invalid";
+			}
+			sSlotLabel += "###Slot_" + std::to_string(i);
+
+			if (bInvalidState)
+				ImGui::PushStyleColor(ImGuiCol_Text, ImVec4{ 1.f, 0.35f, 0.35f, 1.f });
+			else if (bManagedUpdateDisabled)
+				ImGui::PushStyleColor(ImGuiCol_Text, ImGui::GetStyleColorVec4(ImGuiCol_TextDisabled));
+
+			const bool bSlotOpened = ImGui::TreeNode(sSlotLabel.c_str());
+
+			if (bInvalidState || bManagedUpdateDisabled)
+				ImGui::PopStyleColor();
+
+			if (bSlotOpened)
+			{
+				ImGui::Text("Slot Index: %zu", i);
+				ImGui::Text("Slot Generation: %u", slot.GetGeneration());
+				ImGui::Text("FreeList References: %u", iFreeReferenceCount);
+
+				if (bOccupied)
 				{
-					m_Objects[i].Get()->UpdateGUI();
+					CGameObject* pObj = slot.Get();
+					const CHandle hObject = pObj->GetHandle();
+					const std::string_view sObjectType = pObj->GetTypeString();
+					const std::string_view sObjectTag = pObj->GetObjectTag();
+					ImGui::Text(
+						"Object Type: %.*s",
+						static_cast<int>(sObjectType.size()),
+						sObjectType.data());
+					ImGui::Text(
+						"Object Tag: %.*s",
+						static_cast<int>(sObjectTag.size()),
+						sObjectTag.data());
+					ImGui::Text(
+						"Object Handle: Index %zu | Gen %u",
+						hObject.GetIndex(),
+						hObject.GetGeneration());
+					ImGui::Text("Pending Destroy: %s", pObj->GetPendingDestroy() ? "True" : "False");
+					ImGui::Separator();
+					pObj->UpdateGUI();
 				}
 
 				ImGui::TreePop();
@@ -48,37 +186,178 @@ void CGameObjectManager::UpdateGUI()
 		ImGui::TreePop();
 	}
 
-	if (ImGui::TreeNode("Layers"))
+	const bool bLayerFilterActive =
+		m_bGUIEnableSearchInput && m_GUISearchFilter[0] != '\0';
+	size_t iTotalValidLayerObjectCount = 0;
+	size_t iTotalInvalidLayerHandleCount = 0;
+	size_t iFilteredLayerItemCount = 0;
+	for (const auto& [sLayerName, vecHandles] : m_Layers)
 	{
-		for (uint32_t i = 0; i < m_Layers.size(); ++i)
+		for (const auto& handle : vecHandles)
 		{
-			if (ImGui::TreeNode(m_Layers[i].first.c_str()))
+			if (auto* pObj = GetGameObjectByHandle(handle))
 			{
-				for (const auto& handle : m_Layers[i].second)
+				++iTotalValidLayerObjectCount;
+				if (MatchesLayerObjectFilter(sLayerName, pObj))
+					++iFilteredLayerItemCount;
+			}
+			else
+			{
+				++iTotalInvalidLayerHandleCount;
+				if (m_bGUIShowInvalidLayerHandles &&
+					(MatchesGUIFilter(sLayerName) ||
+						MatchesGUIFilter(GetInvalidLayerHandleDebugText(handle))))
+				{
+					++iFilteredLayerItemCount;
+				}
+			}
+		}
+	}
+
+	std::string sLayersLabel = "Layers (";
+	if (bLayerFilterActive)
+	{
+		sLayersLabel += std::to_string(iFilteredLayerItemCount) + " Matches, ";
+	}
+	sLayersLabel += std::to_string(iTotalValidLayerObjectCount) + " Objects, " +
+		std::to_string(m_Layers.size()) + " Layers";
+	if (m_bGUIShowInvalidLayerHandles)
+	{
+		sLayersLabel += ", " + std::to_string(iTotalInvalidLayerHandleCount) + " Invalid";
+	}
+	sLayersLabel += ")###Layers";
+
+	if (ImGui::TreeNode(sLayersLabel.c_str()))
+	{
+		ImGui::Checkbox("Enable Search Input##Layers", &m_bGUIEnableSearchInput);
+		ImGui::SetNextItemWidth(-1);
+		ImGui::PushItemFlag(ImGuiItemFlags_Disabled, !m_bGUIEnableSearchInput);
+		ImGui::PushStyleVar(
+			ImGuiStyleVar_Alpha,
+			m_bGUIEnableSearchInput ? ImGui::GetStyle().Alpha :
+			ImGui::GetStyle().Alpha * 0.5f);
+		ImGui::InputTextWithHint(
+			"##layer_search",
+			"Search layer or object...",
+			m_GUISearchFilter,
+			sizeof(m_GUISearchFilter));
+		ImGui::PopStyleVar();
+		ImGui::PopItemFlag();
+		ImGui::Checkbox("Show Invalid Handles", &m_bGUIShowInvalidLayerHandles);
+		ImGui::Separator();
+
+		for (const auto& [sLayerName, vecHandles] : m_Layers)
+		{
+			const bool bLayerNameMatched = MatchesGUIFilter(sLayerName);
+			size_t iValidObjectCount = 0;
+			size_t iInvalidHandleCount = 0;
+			size_t iMatchedItemCount = 0;
+
+			for (const auto& handle : vecHandles)
+			{
+				if (auto* pObj = GetGameObjectByHandle(handle))
+				{
+					++iValidObjectCount;
+					if (bLayerNameMatched || MatchesLayerObjectFilter(sLayerName, pObj))
+						++iMatchedItemCount;
+				}
+				else
+				{
+					++iInvalidHandleCount;
+					if (m_bGUIShowInvalidLayerHandles &&
+						(bLayerNameMatched ||
+							MatchesGUIFilter(GetInvalidLayerHandleDebugText(handle))))
+					{
+						++iMatchedItemCount;
+					}
+				}
+			}
+
+			if (bLayerFilterActive && iMatchedItemCount == 0)
+				continue;
+
+			std::string sLayerLabel = sLayerName + " (";
+			if (bLayerFilterActive)
+			{
+				sLayerLabel += std::to_string(iMatchedItemCount) + " Matches, ";
+			}
+			sLayerLabel += std::to_string(iValidObjectCount) + " Objects";
+			if (m_bGUIShowInvalidLayerHandles)
+			{
+				sLayerLabel += ", " + std::to_string(iInvalidHandleCount) + " Invalid";
+			}
+			sLayerLabel += ")###Layer_" + sLayerName;
+
+			if (ImGui::TreeNode(sLayerLabel.c_str()))
+			{
+				for (const auto& handle : vecHandles)
 				{
 					if (auto* pObj = GetGameObjectByHandle(handle))
 					{
-						std::string s = std::to_string(handle.GetIndex()) + "_" + std::string{ pObj->GetObjectTag() };
-						if (ImGui::TreeNode(s.data()))
+						if (bLayerFilterActive && !bLayerNameMatched &&
+							!MatchesLayerObjectFilter(sLayerName, pObj))
+						{
+							continue;
+						}
+
+						std::string sObjectLabel = GetGameObjectDebugLabel(pObj);
+						sObjectLabel += "###LayerObject_" + std::to_string(handle.GetIndex()) + "_" +
+							std::to_string(handle.GetGeneration());
+
+						const bool bManagedUpdateDisabled = !pObj->IsManagedUpdateEnabled();
+						if (bManagedUpdateDisabled)
+							ImGui::PushStyleColor(ImGuiCol_Text, ImGui::GetStyleColorVec4(ImGuiCol_TextDisabled));
+
+						const bool bObjectOpened = ImGui::TreeNode(sObjectLabel.c_str());
+
+						if (bManagedUpdateDisabled)
+							ImGui::PopStyleColor();
+
+						if (bObjectOpened)
 						{
 							pObj->UpdateGUI();
-
 							ImGui::TreePop();
 						}
+					}
+					else if (m_bGUIShowInvalidLayerHandles)
+					{
+						const std::string sInvalidHandleText =
+							GetInvalidLayerHandleDebugText(handle);
+						if (bLayerFilterActive && !bLayerNameMatched &&
+							!MatchesGUIFilter(sInvalidHandleText))
+						{
+							continue;
+						}
+
+						ImGui::PushStyleColor(ImGuiCol_Text, ImVec4{ 1.f, 0.35f, 0.35f, 1.f });
+						ImGui::TextUnformatted(sInvalidHandleText.c_str());
+						ImGui::PopStyleColor();
 					}
 				}
 
 				ImGui::TreePop();
 			}
-
 		}
+
 		ImGui::TreePop();
 	}
 
 	if (ImGui::TreeNode("Tree"))
 	{
+		ImGui::Checkbox("Enable Search Input##Tree", &m_bGUIEnableSearchInput);
 		ImGui::SetNextItemWidth(-1);
-		ImGui::InputTextWithHint("##search", "Search...", m_GUISearchFilter, sizeof(m_GUISearchFilter));
+		ImGui::PushItemFlag(ImGuiItemFlags_Disabled, !m_bGUIEnableSearchInput);
+		ImGui::PushStyleVar(
+			ImGuiStyleVar_Alpha,
+			m_bGUIEnableSearchInput ? ImGui::GetStyle().Alpha :
+			ImGui::GetStyle().Alpha * 0.5f);
+		ImGui::InputTextWithHint(
+			"##search",
+			"Search...",
+			m_GUISearchFilter,
+			sizeof(m_GUISearchFilter));
+		ImGui::PopStyleVar();
+		ImGui::PopItemFlag();
 		ImGui::Separator();
 
 		for (const auto& rootHandle : m_TreePreparation)
@@ -91,10 +370,69 @@ void CGameObjectManager::UpdateGUI()
 
 	ImGui::End();
 }
+
+bool CGameObjectManager::MatchesGUIFilter(std::string_view sText) const
+{
+	if (!m_bGUIEnableSearchInput || m_GUISearchFilter[0] == '\0')
+		return true;
+
+	const std::string_view sFilter{ m_GUISearchFilter };
+	const auto iter = std::search(
+		sText.begin(),
+		sText.end(),
+		sFilter.begin(),
+		sFilter.end(),
+		[](char chLeft, char chRight)
+		{
+			return std::tolower(static_cast<unsigned char>(chLeft)) ==
+				std::tolower(static_cast<unsigned char>(chRight));
+		});
+
+	return iter != sText.end();
+}
+
+bool CGameObjectManager::MatchesLayerObjectFilter(
+	std::string_view sLayerName,
+	CGameObject* pObj) const
+{
+	if (MatchesGUIFilter(sLayerName))
+		return true;
+
+	return MatchesGUIFilter(GetGameObjectDebugLabel(pObj));
+}
+
+std::string CGameObjectManager::GetGameObjectDebugLabel(CGameObject* pObj) const
+{
+	const CHandle handle = pObj->GetHandle();
+	return "Index: " + std::to_string(handle.GetIndex()) +
+		" | Type: " + std::string{ pObj->GetTypeString() } +
+		" | Tag: " + std::string{ pObj->GetObjectTag() };
+}
+
+std::string CGameObjectManager::GetInvalidLayerHandleDebugText(const CHandle& handle) const
+{
+	const size_t iIndex = handle.GetIndex();
+	std::string sText = "[Invalid] Index: " + std::to_string(iIndex) +
+		" | Stored Gen: " + std::to_string(handle.GetGeneration());
+
+	if (iIndex >= m_Objects.size())
+	{
+		sText += " | Slot: Out Of Range";
+		return sText;
+	}
+
+	const auto& slot = m_Objects[iIndex];
+	sText += " | Current Gen: " + std::to_string(slot.GetGeneration());
+	sText += slot.IsOccupied() ? " | Slot: Occupied" : " | Slot: Empty";
+	return sText;
+}
+
 bool CGameObjectManager::MatchesFilter(CGameObject* pObj) const
 {
-	std::string label =
-		std::to_string(pObj->GetHandle().GetIndex()) + "_" + std::string{ pObj->GetObjectTag() };
+	if (!m_bGUIEnableSearchInput || m_GUISearchFilter[0] == '\0')
+		return true;
+
+	const std::string label = GetGameObjectDebugLabel(pObj);
 
 	std::string labelLower = label;
 	std::string filterLower = m_GUISearchFilter;
@@ -115,13 +453,25 @@ bool CGameObjectManager::MatchesFilter(CGameObject* pObj) const
 
 void CGameObjectManager::UpdateGUIDrawTreeNode(CGameObject* pObj)
 {
-	std::string label =
-		std::to_string(pObj->GetHandle().GetIndex()) + "_" + std::string{ pObj->GetObjectTag() };
+	const CHandle handle = pObj->GetHandle();
+	std::string label = GetGameObjectDebugLabel(pObj);
+	label += "###TreeObject_" + std::to_string(handle.GetIndex()) + "_" +
+		std::to_string(handle.GetGeneration());
 
-	if (m_GUISearchFilter[0] != '\0' && !MatchesFilter(pObj))
+	if (m_bGUIEnableSearchInput &&
+		m_GUISearchFilter[0] != '\0' && !MatchesFilter(pObj))
 		return;
 
-	if (ImGui::TreeNode(label.c_str()))
+	const bool bManagedUpdateDisabled = !pObj->IsManagedUpdateEnabled();
+	if (bManagedUpdateDisabled)
+		ImGui::PushStyleColor(ImGuiCol_Text, ImGui::GetStyleColorVec4(ImGuiCol_TextDisabled));
+
+	const bool bObjectOpened = ImGui::TreeNode(label.c_str());
+
+	if (bManagedUpdateDisabled)
+		ImGui::PopStyleColor();
+
+	if (bObjectOpened)
 	{
 		pObj->UpdateGUI();
 
@@ -144,34 +494,36 @@ void CGameObjectManager::UpdateGUIDrawTreeNode(CGameObject* pObj)
 
 void CGameObjectManager::FrameStart()
 {
-	{
-		ZoneScopedN("CGameObjectManager_FrameStart");
-	}
+	ZoneScopedN("CGameObjectManager_FrameStart");
 
 	if (!m_bTreeReBuild)
 	{
 		return;
 	}
 
-	m_TreePreparation.clear();
-	for (const auto& [_, Layer] : m_Layers)
 	{
-		for (const auto& handle : Layer)
+		ZoneScopedN("CGameObjectManager_RebuildTree");
+
+		m_TreePreparation.clear();
+		for (const auto& [_, Layer] : m_Layers)
 		{
-			if (auto* pObj = GetGameObjectByHandle(handle))
+			for (const auto& handle : Layer)
 			{
-				if (!pObj->GetParentNode())
+				if (auto* pObj = GetGameObjectByHandle(handle))
 				{
-					m_TreePreparation.push_back(pObj);
+					if (!pObj->GetParentNode())
+					{
+						m_TreePreparation.push_back(pObj);
+					}
 				}
 			}
 		}
-	}
 
-	m_Tree.clear();
-	for (const auto& pRootObj : m_TreePreparation)
-	{
-		MyTreeDFS(pRootObj, [&](auto pObj) {m_Tree.push_back(pObj); }, &m_DFSReserved);
+		m_Tree.clear();
+		for (const auto& pRootObj : m_TreePreparation)
+		{
+			MyTreeDFS(pRootObj, [&](auto pObj) {m_Tree.push_back(pObj); }, &m_DFSReserved);
+		}
 	}
 
 	// TODO: 플래그 완성되면
@@ -180,29 +532,43 @@ void CGameObjectManager::FrameStart()
 
 void CGameObjectManager::FrameEnd()
 {
-	if (m_bAllResetCalled)
+	ZoneScopedN("CGameObjectManager_FrameEnd");
+	const _bool bProcessBatchReset = m_bBatchResetPending;
+	std::unordered_set<std::string> resetTargetLayers{};
+	if (bProcessBatchReset)
 	{
-		m_bAllResetCalled = false;
-		AllObjectsReset();
+		// [LSY] 이번 FrameEnd에서 처리할 요청을 분리해 이후 새로 들어오는 요청과 섞이지 않게 한다.
+		m_bBatchResetPending = false;
+		resetTargetLayers = std::move(m_PendingResetTargetLayers);
+		m_PendingResetTargetLayers.clear();
+	}
+
+	_bool bAnyObjectDestroyed{};
+	if (bProcessBatchReset)
+	{
+		ZoneScopedN("CGameObjectManager_DestroyAllPendingObjects");
+		bAnyObjectDestroyed = DestroyAllPendingObjects();
 	}
 	else
 	{
-		for (auto iter = m_Tree.rbegin(); iter != m_Tree.rend(); ++iter)
-		{
-			CGameObject* pObj = *iter;
-			CHandle hObj = pObj->GetHandle();
+		ZoneScopedN("CGameObjectManager_DestroyPendingObjectsInTree");
+		bAnyObjectDestroyed = DestroyPendingObjectsInTree();
+	}
 
-			// double check 필요 없을듯
-			//if (GetGameObjectByHandle(hObj) == pObj)
-			//{
-			if (pObj->GetPendingDestroy())
-			{
-				m_bTreeReBuild = true;
-				m_Objects[hObj.GetIndex()].Reset();
-				m_FreeSlots.push_back(hObj.GetIndex());
-			}
-			//}
-		}
+	if (bAnyObjectDestroyed)
+	{
+		m_bTreeReBuild = true;
+	}
+
+	if (bAnyObjectDestroyed || bProcessBatchReset)
+	{
+		RemoveInvalidLayerHandles();
+	}
+
+	if (bProcessBatchReset &&
+		RemoveEmptyResetTargetLayers(resetTargetLayers))
+	{
+		SortLayer();
 	}
 }
 
@@ -233,6 +599,9 @@ std::optional<CHandle> CGameObjectManager::GetFreeHandle()
 
 std::optional<CHandle> CGameObjectManager::AddGameObjectToLayer(const StringID& siProtoGroupTag, const StringID& siPrototypeTag, std::string_view sLayerName, void* pArg)
 {
+	const _bool bTracyConnected = TracyIsConnected;
+	ZoneNamedN(tObjectZone, "CGameObjectManager_AddGameObjectToLayer", bTracyConnected);
+
 	auto pDesc = static_cast<CGameObject::GAMEOBJECT_DESC*>(pArg);
 	auto allocHandle = GetFreeHandle();
 	if (!allocHandle)
@@ -251,6 +620,11 @@ std::optional<CHandle> CGameObjectManager::AddGameObjectToLayer(const StringID& 
 	}
 
 	auto objHandle = pGameObject->GetHandle();
+	if (bTracyConnected)
+	{
+		const std::string sDebugLabel = GetGameObjectDebugLabel(pGameObject.get());
+		ZoneNameV(tObjectZone, sDebugLabel.data(), sDebugLabel.size());
+	}
 
 	//auto iter = std::find(m_FreeSlots.begin(), m_FreeSlots.end(), objHandle.GetIndex());
 	//if (iter != m_FreeSlots.end())
@@ -358,13 +732,21 @@ void CGameObjectManager::DelLayer(std::string_view sLayerName)
 
 void CGameObjectManager::FixedUpdate(_float fTimeDelta)
 {
-	{
-		ZoneScopedN("CGameObjectManager_FixedUpdate");
-	}
+	ZoneScopedN("CGameObjectManager_FixedUpdate");
+	const _bool bTracyConnected = TracyIsConnected;
+
 	for (auto& pObj : m_Tree)
 	{
-		if (!pObj->GetPendingDestroy())
+		if (!pObj->GetPendingDestroy() &&
+			pObj->IsManagedUpdateEnabled())
 		{
+			ZoneNamedN(tObjectZone, "GameObject_FixedUpdate", bTracyConnected);
+			if (bTracyConnected)
+			{
+				const std::string sDebugLabel = GetGameObjectDebugLabel(pObj);
+				ZoneNameV(tObjectZone, sDebugLabel.data(), sDebugLabel.size());
+			}
+
 			pObj->FixedUpdate(fTimeDelta);
 		}
 	}
@@ -372,10 +754,21 @@ void CGameObjectManager::FixedUpdate(_float fTimeDelta)
 
 void CGameObjectManager::PriorityUpdate(_float fTimeDelta)
 {
+	ZoneScopedN("CGameObjectManager_PriorityUpdate");
+	const _bool bTracyConnected = TracyIsConnected;
+
 	for (auto& pObj : m_Tree)
 	{
-		if (!pObj->GetPendingDestroy())
+		if (!pObj->GetPendingDestroy() &&
+			pObj->IsManagedUpdateEnabled())
 		{
+			ZoneNamedN(tObjectZone, "GameObject_PriorityUpdate", bTracyConnected);
+			if (bTracyConnected)
+			{
+				const std::string sDebugLabel = GetGameObjectDebugLabel(pObj);
+				ZoneNameV(tObjectZone, sDebugLabel.data(), sDebugLabel.size());
+			}
+
 			pObj->PriorityUpdate(fTimeDelta);
 		}
 	}
@@ -383,10 +776,21 @@ void CGameObjectManager::PriorityUpdate(_float fTimeDelta)
 
 void CGameObjectManager::Update(_float fTimeDelta)
 {
+	ZoneScopedN("CGameObjectManager_Update");
+	const _bool bTracyConnected = TracyIsConnected;
+
 	for (auto& pObj : m_Tree)
 	{
-		if (!pObj->GetPendingDestroy())
+		if (!pObj->GetPendingDestroy() &&
+			pObj->IsManagedUpdateEnabled())
 		{
+			ZoneNamedN(tObjectZone, "GameObject_Update", bTracyConnected);
+			if (bTracyConnected)
+			{
+				const std::string sDebugLabel = GetGameObjectDebugLabel(pObj);
+				ZoneNameV(tObjectZone, sDebugLabel.data(), sDebugLabel.size());
+			}
+
 			pObj->Update(fTimeDelta);
 		}
 	}
@@ -394,10 +798,21 @@ void CGameObjectManager::Update(_float fTimeDelta)
 
 void CGameObjectManager::LateUpdate(_float fTimeDelta)
 {
+	ZoneScopedN("CGameObjectManager_LateUpdate");
+	const _bool bTracyConnected = TracyIsConnected;
+
 	for (auto& pObj : m_Tree)
 	{
-		if (!pObj->GetPendingDestroy())
+		if (!pObj->GetPendingDestroy() &&
+			pObj->IsManagedUpdateEnabled())
 		{
+			ZoneNamedN(tObjectZone, "GameObject_LateUpdate", bTracyConnected);
+			if (bTracyConnected)
+			{
+				const std::string sDebugLabel = GetGameObjectDebugLabel(pObj);
+				ZoneNameV(tObjectZone, sDebugLabel.data(), sDebugLabel.size());
+			}
+
 			pObj->LateUpdate(fTimeDelta);
 		}
 	}
@@ -428,49 +843,185 @@ UPtr<CGameObjectManager> CGameObjectManager::Create()
 // 그래서 지우기 전에 먼저 이거 호출
 void CGameObjectManager::AllReset()
 {
-	for (auto& pObj : m_Objects)
+	RequestResetByLayers({}, RESET_LAYER_MODE::EXCLUDE);
+}
+
+size_t CGameObjectManager::ResetObjectsInLayers(
+	std::span<const std::string_view> layerNames)
+{
+	return RequestResetByLayers(layerNames, RESET_LAYER_MODE::INCLUDE_ONLY);
+}
+
+size_t CGameObjectManager::ResetAllObjectsExceptLayers(
+	std::span<const std::string_view> excludedLayerNames)
+{
+	return RequestResetByLayers(excludedLayerNames, RESET_LAYER_MODE::EXCLUDE);
+}
+
+size_t CGameObjectManager::RequestResetByLayers(
+	std::span<const std::string_view> layerNames,
+	RESET_LAYER_MODE eMode)
+{
+	ZoneScopedN("CGameObjectManager_RequestResetByLayers");
+
+	// [LSY] 전달받은 레이어와 그 레이어가 소유한 유효 오브젝트 슬롯을 빠르게 판별하기 위한 표식이다.
+	std::vector<uint8_t> matchedSlots(m_Objects.size(), 0);
+	std::vector<uint8_t> matchedLayers(m_Layers.size(), 0);
+
+	// [LSY] 존재하는 레이어만 찾고, 세대까지 유효한 핸들의 슬롯만 제거 후보로 표시한다.
+	for (const std::string_view layerName : layerNames)
 	{
-		if (pObj.IsOccupied() && !pObj.Get()->IsPersistent())
+		const auto layerIter = m_LookupLayers.find(layerName);
+		if (layerIter == m_LookupLayers.end())
+			continue;
+
+		const size_t layerIndex = layerIter->second;
+		matchedLayers[layerIndex] = 1;
+
+		const auto& handles = m_Layers[layerIndex].second;
+		for (const CHandle& handle : handles)
 		{
-			pObj.Get()->SetPendingDestroy();
+			if (GetGameObjectByHandle(handle))
+			{
+				matchedSlots[handle.GetIndex()] = 1;
+			}
 		}
 	}
-	m_bTreeReBuild = true;
-	m_bAllResetCalled = true;
-	//FrameStart();
-	//FrameEnd();
+
+	// [LSY] FrameEnd에서 비어 있을 때 제거할 실제 리셋 대상 레이어 이름을 보관한다.
+	_bool bHasResetTargetLayer = false;
+	for (size_t i = 0; i < m_Layers.size(); ++i)
+	{
+		const _bool bLayerMatched = matchedLayers[i] != 0;
+		const _bool bResetTargetLayer =
+			eMode == RESET_LAYER_MODE::INCLUDE_ONLY ?
+			bLayerMatched : !bLayerMatched;
+
+		if (bResetTargetLayer)
+		{
+			m_PendingResetTargetLayers.emplace(m_Layers[i].first);
+			bHasResetTargetLayer = true;
+		}
+	}
+
+	// [LSY] 모드에 따라 선택된 오브젝트를 실제 삭제하지 않고 PendingDestroy 상태로 예약한다.
+	size_t resetObjectCount{};
+	for (size_t i = 0; i < m_Objects.size(); ++i)
+	{
+		auto& slot = m_Objects[i];
+		if (!slot.IsOccupied())
+			continue;
+
+		CGameObject* pObject = slot.Get();
+		const _bool bMatched = matchedSlots[i] != 0;
+		const _bool bShouldReset =
+			eMode == RESET_LAYER_MODE::INCLUDE_ONLY ? bMatched : !bMatched;
+
+		if (!bShouldReset || pObject->GetPendingDestroy())
+			continue;
+
+		pObject->SetPendingDestroy();
+		++resetObjectCount;
+	}
+
+	if (resetObjectCount > 0)
+	{
+		// [LSY] 런타임 업데이트 중 순회하고 있을 수 있는 기존 트리는 즉시 비우지 않는다.
+		// PendingDestroy 오브젝트는 후속 업데이트에서 제외하고, FrameEnd 삭제 후 다음 FrameStart에 재구성한다.
+		m_bTreeReBuild = true;
+	}
+
+	if (resetObjectCount > 0 || bHasResetTargetLayer)
+	{
+		m_bBatchResetPending = true;
+	}
+
+	return resetObjectCount;
+}
+
+_bool CGameObjectManager::DestroyAllPendingObjects()
+{
+	ZoneScopedN("CGameObjectManager_DestroyAllPendingObjectsInternal");
+	const _bool bTracyConnected = TracyIsConnected;
+	_bool bAnyObjectDestroyed = false;
+
+	for (auto& slot : m_Objects)
+	{
+		if (!slot.IsOccupied())
+			continue;
+
+		CGameObject* pObject = slot.Get();
+		if (!pObject->GetPendingDestroy())
+			continue;
+
+		ZoneNamedN(tObjectZone, "GameObject_Destroy", bTracyConnected);
+		if (bTracyConnected)
+		{
+			const std::string sDebugLabel = GetGameObjectDebugLabel(pObject);
+			ZoneNameV(tObjectZone, sDebugLabel.data(), sDebugLabel.size());
+		}
+
+		const CHandle hObject = pObject->GetHandle();
+		slot.Reset();
+		m_FreeSlots.push_back(hObject.GetIndex());
+		bAnyObjectDestroyed = true;
+	}
+
+	return bAnyObjectDestroyed;
+}
+
+_bool CGameObjectManager::DestroyPendingObjectsInTree()
+{
+	const _bool bTracyConnected = TracyIsConnected;
+	_bool bAnyObjectDestroyed = false;
+
+	for (auto iter = m_Tree.rbegin(); iter != m_Tree.rend(); ++iter)
+	{
+		CGameObject* pObject = *iter;
+		if (!pObject->GetPendingDestroy())
+			continue;
+
+		ZoneNamedN(tObjectZone, "GameObject_Destroy", bTracyConnected);
+		if (bTracyConnected)
+		{
+			const std::string sDebugLabel = GetGameObjectDebugLabel(pObject);
+			ZoneNameV(tObjectZone, sDebugLabel.data(), sDebugLabel.size());
+		}
+
+		const CHandle hObject = pObject->GetHandle();
+		m_Objects[hObject.GetIndex()].Reset();
+		m_FreeSlots.push_back(hObject.GetIndex());
+		bAnyObjectDestroyed = true;
+	}
+
+	return bAnyObjectDestroyed;
+}
+
+void CGameObjectManager::RemoveInvalidLayerHandles()
+{
+	ZoneScopedN("CGameObjectManager_RemoveInvalidLayerHandles");
 
 	for (auto& [_, handles] : m_Layers)
 	{
 		std::erase_if(handles, [this](const CHandle& handle)
 		{
-			const auto* pObject = GetGameObjectByHandle(handle);
-			return pObject == nullptr || !pObject->IsPersistent();
+			return GetGameObjectByHandle(handle) == nullptr;
 		});
 	}
-	std::erase_if(m_Layers, [](const auto& layer)
-	{
-		return layer.second.empty();
-	});
-	SortLayer();
-	m_TreePreparation.clear();
-	m_Tree.clear();
 }
 
-void CGameObjectManager::AllObjectsReset()
+_bool CGameObjectManager::RemoveEmptyResetTargetLayers(
+	const std::unordered_set<std::string>& resetTargetLayers)
 {
-	for (auto& pObj : m_Objects)
-	{
-		if (pObj.IsOccupied())
+	const size_t removedLayerCount = std::erase_if(
+		m_Layers,
+		[&resetTargetLayers](const auto& layer)
 		{
-			CHandle hObj = pObj.Get()->GetHandle();
-			if (pObj.Get()->GetPendingDestroy())
-			{
-				m_Objects[hObj.GetIndex()].Reset();
-				m_FreeSlots.push_back(hObj.GetIndex());
-			}
-		}
-	}
+			return layer.second.empty() &&
+				resetTargetLayers.contains(layer.first);
+		});
+
+	return removedLayerCount > 0;
 }
 
 void CGameObjectManager::Free()

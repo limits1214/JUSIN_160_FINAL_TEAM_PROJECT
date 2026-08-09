@@ -16,6 +16,24 @@ CBTComposite::~CBTComposite()
 
 }
 
+HRESULT CBTComposite::Save_SubTree(const _string& SavePath)
+{
+	if (m_Actions.empty() || m_Actions.front() == nullptr)
+	{
+		MSG_BOX("Nob Front null");
+		return E_FAIL;
+	}
+
+	nlohmann::json j;
+	j = Save_Node();
+
+	std::ofstream path(SavePath);
+	path << j.dump(4);
+	path.close();
+
+	return S_OK;
+}
+
 void CBTComposite::Abort()
 {
 }

@@ -28,7 +28,9 @@ CLevelLoading::~CLevelLoading()
 
 HRESULT CLevelLoading::Initialize()
 {
-	Engine::CGameInstance::Get().GameObjectAllReset();
+	Engine::CGameInstance::Get().GameObjectAllResetExceptLayers({
+		"00_ENGINE_CINEMATIC_CAMERA"
+	});
 
 
 	return S_OK;
