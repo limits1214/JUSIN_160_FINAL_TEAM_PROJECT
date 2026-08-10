@@ -7,7 +7,6 @@ namespace Engine
 		CAMERAS,
 		PHYSX,
 		UI,
-		LUA,
 	};
 
 	enum class ES_EngineProtoComponent
@@ -17,7 +16,6 @@ namespace Engine
 		Prototype_Component_ModelInstance,
 		Prototype_Component_StaticModelInstance,
 		Prototype_Component_Animator,
-		Prototype_Component_ComLuaScript,
 		Prototype_Component_ComCharacterMoveIntent,
 		Prototype_Component_ComCharacterMotor,
 		Prototype_Component_ComSound,

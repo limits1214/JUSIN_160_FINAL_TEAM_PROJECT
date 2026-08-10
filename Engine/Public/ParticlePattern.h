@@ -13,6 +13,8 @@ namespace ParticlePattern
 	std::vector<PARTICLE_SPAWN_DATA> MakeSpiral(const SSpiralParam& p);
 	std::vector<PARTICLE_SPAWN_DATA> MakeStraightGround(const SStraightGroundParam& p);
 	std::vector<PARTICLE_SPAWN_DATA> MakeSmoke(const SMOKE& param);
-	std::vector<PARTICLE_SPAWN_DATA> MakeLightning(const SLightning& p); 
+	std::vector<PARTICLE_SPAWN_DATA> MakeLightning(const SLightning& p);
+	std::vector<PARTICLE_SPAWN_DATA> MakeCone(const SConeParam& param);
+
 }
 NS_END

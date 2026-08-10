@@ -47,7 +47,6 @@ struct SPAWN_COMMAND;
 class CAction_Manager;
 class CDbgLineRender;
 class CSerializeManager;
-class ILuaScriptRelodable;
 class CModel_Instance_Manager;
 class CMapMeshInstancingRenderer;
 class CResStaticModel;
@@ -342,6 +341,9 @@ public:
 
 	VOID	Notify_StaticShadowSceneChanged(const BoundingBox& ChangedBounds);
 
+	VOID	Bind_VolumetricLocalLightResources();
+	VOID	UnBind_VolumetricLocalLightResources();
+
 	_bool		Evaluate_DirectionalLightCount();
 
 	XMMATRIX	Get_CascadeShadowViewProj(uint32_t _Index);
@@ -606,37 +608,7 @@ public:
 #pragma endregion
 
 #pragma region LUA_MANAGER
-	HRESULT LuaScriptExecute(const std::string& script, const sol::environment& env, const std::string& chunkName = "InlineScript");
-	HRESULT LuaScriptExecute(const std::string& script, const std::string& chunkName = "InlineScript");
-	sol::environment LuaCreateEnvironment();
-
-	sol::protected_function LuaCacheFunction(const std::string& funcName);
-	sol::protected_function LuaCacheFunction(const sol::environment& env, const std::string& funcName);
-
-	template<typename... Args>
-	bool LuaCallCacheFunction(const sol::protected_function& func, Args&&... args)
-	{ return m_pLuaManager->CallCacheFunction(func, std::forward<Args>(args)...); }
-
-	template<typename T>
-	void LuaSetValue(std::string_view name, T&& value)
-	{ m_pLuaManager->SetValue(name, value); }
-
-	template<typename T>
-	bool LuaGetValue(std::string_view name, T& outValue)
-	{ return m_pLuaManager->GetValue(name, outValue); }
-
-	HRESULT LuaCompile(const std::string& script);
-
-	bool LuaIsEnvValid(const sol::environment& env) const;
-	bool LuaHasValue(const sol::environment& env, std::string_view name) const;
-	void LuaRemoveValue(sol::environment& env, std::string_view name);
-	void LuaEnvDump(const sol::environment& env) const;
-	void LuaEnvClear(sol::environment& env);
-	void LuaRegisterComponent(const std::string& path, ILuaScriptRelodable* pComp);
-	void LuaUnregisterComponent(const std::string& path, ILuaScriptRelodable* pComp);
-	void LuaRegisterExtension(std::function<void(sol::state&)> extensionFunc);
-	template<typename T>
-	void LuaRegisterType() { m_pLuaManager->RegisterType<T>(); }
+	CLuaManager* GetLuaManager() const { return m_pLuaManager.get(); }
 #pragma endregion
 
 public:

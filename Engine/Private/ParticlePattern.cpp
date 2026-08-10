@@ -261,93 +261,53 @@ std::vector<PARTICLE_SPAWN_DATA> ParticlePattern::MakeLightning(const SLightning
 	return spawnList;
 }
 
-//std::vector<PARTICLE_SPAWN_DATA> ParticlePattern::MakeStairs(
-//    const _float3& vStartPos,
-//    uint32_t iStepCount,
-//    _float fStepWidth,
-//    _float fStepHeight,
-//    _float fStepDepth,
-//    _float fLife,
-//    const _float4& color,
-//    const _float4& emissive)
-//{
-//    std::vector<PARTICLE_SPAWN_DATA> spawnList(iStepCount);
-//    for (uint32_t i = 0; i < iStepCount; ++i)
-//    {
-//        PARTICLE_SPAWN_DATA& s = spawnList[i];
-//        s.position = _float3(
-//            vStartPos.x,
-//            vStartPos.y + fStepHeight * i,
-//            vStartPos.z + fStepDepth * i
-//        );
-//        s.velocity = _float3(0.f, 0.f, 0.f);
-//        s.life = fLife;
-//        s.fSize = fStepWidth;
-//        s.color = color;
-//        s.emissive = emissive;
-//    }
-//    return spawnList;
-//}
 
-//std::vector<PARTICLE_SPAWN_DATA> ParticlePattern::MakeCircle(
-//    const _float3& vCenter,
-//    _float fRadius,
-//    uint32_t iCount,
-//    _float fSize,
-//    _float fLife,
-//    const _float4& color,
-//    const _float4& emissive,
-//    _float fYOffset)
-//{
-//    std::vector<PARTICLE_SPAWN_DATA> spawnList(iCount);
-//    if (iCount == 0)
-//        return spawnList;
-//
-//    const _float fAngleStep = XM_2PI / (_float)iCount;
-//    for (uint32_t i = 0; i < iCount; ++i)
-//    {
-//        PARTICLE_SPAWN_DATA& s = spawnList[i];
-//        _float fAngle = fAngleStep * (_float)i;
-//        s.position = _float3(
-//            vCenter.x + cosf(fAngle) * fRadius,
-//            vCenter.y + fYOffset,
-//            vCenter.z + sinf(fAngle) * fRadius
-//        );
-//        s.velocity = _float3(0.f, 0.f, 0.f);
-//        s.life = fLife;
-//        s.fSize = fSize;
-//        s.color = color;
-//        s.emissive = emissive;
-//    }
-//    return spawnList;
-//}
-//
-//std::vector<PARTICLE_SPAWN_DATA> ParticlePattern::MakeStrightGround(const _float3& vStartPos, uint32_t row, uint32_t col, _float offSetX, _float offsetZ, 
-//	_float spawnDelay, _float fSize, _float fLife, const _float4& color, const _float4& emissive)
-//{
-//	std::vector<PARTICLE_SPAWN_DATA> spawnList(row * col);
-//	_float center = (_float)(col - 1) * 0.5f; // 짝수/홀수 모두 대칭
-//
-//	for (uint32_t r = 0; r < row; ++r)
-//	{
-//		for (uint32_t c = 0; c < col; ++c)
-//		{
-//			PARTICLE_SPAWN_DATA& s = spawnList[r * col + c];
-//
-//			_float dx = (_float)c - center;
-//			s.position = _float3(
-//				vStartPos.x + offSetX * dx,
-//				vStartPos.y,
-//				vStartPos.z + offsetZ * (_float)r
-//			);
-//
-//			s.velocity = _float3(Randf(-2.f,2.f), Randf(1.f, 3.f), Randf(0.f, 2.f));
-//			s.life = fLife;
-//			s.fSize = fSize;
-//			s.color = color;
-//			s.emissive = emissive;
-//			s.spawnDelay = spawnDelay * (_float)r;
-//		}
-//	}
-//	return spawnList;
-//}
+std::vector<PARTICLE_SPAWN_DATA> ParticlePattern::MakeCone(const SConeParam& param)
+{
+	std::vector<PARTICLE_SPAWN_DATA> spawnList(param.iCount);
+	const _float cosMaxAngle = cosf(XMConvertToRadians(param.fAngleDegree));
+
+	for (uint32_t i = 0; i < param.iCount; ++i)
+	{
+		const _float randomAngle = E::Randf(0.f, XM_2PI);
+		const _float randomRatio = E::Randf(0.f, 1.f);
+		const _float cosTheta = 1.f - randomRatio * (1.f - cosMaxAngle);
+		const _float sinTheta = sqrtf(std::max(0.f, 1.f - cosTheta * cosTheta));
+		const _float speed = E::Randf(param.fSpeedMin, param.fSpeedMax);
+
+		_vector vDirection = XMVectorSet(cosf(randomAngle) * sinTheta, sinf(randomAngle) * sinTheta, cosTheta, 0.f);
+
+		PARTICLE_SPAWN_DATA& spawnData = spawnList[i];
+		spawnData.position = param.vCenter;
+		XMStoreFloat3(&spawnData.velocity, vDirection * speed);
+		spawnData.life = param.fLife;
+		
+		if (param.bRandomSize) {
+			spawnData.fSize = _float3(E::Randf(param.fSizeMin.x, param.fSizeMax.x), E::Randf(param.fSizeMin.y, param.fSizeMax.y), E::Randf(param.fSizeMin.z, param.fSizeMax.z));
+		}
+		else {
+			spawnData.fSize = param.fSize;
+		}
+		spawnData.fEndSize = param.fEndSize;
+		spawnData.color = param.color;
+
+		spawnData.emissive = _float4(param.emissive.x, param.emissive.y, param.emissive.z, param.startIntensity);
+		spawnData.endEmissive = _float4(param.endEmissive.x, param.endEmissive.y, param.endEmissive.z, param.endIntensity);
+		spawnData.originalPosition = spawnData.position;
+		spawnData.originalVelocity = spawnData.velocity;
+		spawnData.iBehaviorType = param.iBehaviorType;
+
+		spawnData.rotation = param.bRandomRot
+			? _float4(XMConvertToRadians(Randf(param.vMinRot.x, param.vMaxRot.x)),
+				XMConvertToRadians(Randf(param.vMinRot.y, param.vMaxRot.y)),
+				XMConvertToRadians(Randf(param.vMinRot.z, param.vMaxRot.z)),
+				1.f)
+			: _float4(XMConvertToRadians(param.vRotation.x),
+				XMConvertToRadians(param.vRotation.y),
+				XMConvertToRadians(param.vRotation.z),
+				1.f);
+
+	}
+
+	return spawnList;
+}

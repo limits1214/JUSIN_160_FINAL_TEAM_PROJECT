@@ -250,7 +250,6 @@
     <ClInclude Include="..\Public\CinematicCamera.h" />
     <ClInclude Include="..\Public\CinematicSystem.h" />
     <ClInclude Include="..\Public\CinematicTypes.h" />
-    <ClInclude Include="..\public\ComLuaScript.h" />
     <ClInclude Include="..\public\ComPxCharacterController.h" />
     <ClInclude Include="..\Public\ComCharacterMoveIntent.h" />
     <ClInclude Include="..\Public\ComCharacterMotor.h" />
@@ -309,7 +308,7 @@
     <ClInclude Include="..\Public\MapMeshInstancingRenderer.h" />
     <ClInclude Include="..\Public\Model_Instance_Manager.h" />
     <ClInclude Include="..\public\GameInstanceInitLoader.h" />
-    <ClInclude Include="..\public\LuaEnv.h" />
+    <ClInclude Include="..\public\LuaScriptInstance.h" />
     <ClInclude Include="..\public\LuaManager.h" />
     <ClInclude Include="..\public\LuaWatcher.h" />
     <ClInclude Include="..\Public\ParticleParamImGui.h" />
@@ -468,7 +467,6 @@
     <ClInclude Include="..\Public\SerializerInterface.h" />
     <ClInclude Include="..\Public\SerDeTestCase.h" />
     <ClInclude Include="..\Public\SerializeResult.h" />
-    <ClInclude Include="..\Public\ILuaScriptRelodable.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="pch.h" />
   </ItemGroup>
@@ -597,7 +595,6 @@
     <ClCompile Include="..\Private\CinematicAsset.cpp" />
     <ClCompile Include="..\Private\CinematicCamera.cpp" />
     <ClCompile Include="..\Private\CinematicSystem.cpp" />
-    <ClCompile Include="..\private\ComLuaScript.cpp" />
     <ClCompile Include="..\private\ComPxCharacterController.cpp" />
     <ClCompile Include="..\Private\ComCharacterMoveIntent.cpp" />
     <ClCompile Include="..\Private\ComCharacterMotor.cpp" />
@@ -664,8 +661,10 @@
     <ClCompile Include="..\Private\MapMeshInstancingRenderer.cpp" />
     <ClCompile Include="..\Private\Model_Instance_Manager.cpp" />
     <ClCompile Include="..\private\GameInstanceInitLoader.cpp" />
-    <ClCompile Include="..\private\LuaEnv.cpp" />
+    <ClCompile Include="..\private\LuaScriptInstance.cpp" />
     <ClCompile Include="..\private\LuaManager.cpp" />
+    <ClCompile Include="..\private\LuaBindingsCore.cpp" />
+    <ClCompile Include="..\private\LuaBindingsEngine.cpp" />
     <ClCompile Include="..\private\LuaWatcher.cpp" />
     <ClCompile Include="..\private\ParticleShaderCache.cpp" />
     <ClCompile Include="..\Private\ShaderWatcher.cpp" />

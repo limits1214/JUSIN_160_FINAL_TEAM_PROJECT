@@ -17,6 +17,7 @@ private:
 	static HRESULT MonsterLoad_InWorker();
 	static _bool UILoad_InWorker();
 
+
 private:
 	constexpr static LEVEL CURR_LEVEL = LEVEL::LAST_BOSS_RANROK;
 };

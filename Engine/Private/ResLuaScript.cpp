@@ -1,13 +1,12 @@
 #include "pch.h"
 #include "ResLuaScript.h"
 #include "GameInstance.h"
+#include "LuaManager.h"
 
 NS_USING(Engine)
 
 HRESULT CResLuaScript::Load(const std::any& arg)
 {
-	auto desc = std::any_cast<CResLuaScript::DESC>(&arg);
-
 	if (m_eState == STATE::LOADED)
 	{
 		return S_OK;
@@ -18,16 +17,20 @@ HRESULT CResLuaScript::Load(const std::any& arg)
 
 		std::ifstream file(m_sPath, std::ios::binary);
 		if (!file.is_open())
+		{
+			m_Source.clear();
+			m_eState = STATE::LOADFAIL;
 			return E_FAIL;
+		}
 
 		m_Source.assign(
 			std::istreambuf_iterator<char>(file),
 			std::istreambuf_iterator<char>());
 
-		if (CGameInstance::Get().LuaCompile(m_Source))
+		auto pLuaManager = CGameInstance::Get().GetLuaManager();
+		if (!pLuaManager || FAILED(pLuaManager->Compile(m_Source)))
 		{
-			MSG_BOX("Lua Compile Failed See Log");
-			m_Source = "";
+			m_Source.clear();
 			m_eState = STATE::LOADFAIL;
 			return E_FAIL;
 		}
@@ -39,6 +42,7 @@ HRESULT CResLuaScript::Load(const std::any& arg)
 
 HRESULT CResLuaScript::Unload(const std::any& arg)
 {
+	m_Source.clear();
 	m_eState = STATE::UNLOAD;
 	return S_OK;
 }
@@ -70,9 +74,15 @@ SPtr<CResLuaScript> CResLuaScript::CreateAndLoad(const _string& sPath)
 
 HRESULT CResLuaScript::Reload()
 {
-	Unload();
-	Load();
+	std::string PreviousSource = m_Source;
+	const STATE ePreviousState = m_eState.load();
 
-	//OutputDebugStringA(("[Lua] Reload Success: " + GetPath() + "\n").c_str());
-	return S_OK;
+	m_eState = STATE::UNLOAD;
+	if (SUCCEEDED(Load()))
+		return S_OK;
+
+	// 핫리로드 실패 시 현재 실행 중인 인스턴스가 마지막 정상 소스를 계속 사용한다.
+	m_Source = std::move(PreviousSource);
+	m_eState = ePreviousState;
+	return E_FAIL;
 }

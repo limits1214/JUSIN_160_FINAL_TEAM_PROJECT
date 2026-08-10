@@ -62,8 +62,20 @@ EVALUATE CBTAttackAnimation::Evaluate(_float fTimeDelta)
 				if (!m_bTrigger && !m_bActiveSkill)
 					m_bActiveSkill = Active_Skill();
 				
-				if (m_bTrigger && !m_bActiveSkill && fAnimRatio >= m_fSkillRatio.x)
-					m_bActiveSkill = ActiveTriggerSkill();
+				if (m_bTrigger)
+				{
+					for (auto& iter :  m_Skills)
+					{
+						if (true == iter.bTrigger || iter.eSkill == ATTMON::END)
+							continue;
+						if (fAnimRatio >= iter.fRatio)
+						{
+							iter.bTrigger = true;
+							ActiveTriggerSkill(iter.eSkill);
+						}
+							
+					}
+				}
 				
 				Gravity();
 				Play_Sound(fTimeDelta);
@@ -184,6 +196,72 @@ void CBTAttackAnimation::Update_Gui()
 		ImGui::TreePop();
 	}
 
+	ImGui::PushStyleColor(ImGuiCol_Text, ImVec4{ 1,0,0,1 });
+	if (ImGui::TreeNode("New Skill Table Ver.2"))
+	{
+		if (ImGui::Button("Add"))
+		{
+			m_Skills.push_back(ATT_SKILL_EVENT{});
+		}
+
+		if (!m_Skills.empty())
+		{
+			auto pBT = Get_ComBT();
+			if (nullptr == pBT)
+			{
+				ImGui::TreePop(); ImGui::PopStyleColor();
+				return;
+			}
+			auto pSrc = static_cast<CMonster*>(pBT->GetGameObject());
+			if (nullptr == pSrc)
+			{
+				ImGui::TreePop(); ImGui::PopStyleColor();
+				return;
+			}
+			uint32_t iButton{};
+			for (auto iter = m_Skills.begin(); iter != m_Skills.end(); ++ iter)
+			{
+				ImGui::PushID(iButton);
+				DragFloat("StartRatio",(*iter).fRatio);
+				ImGui::SameLine();
+				ImGui::Text("AttMon Type:"); ImGui::SameLine();
+				if (ImGui::BeginCombo("##AttMon Type", pSrc->Get_SkillName((*iter).eSkill).c_str()))
+				{
+					for (uint32_t i = 0; i < ETOUI(ATTMON::END) + 1; ++i)
+					{
+						_string SkillName = pSrc->Get_SkillName(static_cast<ATTMON>(i));
+						if (SkillName == "")
+							continue;
+
+						_bool bSelect = static_cast<int32_t>((*iter).eSkill) == i;
+
+						if (ImGui::Selectable(SkillName.data()))
+							(*iter).eSkill = static_cast<ATTMON>(i);
+
+						if (bSelect)
+							ImGui::SetItemDefaultFocus();
+
+					}
+					ImGui::EndCombo();
+				}
+
+				ImGui::SameLine();
+				if (ImGui::Button("Del"))
+				{
+					m_Skills.erase(iter);
+					ImGui::PopID();
+					break;
+				}
+				ImGui::PopID();
+				++iButton;
+			}
+
+		}
+		
+
+		ImGui::TreePop();
+	}
+	ImGui::PopStyleColor();
 }
 void CBTAttackAnimation::Att(CMonster* pMon, CComTransform* pSrcTransform, CGameObject* pTarget, _float fRotRatio,_float fTimeDelta)
 {
@@ -264,6 +342,11 @@ void CBTAttackAnimation::Abort()
 {
 	__super::Abort();
 	Reset_CheckFlag();
+	if (!m_Skills.empty())
+	{
+		for (auto& iter : m_Skills)
+			iter.bTrigger = false;
+	}
 }
 nlohmann::json CBTAttackAnimation::Save_Node()
 {
@@ -278,9 +361,20 @@ nlohmann::json CBTAttackAnimation::Save_Node()
 	SaveJsonValue(j, "CamShakeRatio", m_fCamShakeRatio);
 	SaveJsonValue(j, "AttRadius", m_fAttRadius);
 	SaveJsonValue(j, "OverlabMove", m_bOverLabMove);
-
 	SaveJsonValue(j, "TriggerSkill", m_bTrigger);
 	
+
+	if (!m_Skills.empty())
+	{
+		uint32_t iMax{};
+		iMax = m_Skills.size();
+		SaveJsonValue(j, "NewSkillTableSize" , iMax);
+		for (size_t i =0; i < m_Skills.size(); ++i )
+		{
+			SaveJsonEnum(j, "NewSkillType" + std::to_string(i), m_Skills[i].eSkill);
+			SaveJsonValue(j, "NewSkillRatio" + std::to_string(i), m_Skills[i].fRatio);
+		}
+	}
 	return j;
 }
 HRESULT CBTAttackAnimation::Load_json(const nlohmann::json& j)
@@ -298,6 +392,16 @@ HRESULT CBTAttackAnimation::Load_json(const nlohmann::json& j)
 	LoadJsonValue(j, "OverlabMove", m_bOverLabMove);
 	LoadJsonValue(j, "TriggerSkill", m_bTrigger);
 
+	uint32_t iMax{};
+	if (LoadJsonValue(j, "NewSkillTableSize", iMax))
+	{
+		m_Skills.resize(iMax);
+		for (size_t i = 0; i < m_Skills.size(); ++i)
+		{
+			LoadJsonEnum(j, "NewSkillType" + std::to_string(i), m_Skills[i].eSkill);
+			LoadJsonValue(j, "NewSkillRatio" + std::to_string(i), m_Skills[i].fRatio);
+		}
+	}
 	return S_OK;
 }
 
@@ -311,13 +415,18 @@ void CBTAttackAnimation::OnEnter()
 	m_fTime = 0.f;
 	m_fCurOverLabSpeed = m_fAttRadius;
 
+	if (!m_Skills.empty())
+	{
+		for (auto& iter : m_Skills)
+			iter.bTrigger = false;
+	}
 
 }
 void CBTAttackAnimation::OnExit(EVALUATE eResult)
 {
 	m_bDir = false;
 }
-_bool CBTAttackAnimation::ActiveTriggerSkill()
+_bool CBTAttackAnimation::ActiveTriggerSkill(ATTMON eAtt)
 {
 	auto pBT = Get_ComBT();
 	if (nullptr == pBT) return false;
@@ -325,7 +434,7 @@ _bool CBTAttackAnimation::ActiveTriggerSkill()
 	auto pMonster = static_cast<CMonster*>(pBT->GetGameObject());
 	if (nullptr == pMonster) return false;
 	
-	pMonster->Set_AttTable(m_eSkillType, m_fSkillRatio);
+	pMonster->Set_AttTable(eAtt, m_fSkillRatio);
 	return true;
 }
 E::UPtr<CBTAttackAnimation> CBTAttackAnimation::Create()

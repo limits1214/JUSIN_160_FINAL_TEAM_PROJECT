@@ -146,3 +146,7 @@ X(GROGY,   0x0004000)\
 #define SPOT_SHADOW_MAPSIZE				512
 #define CSM_SHADOW_MAPSIZE				2048
 /////////////////////////////////////////
+
+/////// -- Volumetric Rendering -- ///////
+#define VOLUME_MAXFAR	200
+//////////////////////////////////////////

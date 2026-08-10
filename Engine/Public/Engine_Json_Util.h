@@ -11,24 +11,33 @@ namespace Engine
 	{
 	public:
 		/////////////Save
-		static void  SaveJsonTypeString(nlohmann::json& jsonFile, const _string& TypeName, const _string& Src)
+		inline static void  SaveJsonTypeString(nlohmann::json& jsonFile, const _string& TypeName, const _string& Src)
 		{
 			jsonFile[TypeName] = Src;
 		}
-		static void  SaveJsonTypeFloat4(nlohmann::json& jsonFile, const _string& TypeName, _float4& Float4)
+		inline static void  SaveJsonTypeFloat4(nlohmann::json& jsonFile, const _string& TypeName, _float4& Float4)
 		{
 			jsonFile[TypeName] = { Float4.x,Float4.y,Float4.z,Float4.w };
 		}
-		static void  SaveJsonTypeFloat3(nlohmann::json& jsonFile, const _string& TypeName, _float3& Float3)
+		inline static void  SaveJsonTypeFloat3(nlohmann::json& jsonFile, const _string& TypeName, _float3& Float3)
 		{
 			jsonFile[TypeName] = { Float3.x,Float3.y,Float3.z };
 		}
-		static void  SaveJsonTypeFloat2(nlohmann::json& jsonFile, const _string& TypeName, _float2& Float2)
+		inline static void  SaveJsonTypeFloat2(nlohmann::json& jsonFile, const _string& TypeName, _float2& Float2)
 		{
 			jsonFile[TypeName] = { Float2.x,Float2.y };
 		}
+		inline static void  SaveJsonTypeFloat3list(nlohmann::json& jsonFile, const _string& TypeName, std::list<_float3>& Values)
+		{
+			auto& jsonArray = jsonFile[TypeName];
+			jsonArray = nlohmann::json::array();
+			for (auto& value : Values)
+			{
+				jsonArray.push_back({value.x,value.y,value.z});
+			}
+		}
 		///////////////Load
-		static _bool  LoadJsonTypeString(const nlohmann::json& jsonFile, const _string& TypeName, _string& Src)
+		inline static _bool  LoadJsonTypeString(const nlohmann::json& jsonFile, const _string& TypeName, _string& Src)
 		{
 			if (jsonFile.contains(TypeName))
 			{
@@ -37,7 +46,7 @@ namespace Engine
 			}
 			return false;
 		}
-		static _bool  LoadJsonTypeFloat4(const nlohmann::json& jsonFile, const _string& TypeName, _float4& Float4)
+		inline static _bool  LoadJsonTypeFloat4(const nlohmann::json& jsonFile, const _string& TypeName, _float4& Float4)
 		{
 			if (jsonFile.contains(TypeName))
 			{
@@ -46,7 +55,7 @@ namespace Engine
 			}
 			return false;
 		}
-		static _bool  LoadJsonTypeFloat3(const nlohmann::json& jsonFile, const _string& TypeName, _float3& Float3)
+		inline static _bool  LoadJsonTypeFloat3(const nlohmann::json& jsonFile, const _string& TypeName, _float3& Float3)
 		{
 			if (jsonFile.contains(TypeName))
 			{
@@ -55,7 +64,7 @@ namespace Engine
 			}
 			return false;
 		}
-		static _bool  LoadJsonTypeFloat2(const nlohmann::json& jsonFile, const _string& TypeName, _float2& Float2)
+		inline static _bool  LoadJsonTypeFloat2(const nlohmann::json& jsonFile, const _string& TypeName, _float2& Float2)
 		{
 			if (jsonFile.contains(TypeName))
 			{
@@ -64,7 +73,7 @@ namespace Engine
 			}
 			return false;
 		}
-		static _bool  LoadJsonTypeUINT(const nlohmann::json& jsonFile, const _string& TypeName, uint32_t& iUlnt)
+		inline static _bool  LoadJsonTypeUINT(const nlohmann::json& jsonFile, const _string& TypeName, uint32_t& iUlnt)
 		{
 			if (jsonFile.contains(TypeName))
 			{
@@ -73,7 +82,7 @@ namespace Engine
 			}
 			return false;
 		}
-		static _bool  LoadJsonTypeINT(const nlohmann::json& jsonFile, const _string& TypeName, int32_t& iUlnt)
+		inline static _bool  LoadJsonTypeINT(const nlohmann::json& jsonFile, const _string& TypeName, int32_t& iUlnt)
 		{
 			if (jsonFile.contains(TypeName))
 			{
@@ -81,6 +90,26 @@ namespace Engine
 				return true;
 			}
 			return false;
+		}
+
+		inline static _bool  LoadJsonTypeFloat3list(nlohmann::json& jsonFile, const _string& TypeName, std::list<_float3>& Values)
+		{
+			if (!jsonFile.contains(TypeName))
+				return false;
+
+			auto& jsonArray = jsonFile[TypeName];
+
+			if (!jsonArray.is_array())
+				return false;
+
+			for (auto& value : jsonArray)
+			{
+				if (!value.is_array() || value.size() < 3)
+					continue;
+
+				Values.emplace_back(value[0], value[1], value[2]);
+			}
+			return true;
 		}
 	};
 	

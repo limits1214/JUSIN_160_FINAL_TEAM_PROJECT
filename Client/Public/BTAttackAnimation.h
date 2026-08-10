@@ -5,6 +5,12 @@
 NS_BEGIN(Client)
 class CBTAttackAnimation final : public CBTAnimRoot
 {
+typedef struct strattskillevent
+{
+	_float fRatio{};
+	ATTMON eSkill{ATTMON::END};
+	_bool bTrigger{ false };
+}ATT_SKILL_EVENT;
 public:
 	DECLARE_DERIVED_TYPE(CBTAttackAnimation, CBTAnimRoot)
 
@@ -29,8 +35,9 @@ private:
 
 	void OnEnter()override;
 	void OnExit(EVALUATE eResult)override;
-	_bool ActiveTriggerSkill();
+	_bool ActiveTriggerSkill(ATTMON eAtt);
 private:
+	std::vector<ATT_SKILL_EVENT> m_Skills{};
 	MOVE				m_eMove{ MOVE::STRAIGHT };
 
 	_float3				m_vEmissiveColor{}, m_vLastPos{}, m_vLastDir{};

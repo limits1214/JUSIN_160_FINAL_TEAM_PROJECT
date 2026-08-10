@@ -212,7 +212,7 @@ VOID CLight::Update_DirectionalShadowMatrices() {
 
 	_float	 CameraNear = MainCamera->GetNear();
 
-	const _float ShadowMaxDistance = 200.f;		// 카메라 Far가 변하면 그림자 품질도 달라지므로 최대 그림자 Casting 거리 제한
+	const _float ShadowMaxDistance = static_cast<_float>(VOLUME_MAXFAR);		// 카메라 Far가 변하면 그림자 품질도 달라지므로 최대 그림자 Casting 거리 제한
 	_float	 CameraFar	= std::min(MainCamera->GetFar(), ShadowMaxDistance);
 
 	_float	 Lambda		= 0.7f;

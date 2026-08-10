@@ -1,6 +1,7 @@
 #include "pch.h"
 
 #include "MainAppLoader.h"
+#include "ClientLuaBindings.h"
 #include "GameInstance.h"
 #include "PhysXManager.h"
 #include "LevelLoading.h"
@@ -28,6 +29,9 @@ NS_USING(Client)
 HRESULT CMainAppLoader::Load()
 {
 	LOG_MEMORY("CMainAppLoader::Load() start");
+
+	if (FAILED(CClientLuaBindings::Register()))
+		return E_FAIL;
 
 	// 전체 레벨에서 사용할 라이트 오브젝트 프로토타입 등록
 	if (E::CGameInstance::Get().AddPrototype("LIGHT", "Prototype_GameObject_Light", CLight::Create()))	return E_FAIL;

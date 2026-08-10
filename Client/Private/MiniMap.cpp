@@ -132,6 +132,7 @@ void CMiniMap::Update(E::_float fTimeDelta)
 	// PlayerCamera는 플레이어 위치/방향 조회에 사용하고,
 	// 월드 좌표 투영은 실제 렌더링 중인 활성 카메라를 사용한다.
 	UpdateObjectiveMarkers(
+		fTimeDelta,
 		pPlayer->GetTransform().GetPosition(),
 		E::CGameInstance::Get().GetActiveCamera());
 
@@ -732,6 +733,7 @@ void CMiniMap::SetMonsterMarkerVisible(
 }
 
 void CMiniMap::UpdateObjectiveMarkers(
+	_float fTimeDelta,
 	const _float3& playerPosition,
 	E::CCameraObject* camera)
 {
@@ -782,14 +784,16 @@ void CMiniMap::UpdateObjectiveMarkers(
 		for (auto& phase : objective.VisualPhases)
 		{
 			const _bool isSelected = &phase == selectedPhase;
-			SetObjectivePhaseVisible(phase, isSelected);
+			SetObjectivePhaseVisible(
+				phase, isSelected, fTimeDelta);
 
-			const _bool showScreenMarker = isSelected &&
-				phase.ShowScreenMarker &&
+			const _float screenMarkerTargetAlpha =
+				isSelected && phase.ShowScreenMarker ?
 				UpdateScreenObjectiveMarkerPosition(
-					phase, objective.WorldPosition, camera);
+					phase, objective.WorldPosition, camera) :
+				0.f;
 			SetScreenObjectivePhaseVisible(
-				phase, showScreenMarker);
+				phase, screenMarkerTargetAlpha, fTimeDelta);
 		}
 
 		// FadeOut 중에는 selectedPhase에서 제외되지만 Tween이 끝날 때까지
@@ -849,6 +853,7 @@ void CMiniMap::HideObjectiveMarkers()
 		for (auto& phase : objective.VisualPhases)
 		{
 			phase.DesiredVisible = false;
+			phase.MarkerAlphaRatio = 0.f;
 			if (auto* marker = E::CGameInstance::Get().
 				GetGameObjectByHandleT<E::CUIObject>(phase.MarkerHandle))
 			{
@@ -856,6 +861,7 @@ void CMiniMap::HideObjectiveMarkers()
 			}
 
 			phase.ScreenMarkerDesiredVisible = false;
+			phase.ScreenMarkerAlpha = 0.f;
 			if (auto* screenMarker = E::CGameInstance::Get().
 				GetGameObjectByHandleT<E::CUIObject>(
 					phase.ScreenMarkerHandle))
@@ -915,35 +921,47 @@ void CMiniMap::SetObjectiveMarkerVisible(
 }
 
 void CMiniMap::SetObjectivePhaseVisible(
-	OBJECTIVE_VISUAL_PHASE& phase, _bool visible)
+	OBJECTIVE_VISUAL_PHASE& phase, _bool visible,
+	_float fTimeDelta)
 {
-	if (phase.DesiredVisible == visible)
-		return;
-
-	phase.DesiredVisible = visible;
 	auto* marker = E::CGameInstance::Get().
 		GetGameObjectByHandleT<E::CUIObject>(phase.MarkerHandle);
 	if (!marker)
 		return;
 
-	if (auto* tween = marker->GetTweenCom())
-		tween->ClearTweens();
+	phase.DesiredVisible = visible;
+
+	const _float targetRatio = visible ?
+		MINIMAP_ICON_ALPHA_RATIO : 0.f;
+	const _float fadeTime = visible ?
+		phase.FadeInTime : phase.FadeOutTime;
+	const _float ratioStep = fadeTime > 0.f ?
+		MINIMAP_ICON_ALPHA_RATIO *
+		std::max(0.f, fTimeDelta) / fadeTime :
+		MINIMAP_ICON_ALPHA_RATIO;
 
 	if (visible)
 	{
 		marker->SetActive(true);
-		marker->SetAlphaRatio(MINIMAP_ICON_ALPHA_RATIO);
-		marker->SetAlpha(0.f);
-		PlayFadeIn(phase.MarkerHandle, 0.f, phase.FadeInTime);
+		phase.MarkerAlphaRatio = std::min(
+			targetRatio, phase.MarkerAlphaRatio + ratioStep);
 	}
 	else
 	{
-		PlayFadeOut(phase.MarkerHandle, 0.f, phase.FadeOutTime);
+		phase.MarkerAlphaRatio = std::max(
+			targetRatio, phase.MarkerAlphaRatio - ratioStep);
 	}
+
+	marker->SetAlphaRatio(phase.MarkerAlphaRatio);
+	marker->SetAlpha(m_UIINFO.Alpha * phase.MarkerAlphaRatio);
+
+	if (!visible && phase.MarkerAlphaRatio <= 0.f)
+		marker->SetActive(false);
 }
 
 void CMiniMap::SetScreenObjectivePhaseVisible(
-	OBJECTIVE_VISUAL_PHASE& phase, _bool visible)
+	OBJECTIVE_VISUAL_PHASE& phase, _float targetAlpha,
+	_float fTimeDelta)
 {
 	if (!phase.ShowScreenMarker)
 		return;
@@ -954,50 +972,51 @@ void CMiniMap::SetScreenObjectivePhaseVisible(
 	if (!marker)
 		return;
 
-	// 원하는 상태뿐 아니라 실제 객체 상태도 함께 검사한다.
-	// 객체가 레이어에 늦게 반영되거나 외부에서 비활성화된 경우에도
-	// 다음 프레임에 표시 전환을 다시 수행할 수 있다.
-	if (phase.ScreenMarkerDesiredVisible == visible)
-	{
-		// FadeOut 중에는 객체가 활성 상태인 것이 정상이다. 표시 요청인데
-		// 실제 객체만 비활성인 경우에 한해서 FadeIn을 다시 시도한다.
-		if (!visible || marker->GetActive())
-			return;
-	}
-
+	targetAlpha = std::clamp(targetAlpha, 0.f, 1.f);
+	const _bool visible = targetAlpha > 0.f;
 	phase.ScreenMarkerDesiredVisible = visible;
 
-	if (auto* tween = marker->GetTweenCom())
-		tween->ClearTweens();
+	const _bool increasing =
+		phase.ScreenMarkerAlpha < targetAlpha;
+	const _float fadeTime = increasing ?
+		phase.FadeInTime : phase.FadeOutTime;
+	const _float alphaStep = fadeTime > 0.f ?
+		std::max(0.f, fTimeDelta) / fadeTime : 1.f;
 
 	if (visible)
-	{
 		marker->SetActive(true);
-		marker->SetAlphaRatio(1.f);
-		marker->SetAlpha(0.f);
-		PlayFadeIn(
-			phase.ScreenMarkerHandle, 0.f, phase.FadeInTime);
+
+	if (increasing)
+	{
+		phase.ScreenMarkerAlpha = std::min(
+			targetAlpha, phase.ScreenMarkerAlpha + alphaStep);
 	}
 	else
 	{
-		PlayFadeOut(
-			phase.ScreenMarkerHandle, 0.f, phase.FadeOutTime);
+		phase.ScreenMarkerAlpha = std::max(
+			targetAlpha, phase.ScreenMarkerAlpha - alphaStep);
 	}
+
+	marker->SetAlphaRatio(1.f);
+	marker->SetAlpha(phase.ScreenMarkerAlpha);
+
+	if (!visible && phase.ScreenMarkerAlpha <= 0.f)
+		marker->SetActive(false);
 }
 
-_bool CMiniMap::UpdateScreenObjectiveMarkerPosition(
+_float CMiniMap::UpdateScreenObjectiveMarkerPosition(
 	OBJECTIVE_VISUAL_PHASE& phase,
 	const _float3& worldPosition,
 	E::CCameraObject* camera)
 {
 	if (!camera)
-		return false;
+		return 0.f;
 
 	auto* marker = E::CGameInstance::Get().
 		GetGameObjectByHandleT<E::CUIObject>(
 			phase.ScreenMarkerHandle);
 	if (!marker)
-		return false;
+		return 0.f;
 
 	const _float3 markerWorldPosition{
 		worldPosition.x + phase.ScreenMarkerWorldOffset.x,
@@ -1013,13 +1032,10 @@ _bool CMiniMap::UpdateScreenObjectiveMarkerPosition(
 			markerWorldPosition.z,
 			1.f),
 		view * projection);
-	if (XMVectorGetW(clipPosition) <= 0.f)
-		return false;
-
 	const _float2 screenSize =
 		E::CGameInstance::Get().GetClientScreenSize();
 	if (screenSize.x <= 0.f || screenSize.y <= 0.f)
-		return false;
+		return 0.f;
 
 	const _vector projected = XMVector3Project(
 		XMLoadFloat3(&markerWorldPosition),
@@ -1042,12 +1058,49 @@ _bool CMiniMap::UpdateScreenObjectiveMarkerPosition(
 		screenPosition.x <= screenSize.x - halfSize &&
 		screenPosition.y >= halfSize &&
 		screenPosition.y <= screenSize.y - halfSize;
-	if (!isOnScreen)
-		return false;
+	if (isOnScreen && XMVectorGetW(clipPosition) > 0.f)
+	{
+		marker->SetPos({ screenPosition.x, screenPosition.y });
+		marker->CalcUICoord();
+		return 1.f;
+	}
 
-	marker->SetPos({ screenPosition.x, screenPosition.y });
+	const _float clipW = XMVectorGetW(clipPosition);
+	const _float safeW = std::max(fabsf(clipW), 0.0001f);
+	_float ndcX = XMVectorGetX(clipPosition) / safeW;
+	_float ndcY = XMVectorGetY(clipPosition) / safeW;
+
+	// abs(w)를 사용하면 카메라 뒤쪽에서도 목표의 좌우 방향을 유지한다.
+
+	_float2 screenDirection{
+		ndcX * screenSize.x * 0.5f,
+		-ndcY * screenSize.y * 0.5f
+	};
+	if (fabsf(screenDirection.x) < 0.0001f &&
+		fabsf(screenDirection.y) < 0.0001f)
+	{
+		screenDirection.y = screenSize.y * 0.5f;
+	}
+
+	const _float edgePadding = std::max(
+		0.f, phase.ScreenMarkerEdgePadding);
+	const _float edgeHalfWidth = std::max(
+		0.f, screenSize.x * 0.5f - halfSize - edgePadding);
+	const _float edgeHalfHeight = std::max(
+		0.f, screenSize.y * 0.5f - halfSize - edgePadding);
+	const _float scaleX = fabsf(screenDirection.x) > 0.0001f ?
+		edgeHalfWidth / fabsf(screenDirection.x) : FLT_MAX;
+	const _float scaleY = fabsf(screenDirection.y) > 0.0001f ?
+		edgeHalfHeight / fabsf(screenDirection.y) : FLT_MAX;
+	const _float edgeScale = std::min(scaleX, scaleY);
+
+	marker->SetPos({
+		screenSize.x * 0.5f + screenDirection.x * edgeScale,
+		screenSize.y * 0.5f + screenDirection.y * edgeScale
+	});
 	marker->CalcUICoord();
-	return true;
+	return std::clamp(
+		phase.ScreenMarkerOffscreenAlpha, 0.f, 1.f);
 }
 
 void CMiniMap::ConfigureDefaultProfile()
@@ -1271,12 +1324,15 @@ void CMiniMap::PlayFadeIn(CHandle pHandle, float delay, float playtime)
 
 	//pBtn->SetInputLcok(true);
 
-	pBtn->SetAlphaRatio(MINIMAP_ICON_ALPHA_RATIO);
+	// 미니맵 마커는 자식 UI라서 Alpha가 매 프레임
+	// ParentAlpha * AlphaRatio로 다시 계산된다.
+	// 따라서 Alpha가 아니라 AlphaRatio를 보간해야 첫 표시도 정상적으로 페이드된다.
+	pBtn->SetAlphaRatio(0.f);
 	pBtn->SetAlpha(0.f);
 
-	pTween->PlayTween(0.f, 1.f, playtime,
+	pTween->PlayTween(0.f, MINIMAP_ICON_ALPHA_RATIO, playtime,
 		[pBtn](float currentValue) {
-			pBtn->SetAlpha(currentValue);
+			pBtn->SetAlphaRatio(currentValue);
 		}, nullptr, EEaseType::EaseOutQuad, delay);
 }
 
@@ -1291,11 +1347,11 @@ void CMiniMap::PlayFadeOut(CHandle pHandle, float delay, float playtime)
 
 	pBtn->SetInputLcok(true);
 
-	_float originAlpha = pBtn->GetAlpha();
+	const _float originAlphaRatio = pBtn->GetAlphaRatio();
 
-	pTween->PlayTween(originAlpha, 0.f, playtime,
+	pTween->PlayTween(originAlphaRatio, 0.f, playtime,
 		[pBtn](float currentValue) {
-			pBtn->SetAlpha(currentValue);
+			pBtn->SetAlphaRatio(currentValue);
 		}, [pHandle]() {
 			if (auto* marker = E::CGameInstance::Get().
 				GetGameObjectByHandleT<CUIObject>(pHandle))

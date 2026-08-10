@@ -32,6 +32,7 @@ HRESULT CDragonSkill::Initialize(void* pArg)
 
 	m_hOwner = pDesc->hOwner;
 	m_iBoneIndex = pDesc->iBoneIndex;
+	m_iOffsetBoneIdex = pDesc->iOffsetBoneIndex;
 	m_pxQueryFilter = pDesc->tQueryFilter;
 	return S_OK;
 }
@@ -71,7 +72,7 @@ void CDragonSkill::Spawn_Skill_Effect(const _string& SkillName)
 		});
 }
 
-void CDragonSkill::Life_Check(_float fTimeDelta)
+_bool CDragonSkill::Life_Check(_float fTimeDelta)
 {
 	m_fLife += fTimeDelta;
 
@@ -80,22 +81,23 @@ void CDragonSkill::Life_Check(_float fTimeDelta)
 		if (m_iBoneIndex != INVALID_EFFECT_INSTANCE_ID)
 			CGameInstance::Get().StopEffect(m_iBoneIndex);
 		ResetValue();
+		return true;
 	}
-		
+	return false;
 }
 
-const _float4x4* CDragonSkill::Get_BoneMatrix()
+ _float4x4 CDragonSkill::Get_BoneMatrix(int32_t iIndex)
 {
+
+	 _float4x4 CombineMatrix{};
 
 	auto pSrc = Get_Owner();
 	if (nullptr == pSrc)
-		return nullptr;
-	
-	_float4x4 CombineMatrix{};
+		return CombineMatrix;
 
 	XMStoreFloat4x4(&CombineMatrix,
-		XMLoadFloat4x4(pSrc->Get_CombineBoneMatrix(m_iBoneIndex)) * XMLoadFloat4x4(pSrc->GetTransform().GetWorldMatrix()));
-	return &CombineMatrix;
+		XMLoadFloat4x4(pSrc->Get_CombineBoneMatrix(iIndex)) * XMLoadFloat4x4(pSrc->GetTransform().GetWorldMatrix()));
+	return CombineMatrix;
 }
 
 void CDragonSkill::ResetValue()

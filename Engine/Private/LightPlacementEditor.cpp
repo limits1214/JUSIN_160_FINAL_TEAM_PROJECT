@@ -14,11 +14,13 @@ namespace Engine::LightPlacementEditorDetail
 	inline constexpr int GIZMO_ID = 0x4C495445;
 	inline constexpr _float MIN_DIRECTION_LENGTH_SQ = 1e-8f;
 	inline constexpr _float MIN_RANGE = 0.02f;
-	inline constexpr std::array<const char*, 4> FILE_PRESETS{
+	inline constexpr std::array<const char*, 6> FILE_PRESETS{
 		"Custom",
 		"Level_CharlesRookwood",
 		"Level_BossCharlesRookwood",
-		"Level_Terrain"
+		"Level_Terrain",
+		"Level_LastBossRanrok",
+		"Level_HogwartWorld"
 	};
 
 	const char* GetLightTypeName(LIGHT_TYPE eType)

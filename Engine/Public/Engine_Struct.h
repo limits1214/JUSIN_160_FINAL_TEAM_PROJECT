@@ -89,7 +89,7 @@ namespace Engine
 		_float		OuterAttanuation;
 
 		int32_t		ShadowSlot;
-		_float		LightPadding;
+		_float		VolumetricIntensity;
 	} DYNAMIC_LIGHT;
 
 	typedef struct tagEffectLight {

@@ -123,7 +123,8 @@ public:
 		const std::string& AnyTexPath = "",
 		int iSelectedBlend = 0,
 		_bool bShrinkWidth = true,
-		_float fMaxduration = 0);
+		_float fMaxduration = 0,
+		int iTrailBehaviorMode = 1);
 
 	HRESULT Save_Beam_Json(std::string outpath, const std::string& FullPath, const std::string& whatKind, const std::string& particleType,
 		const std::string& particleName, int iMaxParticles, const std::string& VSGroup, const std::string& VSID, const std::string& VSEntryPoint,

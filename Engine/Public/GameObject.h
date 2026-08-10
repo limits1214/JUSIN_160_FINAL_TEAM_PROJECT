@@ -12,6 +12,7 @@
 NS_BEGIN(Engine)
 
 struct MODEL_INSTANCE_BATCH;
+class CGameObjectManager;
 class CGameObjectPoolManager;
 
 class ENGINE_DLL CGameObject : public CPrototype,
@@ -44,6 +45,11 @@ public:
 	virtual void Update(_float fTimeDelta);
 	virtual void LateUpdate(_float fTimeDelta);
 	virtual void UpdateGUI();
+
+protected:
+	// [LSY] GameObjectManager의 슬롯과 레이어에 등록이 모두 끝난 직후 한 번 호출된다.
+	// Initialize 중에는 아직 자기 Handle 조회가 불가능하므로 Manager 등록이 필요한 후처리는 여기서 수행한다.
+	virtual void OnRegisteredToManager() {}
 
 public:
 	HRESULT Render(ID3D11DeviceContext* pContext, const RENDER_CTX& ctx) override;
@@ -177,6 +183,7 @@ private:
 	_bool AcquireFromPool(void* pArg = nullptr);
 	void ReleaseToPool();
 	_bool m_bManagedUpdateEnabled{ true };
+	friend class CGameObjectManager;
 	friend class CGameObjectPoolManager;
 
 	// IPhysicsListener

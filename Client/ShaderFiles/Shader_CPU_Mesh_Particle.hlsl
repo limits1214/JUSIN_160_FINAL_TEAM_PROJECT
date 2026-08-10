@@ -453,3 +453,31 @@ PS_OUT PSMarble(VS_OUT In)
 	Out.vDiffuse = float4(finalColor, In.vColor.a);
 	return Out;
 }
+
+PS_OUT PSBreathe(VS_OUT In)
+{
+	PS_OUT Out = (PS_OUT) 0;
+
+	float2 flameUV = In.vTexcoord * float2(2.f, 5.f);
+	float2 noiseUV = In.vTexcoord * float2(3.f, 4.f);
+
+	flameUV.y += g_fAccumulationTime * 0.8f;
+	noiseUV.y -= g_fAccumulationTime * 0.35f;
+	noiseUV.x += g_fAccumulationTime * 0.1f;
+
+	float noise = NoiseMap.Sample(LinearWrap, noiseUV).r;
+	float2 distortion = (noise * 2.f - 1.f) * float2(0.04f, 0.02f);
+	float flame = AlbedoMap.Sample(LinearWrap, flameUV + distortion).r;
+	float pattern = smoothstep(0.08f, 0.85f, saturate(flame * 0.75f + noise * 0.25f));
+
+	float lifeRatio = saturate(In.life / max(In.maxLife, 0.0001f));
+	float4 lerpedEmissive = lerp(In.vEmissive, In.vEndEmissive, lifeRatio);
+
+	float3 baseColor = In.vColor.rgb;	
+	float3 emissive = pattern * lerpedEmissive.rgb * lerpedEmissive.a;
+	float3 finalColor = baseColor + emissive;
+	float alpha = lerp(0.4f, 0.9f, pattern) * In.vColor.a;
+
+	Out.vDiffuse = float4(finalColor, alpha);
+	return Out;
+}

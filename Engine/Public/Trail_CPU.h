@@ -41,6 +41,13 @@ public:
 		LOCAL,  // 검 궤적: 실제 vStart/vEnd 방향 그대로
 		VIEW    // 마법 리본: 카메라 빌보드
 	};
+
+	enum class TRAIL_BEHAVIOR_MODE
+	{
+		LEGACY,
+		STABILIZED
+	};
+
     struct DESC
     {
         std::pair<StringID, StringID> textureID;
@@ -61,6 +68,7 @@ public:
 		uint32_t TexRows = 1;
 		uint32_t TexColumns = 1;
 		_bool bShrinkWidth = true;
+		TRAIL_BEHAVIOR_MODE eBehaviorMode = TRAIL_BEHAVIOR_MODE::STABILIZED;
 
 
     };
@@ -84,6 +92,7 @@ public:
     void AddPoint(const _float3& vStart, const _float3& vEnd);
 
     void Clear();
+	void SetBehaviorMode(TRAIL_BEHAVIOR_MODE eMode);
     uint32_t Debug_GetFrameCount() const { return (uint32_t)m_dequeFrames.size(); }
     uint32_t Debug_GetVertexCount() const { return (uint32_t)m_vecVertices.size(); }
 	virtual void SetPosition(const _float3& pos) override;

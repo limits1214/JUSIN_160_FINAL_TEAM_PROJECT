@@ -118,10 +118,10 @@ HRESULT CParticle_GPU::Initialize(void* pArg)
 	// 스폰 데이터 버퍼
 	if (auto res = CResStructuredBuffer::Create())
 	{
-		std::vector<PARTICLE_SPAWN_DATA> initSpawnData(MAX_SPAWN_PER_CALL);
+		std::vector<PARTICLE_SPAWN_DATA> initSpawnData(m_iNumElements);
 
 		CResStructuredBuffer::DESC bufDesc{};
-		bufDesc.iNumElements = MAX_SPAWN_PER_CALL;
+		bufDesc.iNumElements = m_iNumElements;
 		bufDesc.iStructureByteStride = sizeof(PARTICLE_SPAWN_DATA);
 		bufDesc.pInitialData = initSpawnData.data();
 		bufDesc.bAppendConsume = false;
@@ -679,14 +679,14 @@ HRESULT CParticle_GPU::Spawn(uint32_t count, const PARTICLE_SPAWN_DATA* pSpawnDa
 		return E_FAIL;
 
 
-	count = std::min(count, MAX_SPAWN_PER_CALL);
+	count = std::min(count, m_iNumElements);
 
 	if (count == 0)
 		return E_FAIL;
 
 	auto context = CGameInstance::Get().GetGraphicDeviceContext();
 
-	std::vector<PARTICLE_SPAWN_DATA> fullData(MAX_SPAWN_PER_CALL);
+	std::vector<PARTICLE_SPAWN_DATA> fullData(m_iNumElements);
 	memcpy(fullData.data(), pSpawnData, sizeof(PARTICLE_SPAWN_DATA) * count);
 
 	context->UpdateSubresource(

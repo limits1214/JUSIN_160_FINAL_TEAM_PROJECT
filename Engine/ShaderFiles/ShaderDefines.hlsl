@@ -67,19 +67,19 @@ struct DynamicLight
 {
 	float4x4 g_LightViewProj[MAX_LIGHT_MAPCOUNT];
 
-    float3 LightDirection;
-    float LightIntensity;
-    float3 LightColor;
-    float LightRange;
+    float3	LightDirection;
+    float	LightIntensity;
+    float3	LightColor;
+    float	LightRange;
 
-    float3 Position;
-    uint LightType;
+    float3	Position;
+    uint	LightType;
 
-    float InnerAttanuation;
-    float OuterAttanuation;
+    float	InnerAttanuation;
+    float	OuterAttanuation;
 	
 	int		ShadowSlot;
-    float LightPadding;
+	float	VolumetricIntensity;
 };
 
 struct EffectLight

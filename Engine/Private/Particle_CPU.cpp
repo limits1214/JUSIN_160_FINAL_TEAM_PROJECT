@@ -666,7 +666,7 @@ HRESULT CParticle_CPU::Render_Mesh(ID3D11DeviceContext* pContext, const E::RENDE
 
 	auto rasterizer = E::CGameInstance::GetConst().GetResourceFirst<E::CResRasterizerState>(
 		TAG_RES_GRP_PERMANENT_STATE,
-		TAG_RES_STATE_RS_SOLID_BACKCULL);
+		TAG_RES_STATE_RS_SOLID_NOCULL);
 
 	if (!rasterizer)
 		return E_FAIL;

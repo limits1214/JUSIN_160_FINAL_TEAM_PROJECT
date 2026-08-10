@@ -50,9 +50,13 @@ struct OBJECTIVE_VISUAL_PHASE
 	_float ScreenMarkerSize{ 36.f };
 	_float3 ScreenMarkerWorldOffset{ 0.f, 2.5f, 0.f };
 	int ScreenMarkerWeight{ 100 };
+	_float ScreenMarkerOffscreenAlpha{ 0.5f };
+	_float ScreenMarkerEdgePadding{ 32.f };
 	_bool DesiredVisible{ false };
+	_float MarkerAlphaRatio{};
 	CHandle MarkerHandle{};
 	_bool ScreenMarkerDesiredVisible{ false };
+	_float ScreenMarkerAlpha{};
 	CHandle ScreenMarkerHandle{};
 };
 

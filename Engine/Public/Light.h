@@ -121,6 +121,12 @@ public:
 	VOID			Set_ShadowSlotNumb(int32_t _Numb)	{ m_ShadowSlot = _Numb; }
 	int32_t			Get_ShadowSlotNumb()				{ return m_ShadowSlot;  }
 
+	VOID			Set_VolumetricScattering(_bool bEnable)		{ m_bVolumetricScattering = bEnable; }
+	_bool			Get_VolumetricScattering() const			{ return m_bVolumetricScattering;	 }
+
+	VOID			Set_VolumetricIntensity(_float fIntensity)	{ m_fVolumetricIntensity = fIntensity; }
+	_float			Get_VolumetricIntensity() const				{ return m_bVolumetricScattering ? m_fVolumetricIntensity : 0.f; }
+
 	VOID			InvalidateAllShadow()
 	{
 		m_bShadowMatrixDirty = true;
@@ -148,6 +154,7 @@ private:
 	_bool								m_bActivate_State			= { true };
 	_bool								m_bCastShadow				= { true };
 	_bool								m_bHadDynamicShadowCaster	= { false };
+	_bool								m_bVolumetricScattering		= { true };
 
 	_bool								m_bEffectLightFlag			= { false };
 	// LSY 변경: 별칭은 식별 편의용이며, 배치 그룹은 런타임 로더 단위 정리에 사용한다.
@@ -159,6 +166,8 @@ private:
 
 	_float								m_fPointLightInnerAttenuation{};
 	_float								m_fPointLightOuterAttenuation{};
+
+	_float								m_fVolumetricIntensity{ 10.f };
 
 	XMFLOAT4 m_fCascadeShadowSplits{};
 

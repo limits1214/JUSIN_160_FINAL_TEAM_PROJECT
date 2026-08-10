@@ -481,14 +481,8 @@
     <Filter Include="Component\Lua">
       <UniqueIdentifier>{b39ae02f-5cb2-4ba1-b7b3-e4646aac4b23}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Lua\Watcher">
-      <UniqueIdentifier>{9d20ff6d-a821-4923-8d6b-f0880f32157f}</UniqueIdentifier>
-    </Filter>
     <Filter Include="LuaFiles\SomeFolder">
       <UniqueIdentifier>{bde2835c-1d45-44d2-aca4-56623b27cddf}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Lua\LuaEnv">
-      <UniqueIdentifier>{8ba16c43-054b-4dbb-9c2a-aed24797421d}</UniqueIdentifier>
     </Filter>
     <Filter Include="Component\PhysX\CharacterController">
       <UniqueIdentifier>{3ff22233-47fd-43dc-9f31-4bdf198f60e8}</UniqueIdentifier>
@@ -546,6 +540,18 @@
     </Filter>
     <Filter Include="Blast">
       <UniqueIdentifier>{54753909-f100-46b4-8d09-46dc3a6d843f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Lua\Manager">
+      <UniqueIdentifier>{ce8a7a89-813a-4c7a-b7f7-0e177a51a1f5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Lua\Manager\Binding">
+      <UniqueIdentifier>{d47ce7cb-22e5-46a5-b85b-fcf3e2770f4b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Lua\ScriptInstance">
+      <UniqueIdentifier>{da25f4ae-11bc-445c-ac9e-8ea04c809915}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Lua\Manager\Watcher">
+      <UniqueIdentifier>{9d20ff6d-a821-4923-8d6b-f0880f32157f}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -1147,29 +1153,17 @@
     <ClInclude Include="..\public\Beam_CPU.h">
       <Filter>Particle\Beam</Filter>
     </ClInclude>
-    <ClInclude Include="..\public\LuaManager.h">
-      <Filter>Lua</Filter>
-    </ClInclude>
     <ClInclude Include="..\public\ResLua.h">
       <Filter>Resource\Lua</Filter>
     </ClInclude>
     <ClInclude Include="..\public\ResLuaScript.h">
       <Filter>Resource\Lua\Script</Filter>
     </ClInclude>
-    <ClInclude Include="..\public\ComLuaScript.h">
-      <Filter>Component\Lua</Filter>
-    </ClInclude>
     <ClInclude Include="..\public\LuaWatcher.h">
-      <Filter>Lua\Watcher</Filter>
+      <Filter>Lua\Manager\Watcher</Filter>
     </ClInclude>
     <ClInclude Include="..\Public\ShaderWatcher.h">
       <Filter>Resource\Shader</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Public\ILuaScriptRelodable.h">
-      <Filter>Lua</Filter>
-    </ClInclude>
-    <ClInclude Include="..\public\LuaEnv.h">
-      <Filter>Lua\LuaEnv</Filter>
     </ClInclude>
     <ClInclude Include="..\public\ComPxCharacterController.h">
       <Filter>Component\PhysX\CharacterController</Filter>
@@ -1266,6 +1260,12 @@
     </ClInclude>
     <ClInclude Include="..\public\BTSubTreeNode.h">
       <Filter>Component\BeHavior\Root\Composite\CompositeNode\ActionNode</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\LuaManager.h">
+      <Filter>Lua\Manager</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\LuaScriptInstance.h">
+      <Filter>Lua\ScriptInstance</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -1798,26 +1798,17 @@
     <ClCompile Include="..\Private\ShadowCamera.cpp">
       <Filter>GameObject\Camera\ShadowCamera</Filter>
     </ClCompile>
-    <ClCompile Include="..\private\LuaManager.cpp">
-      <Filter>Lua</Filter>
-    </ClCompile>
     <ClCompile Include="..\private\ResLua.cpp">
       <Filter>Resource\Lua</Filter>
     </ClCompile>
     <ClCompile Include="..\private\ResLuaScript.cpp">
       <Filter>Resource\Lua\Script</Filter>
     </ClCompile>
-    <ClCompile Include="..\private\ComLuaScript.cpp">
-      <Filter>Component\Lua</Filter>
-    </ClCompile>
     <ClCompile Include="..\private\LuaWatcher.cpp">
-      <Filter>Lua\Watcher</Filter>
+      <Filter>Lua\Manager\Watcher</Filter>
     </ClCompile>
     <ClCompile Include="..\Private\ShaderWatcher.cpp">
       <Filter>Resource\Shader</Filter>
-    </ClCompile>
-    <ClCompile Include="..\private\LuaEnv.cpp">
-      <Filter>Lua\LuaEnv</Filter>
     </ClCompile>
     <ClCompile Include="..\private\ComPxCharacterController.cpp">
       <Filter>Component\PhysX\CharacterController</Filter>
@@ -1899,6 +1890,18 @@
     </ClCompile>
     <ClCompile Include="..\private\BlastManager.cpp">
       <Filter>Blast</Filter>
+    </ClCompile>
+    <ClCompile Include="..\private\LuaManager.cpp">
+      <Filter>Lua\Manager</Filter>
+    </ClCompile>
+    <ClCompile Include="..\private\LuaBindingsCore.cpp">
+      <Filter>Lua\Manager\Binding</Filter>
+    </ClCompile>
+    <ClCompile Include="..\private\LuaBindingsEngine.cpp">
+      <Filter>Lua\Manager\Binding</Filter>
+    </ClCompile>
+    <ClCompile Include="..\private\LuaScriptInstance.cpp">
+      <Filter>Lua\ScriptInstance</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

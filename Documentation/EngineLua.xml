@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<doc>
+  <tables>
+    <table name="Object">
+      <function name="GetByHandle">
+        <summary>핸들로 게임 오브젝트를 찾습니다.</summary>
+        <parameter name="handle" />
+      </function>
+      <function name="GetLayer">
+        <summary>레이어에 등록된 게임 오브젝트 목록을 반환합니다.</summary>
+        <parameter name="layerName" />
+      </function>
+      <function name="GetFirst">
+        <summary>레이어의 첫 번째 게임 오브젝트를 반환합니다.</summary>
+        <parameter name="layerName" />
+      </function>
+      <function name="Add">
+        <summary>프로토타입을 복제해 지정 레이어에 추가합니다.</summary>
+        <parameter name="levelIndex" />
+        <parameter name="prototypeTag" />
+        <parameter name="layerName" />
+        <parameter name="arg" optional="true" />
+      </function>
+    </table>
+    <table name="Rand">
+      <function name="Randf">
+        <summary>지정 범위의 실수를 반환합니다.</summary>
+        <parameter name="min" />
+        <parameter name="max" />
+      </function>
+      <function name="RandInt">
+        <summary>지정 범위의 정수를 반환합니다.</summary>
+        <parameter name="min" />
+        <parameter name="max" />
+      </function>
+    </table>
+    <table name="Collision">
+      <function name="AddColliderGroup">
+        <parameter name="groupTag" />
+        <parameter name="collider" />
+      </function>
+      <function name="GetColliderGroup"><parameter name="groupTag" /></function>
+      <function name="IntersectColl"><parameter name="colliderA" /><parameter name="colliderB" /></function>
+      <function name="GetColliders" />
+    </table>
+    <table name="Input">
+      <function name="KeyPressing"><parameter name="key" /></function>
+      <function name="KeyDown"><parameter name="key" /></function>
+      <function name="KeyUp"><parameter name="key" /></function>
+      <function name="MouseMove"><parameter name="axis" /></function>
+      <function name="MousePressing"><parameter name="button" /></function>
+      <function name="MouseDown"><parameter name="button" /></function>
+      <function name="MouseUp"><parameter name="button" /></function>
+    </table>
+    <table name="Camera">
+      <function name="GetActiveCamera"><parameter name="cameraID" optional="true" /></function>
+      <function name="GetCamera"><parameter name="cameraID" /></function>
+      <function name="SetActiveCamera"><parameter name="cameraID" /></function>
+    </table>
+    <table name="Level">
+      <function name="ChangeLevel"><parameter name="levelID" /></function>
+    </table>
+    <table name="DbgLine">
+      <function name="SetColor"><parameter name="color" /></function>
+      <function name="GetColor" />
+      <function name="AddLine"><parameter name="start" /><parameter name="end" /></function>
+      <function name="AddBox"><parameter name="extents" /><parameter name="world" /></function>
+      <function name="AddSphere"><parameter name="radius" /><parameter name="world" /></function>
+      <function name="AddCapsule"><parameter name="radius" /><parameter name="halfHeight" /><parameter name="world" /></function>
+      <function name="AddCylinder"><parameter name="radius" /><parameter name="height" /><parameter name="world" /></function>
+      <function name="AddTriangle"><parameter name="p0" /><parameter name="p1" /><parameter name="p2" /></function>
+      <function name="AddAxis"><parameter name="length" /><parameter name="world" /></function>
+      <function name="AddCircle"><parameter name="radius" /><parameter name="world" /><parameter name="segments" /></function>
+      <function name="AddCross"><parameter name="position" /><parameter name="size" /></function>
+    </table>
+    <table name="EngineBase">
+      <function name="GetTypeString" />
+      <function name="IsA"><parameter name="typeName" /></function>
+    </table>
+    <table name="Component" inherits="EngineBase">
+      <function name="GetGameObject" />
+    </table>
+    <table name="Transform" inherits="Component">
+      <function name="GetPosition" />
+      <function name="SetPosition"><parameter name="position" /></function>
+      <function name="AddPosition"><parameter name="delta" /></function>
+      <function name="GetRotationEuler" />
+      <function name="SetRotationEuler"><parameter name="rotation" /></function>
+      <function name="AddRotationEuler"><parameter name="rotation" /></function>
+      <function name="GetScale" />
+      <function name="SetScale"><parameter name="scale" /></function>
+      <function name="GoStraight"><parameter name="timeDelta" /></function>
+      <function name="GoBackward"><parameter name="timeDelta" /></function>
+      <function name="GoLeft"><parameter name="timeDelta" /></function>
+      <function name="GoRight"><parameter name="timeDelta" /></function>
+      <function name="GoUp"><parameter name="timeDelta" /></function>
+      <function name="GoDown"><parameter name="timeDelta" /></function>
+      <function name="GetWorldMatrix" />
+      <function name="GetCombinedWorldMatrix" />
+      <function name="GetLoadedWorldMatrix" />
+      <function name="GetLoadedCombinedWorldMatrix" />
+      <function name="LookAt"><parameter name="target" /></function>
+      <function name="Chase"><parameter name="target" /><parameter name="distance" /><parameter name="limit" /></function>
+    </table>
+    <table name="GameObject" inherits="EngineBase">
+      <function name="GetComponent"><parameter name="componentTag" /></function>
+      <function name="GetTransform" />
+      <function name="GetHandle" />
+      <function name="DestroyCascade" />
+      <function name="GetTag" />
+      <function name="SetTag"><parameter name="tag" /></function>
+    </table>
+    <table name="ComLuaScript" inherits="Component" />
+    <table name="CameraObject" inherits="GameObject">
+      <function name="GetView" />
+      <function name="GetProj" />
+      <function name="GetRay" />
+      <function name="UpdateViewMatrix" />
+      <function name="UpdateProjMatrix" />
+    </table>
+  </tables>
+  <variables>
+    <variable name="Object" type="Object" />
+    <variable name="Rand" type="Rand" />
+    <variable name="Collision" type="Collision" />
+    <variable name="Input" type="Input" />
+    <variable name="Camera" type="Camera" />
+    <variable name="Level" type="Level" />
+    <variable name="DbgLine" type="DbgLine" />
+    <variable name="self" type="ComLuaScript" />
+    <variable name="gameObject" type="GameObject" />
+    <variable name="transform" type="Transform" />
+  </variables>
+</doc>

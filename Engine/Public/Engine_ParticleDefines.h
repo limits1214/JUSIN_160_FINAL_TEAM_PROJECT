@@ -269,6 +269,29 @@ COMMON_PATTERN_FIELDS(X)
 	X(_float, endIntensity, 0.f) \
    COMMON_PATTERN_FIELDS(X)
 
+#define CONE_FIELDS(X) \
+    X(_float3, vCenter, _float3(0,0,0)) \
+    X(uint32_t, iCount, 12) \
+    X(_float, fAngleDegree, 1.f) \
+    X(_float, fSpeedMin, 1.f) \
+    X(_float, fSpeedMax, 1.f) \
+    X(_float, fLife, 1.f) \
+    X(_bool, bRandomSize, false) \
+	X(_float3, fSize, _float3(1.f,1.f,1.f)) \
+	X(_float3, fSizeMin, _float3(0, 0, 0))\
+	X(_float3, fSizeMax, _float3(0, 0, 0))\
+    X(_float3, fEndSize, _float3(1.f,1.f,1.f)) \
+    X(_bool, bRandomRot, false) \
+    X(_float3, vMinRot, _float3(0,0,0)) \
+    X(_float3, vMaxRot, _float3(0,0,0)) \
+    X(_float3, vRotation, _float3(0,0,0)) \
+    X(_float4, color, _float4(1,1,1,1)) \
+    X(_float4, emissive, _float4(0,0,0,0)) \
+    X(_float, startIntensity, 0.f) \
+    X(_float4, endEmissive, _float4(0,0,0,0)) \
+	X(_float, endIntensity, 0.f) \
+   COMMON_PATTERN_FIELDS(X)
+
 // ============================================================
 // struct 자동 생성 매크로
 // ============================================================
@@ -288,17 +311,18 @@ struct StructName \
 	struct SStraightGroundParam { STRAIGHT_GROUND_FIELDS(DECLARE_PARAM_FIELD) };
 	struct SMOKE { SMOKE_FIELDS(DECLARE_PARAM_FIELD) };
 	struct SLightning { LIGHTNING_STREIGHT(DECLARE_PARAM_FIELD) };
+	struct SConeParam { CONE_FIELDS(DECLARE_PARAM_FIELD) };
 
 #undef DECLARE_PARAM_FIELD
 
 
 	//3. STRUCT 추가
-	using PatternParamVariant = std::variant<SStairsParam, SCircleParam, SSpiralParam, SStraightGroundParam, SCircleSpreadParam, SMOKE, SLightning>;
+	using PatternParamVariant = std::variant<SStairsParam, SCircleParam, SSpiralParam, SStraightGroundParam, SCircleSpreadParam, SMOKE, SLightning, SConeParam>;
 
 	// 4. 콤보박스 등에서 쓸 이름 목록 (variant 인덱스와 순서 반드시 일치)
 	inline constexpr const char* PATTERN_KIND_NAMES[] =
 	{
-		"Stairs", "Circle",  "Spiral", "StraightGround", "CircleToWave", "SMOKE", "SLightning"
+		"Stairs", "Circle",  "Spiral", "StraightGround", "CircleToWave", "SMOKE", "SLightning", "Cone"
 	};
 
 	//5. 여기에 CASE 추가
@@ -314,6 +338,7 @@ struct StructName \
 		case 4: return SCircleSpreadParam{};
 		case 5: return SMOKE{};
 		case 6: return SLightning{};
+		case 7: return SConeParam{};
 			  
 		default: return SStairsParam{};
 		}

@@ -102,14 +102,14 @@ _bool CEdg_Phase::MovePhase(CEnderDragon* pDragon, _float fTimeDelta)
 	}
 
 	m_fTick += fTimeDelta;
-	_float t = m_fTick / 3.f;
+	_float t = m_fTick / 1.5f;
 	if (t >= 1.f)
 		t = 1.f;
 
 	_float3 vLerpDir{};
 	XMStoreFloat3(&vLerpDir, XMVector3Normalize(XMVectorLerp(XMLoadFloat3(&m_vLastDir), XMLoadFloat3(&m_vNextDir), t)));
 	
-	pMoveIntent->SetMoveIntent(vLerpDir, 5.f);
+	pMoveIntent->SetMoveIntent(vLerpDir, 15.f);
 	pMoveIntent->SetFacingIntent(vLerpDir, 6.f);
 	return false;
 }

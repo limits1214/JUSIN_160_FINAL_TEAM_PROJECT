@@ -45,8 +45,6 @@
 #include "ComPxTriMeshCollider.h"
 #include "ComPxCharacterController.h"
 
-#include "ComLuaScript.h"
-
 #include "ParticleManager.h"
 #include "Particle.h"
 
@@ -734,52 +732,6 @@ void CGameInstance::ClearAllRunningEffect() {
 
 #pragma endregion
 
-#pragma region LUA_MANAGER
-HRESULT CGameInstance::LuaScriptExecute(const std::string& script, const sol::environment& env, const std::string& chunkName)
-{
-	return m_pLuaManager->Execute(script, env, chunkName);
-}
-
-HRESULT CGameInstance::LuaScriptExecute(const std::string& script, const std::string& chunkName)
-{
-	return m_pLuaManager->Execute(script, chunkName);
-}
-
-sol::environment CGameInstance::LuaCreateEnvironment()
-{
-	return m_pLuaManager->CreateEnvironment();
-}
-
-sol::protected_function CGameInstance::LuaCacheFunction(const std::string& funcName)
-{
-	return m_pLuaManager->CacheFunction(funcName);
-}
-
-sol::protected_function CGameInstance::LuaCacheFunction(const sol::environment& env, const std::string& funcName)
-{
-	return m_pLuaManager->CacheFunction(env, funcName);
-}
-
-
-HRESULT CGameInstance::LuaCompile(const std::string& script)
-{
-	return m_pLuaManager->Compile(script);
-}
-void CGameInstance::LuaRegisterComponent(const std::string& path, ILuaScriptRelodable* pComp)
-{
-	m_pLuaManager->RegisterComponent(path, pComp);
-}
-
-void CGameInstance::LuaUnregisterComponent(const std::string& path, ILuaScriptRelodable* pComp)
-{
-	m_pLuaManager->UnregisterComponent(path, pComp);
-}
-
-void CGameInstance::LuaRegisterExtension(std::function<void(sol::state&)> extensionFunc)
-{
-	m_pLuaManager->RegisterExtension(extensionFunc);
-}
-
 #pragma region TIME_PROVIDER
 _float CGameInstance::UpdateTimeProvider()
 {
@@ -1322,7 +1274,12 @@ HRESULT	CGameInstance::Capture_ShadowMap() {
 VOID	CGameInstance::Notify_StaticShadowSceneChanged(const BoundingBox& ChangedBounds) {
 	m_pLightManager->Notify_StaticShadowSceneChanged(ChangedBounds);
 }
-
+VOID	CGameInstance::Bind_VolumetricLocalLightResources() {
+	m_pLightManager->Bind_VolumetricLocalLightResources();
+}
+VOID	CGameInstance::UnBind_VolumetricLocalLightResources() {
+	m_pLightManager->UnBind_VolumetricLocalLightResources();
+}
 _bool	CGameInstance::Evaluate_DirectionalLightCount() {
 	return m_pLightManager->Evaluate_DirectionalLightCount();
 }

@@ -69,19 +69,17 @@ VS_OUT VSMain(uint vID : SV_VertexID, uint instID : SV_InstanceID)
     float3 local = float3((baseUV - 0.5f) * p.size, 0);
 
     float4 vWorldPos;
+	if ((p.iBehaviorType & BEHAVIOR_BILLBOARD) != 0)
+	{
+		float sinRot = sin(p.rotation.z);
+		float cosRot = cos(p.rotation.z);
+		float2 rotatedLocal = float2(local.x * cosRot - local.y * sinRot, local.x * sinRot + local.y * cosRot);
+		float3 worldPos = p.position + camRight * rotatedLocal.x + camUp * rotatedLocal.y;
 
-    if ((p.iBehaviorType & BEHAVIOR_BILLBOARD) != 0)
-    {
-        float3 worldPos =
-        p.position +
-        camRight * local.x +
-        camUp * local.y;
-        vWorldPos = float4(worldPos, 1.0f);
-
-        // Compute_WorldNormal은 Normal/Tangent 두 개만 받으니, Binormal은 함수 내부에서 자동 계산됨
-        Out.vNormal = -camFwd;
-        Out.vTangent = camRight;
-    }
+		vWorldPos = float4(worldPos, 1.f);
+		Out.vNormal = -camFwd;
+		Out.vTangent = camRight * cosRot + camUp * sinRot;
+	}
     else
     {
         float3 rotatedLocal = RotateXYZ(local, p.rotation);
@@ -237,3 +235,25 @@ PS_OUT PSFlameRing(VS_OUT In)
 	return Out;
 }
 
+PS_OUT PSDragonBreath(VS_OUT In)
+{
+	PS_OUT Out = (PS_OUT) 0;
+
+	float lifeRatio = saturate(1.f - In.life / max(In.maxLife, 0.0001f));
+	float4 tex = g_DiffuseTexture.Sample(LinearWrap, In.vTexcoord);
+	float mask = max(max(tex.r, tex.g), tex.b);
+
+	clip(mask - 0.02f);
+
+	float bodyMask = smoothstep(0.02f, 0.5f, mask);
+	float emissiveMask = pow(saturate(mask), 1.5f);
+	float4 emissive = lerp(In.vEmissive, In.vEndEmissive, lifeRatio);
+
+	float3 bodyColor = In.vColor.rgb;
+	float3 emissiveColor = emissive.rgb * emissive.a * emissiveMask;
+	float3 finalColor = bodyColor + emissiveColor;
+	float finalAlpha = saturate(bodyMask * In.vColor.a);
+
+	Out.vDiffuse = float4(finalColor, finalAlpha);
+	return Out;
+}

@@ -1,12 +1,22 @@
 #pragma once
 #include "Monster.h"
 #include "Client_Defines.h"
-enum class DRAGON_SKILL{BOOM,BREATH,FIREBALL,SKIP,END};
-enum class DRAGON_PHASE{PHASE1, PHASE2, PHASE3, PHASE4, PHASE5, PHASE6, END};
+enum class DRAGON_SKILL{BOOM,BREATH,FIREBALL,PULSE,SKIP,END};
+enum class DRAGON_PHASE{PHASE1, PHASE2, PHASE3, PHASE4, PHASE5, PHASE6, PHASE7, END};
 // 투명 드래곤이 울부 짖었다
 
-
 NS_BEGIN(Client)
+typedef struct stredgskillInfo
+{
+	CHandle handle{};
+	_bool	bPool;
+	int32_t iBoneIndex{};
+	_string LevelTag{};
+	PROTO_GAMEOBJECT ProtoTag;
+	_string NameTag{};
+	int32_t iOffsetBoneIndex{-1};
+
+}EDG_SKILL_INFO;
 class CEnderDragon final : public CMonster
 {
 public:
@@ -49,16 +59,20 @@ private:
 	void						Update_BBToFsm();
 	void						Flag_Check(_float fTimeDelta) override;
 	_bool						BreakSkillType(PLAYER_SKILL_TYPE eType);
+	
 	void						Phase_Debug();
+	void						Picking(_float3& vPos,uint32_t iID);
 private:
 	class CEnderDragon_State* m_pFsm{ nullptr };
 
 	_string			m_EffectNames[ETOUI(DRAGON_SKILL::END)]{};
-	CHandle			m_SkillHandle[ETOUI(DRAGON_SKILL::END)]{};
+	EDG_SKILL_INFO	m_SkillHandle[ETOUI(DRAGON_SKILL::END)]{};
 	DRAGON_SKILL	m_eDragonSkill{};
 	DRAGON_PHASE	m_ePhase{};
-	_bool			m_bIsBreak{ false }, m_bActiveSKill{ false };
+	_bool			m_bIsBreak{ false }, m_bActiveSKill{ false }, m_bDebug{ false }, m_bPopup{ false };
 
+	_string						m_WayName{};
+	std::list<_float3>			m_DebugPoint;
 	std::array<_bool, ETOUI(DRAGON_PHASE::END)>	m_bPhaseLock{ false };
 public:
 	static E::UPtr<CEnderDragon> Create();

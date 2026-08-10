@@ -28,7 +28,6 @@ public:
 
 private:
 	std::string m_Source;
-	sol::load_result m_Compiled;
 
 public:
 	static SPtr<CResLuaScript> Create(const _string& sPath);

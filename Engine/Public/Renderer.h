@@ -11,9 +11,9 @@ class CResDynamicTexture2D;
 class CMyGFSDK_SSAO;
 class CMyFSR2_2;
 
-#define FROXELX	160
-#define FROXELY	90
-#define FROXELZ	64
+#define FROXELX	320
+#define FROXELY	180
+#define FROXELZ	96
 
 class CRenderer final : public CEngineBase
 {
@@ -144,6 +144,7 @@ private:
 
 	SPtr<CResCBuffer>			m_pBloomCBuffer{};
 	SPtr<CResCBuffer>			m_pVolumetricFroxelCBuffer{};
+	SPtr<CResCBuffer>			m_pVolumetricTemporalCBuffer{};
 	SPtr<CResCBuffer>			m_pVolumetricVFogCBuffer{};
 	SPtr<CResCBuffer>			m_pVolumetricCSMCBuffer{};
 	SPtr<CResCBuffer>			m_pLensFlareCBuffer{};
@@ -314,6 +315,10 @@ private:
 	TEXTURE3D		m_pVoxelAccumulated{};
 
 	ComPtr<ID3D11ShaderResourceView>	CSMShadowMapSRV{};
+
+	_bool m_bHistoryValid{ false };
+	uint32_t m_iVolumetricFrameIndex{};
+	XMFLOAT4X4 m_matPrevViewProj{};
 
 private:
 	std::optional<CHandle>	m_pOutlineTargetHandle{};

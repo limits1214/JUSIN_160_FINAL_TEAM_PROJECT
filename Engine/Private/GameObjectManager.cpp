@@ -626,6 +626,8 @@ std::optional<CHandle> CGameObjectManager::AddGameObjectToLayer(const StringID& 
 		ZoneNameV(tObjectZone, sDebugLabel.data(), sDebugLabel.size());
 	}
 
+	CGameObject* pRegisteredObject = pGameObject.get();
+
 	//auto iter = std::find(m_FreeSlots.begin(), m_FreeSlots.end(), objHandle.GetIndex());
 	//if (iter != m_FreeSlots.end())
 	//{
@@ -646,6 +648,9 @@ std::optional<CHandle> CGameObjectManager::AddGameObjectToLayer(const StringID& 
 	}
 
 	m_bTreeReBuild = true;
+
+	// [LSY] 슬롯과 레이어 등록을 모두 마친 뒤 호출하여, 객체가 자기 Handle과 레이어를 안전하게 조회할 수 있게 한다.
+	pRegisteredObject->OnRegisteredToManager();
 
 	return objHandle;
 }

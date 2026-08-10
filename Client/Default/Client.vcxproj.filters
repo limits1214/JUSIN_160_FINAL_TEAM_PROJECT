@@ -73,6 +73,9 @@
     <Filter Include="GameObject\Terrain\PathPlaybackTest">
       <UniqueIdentifier>{706c2a62-aaf1-4b39-99c1-91cd9a965278}</UniqueIdentifier>
     </Filter>
+    <Filter Include="GameObject\Terrain\LuaTest">
+      <UniqueIdentifier>{b7a52fda-7da4-45d9-9d0d-f609bf057819}</UniqueIdentifier>
+    </Filter>
     <Filter Include="GameObject\Terrain\NvClothCape">
       <UniqueIdentifier>{458c9c2b-bf7b-41e0-9b51-876506f76f81}</UniqueIdentifier>
     </Filter>
@@ -316,6 +319,9 @@
     <Filter Include="GameObject\Monster\EnderDragon\Skill\Bress">
       <UniqueIdentifier>{15ad6ff0-923c-4093-a6c9-78ea3f0340ef}</UniqueIdentifier>
     </Filter>
+    <Filter Include="GameObject\Monster\EnderDragon\Skill\Pulse">
+      <UniqueIdentifier>{09992e54-522b-43d3-906d-2a40796d13e4}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Client.h">
@@ -359,6 +365,9 @@
     </ClInclude>
     <ClInclude Include="..\public\MainAppLoader.h">
       <Filter>Loader\MainApp</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\ClientLuaBindings.h">
+      <Filter>MainApp</Filter>
     </ClInclude>
     <ClInclude Include="..\public\LevelCharlesRookwood.h">
       <Filter>Level\CharlesRookwood</Filter>
@@ -567,6 +576,9 @@
     <ClInclude Include="..\public\TestPathPlaybackObject.h">
       <Filter>GameObject\Terrain\PathPlaybackTest</Filter>
     </ClInclude>
+    <ClInclude Include="..\public\LuaTestObject.h">
+      <Filter>GameObject\Terrain\LuaTest</Filter>
+    </ClInclude>
     <ClInclude Include="..\public\NvClothCape.h">
       <Filter>GameObject\Terrain\NvClothCape</Filter>
     </ClInclude>
@@ -738,6 +750,9 @@
     <ClInclude Include="..\Public\UI_Structs.h">
       <Filter>99.Defines</Filter>
     </ClInclude>
+    <ClInclude Include="..\public\EdgPulse.h">
+      <Filter>GameObject\Monster\EnderDragon\Skill\Pulse</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Image Include="Client.ico">
@@ -779,6 +794,9 @@
     </ClCompile>
     <ClCompile Include="..\private\MainAppLoader.cpp">
       <Filter>Loader\MainApp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\private\ClientLuaBindings.cpp">
+      <Filter>MainApp</Filter>
     </ClCompile>
     <ClCompile Include="..\private\LevelCharlesRookwood.cpp">
       <Filter>Level\CharlesRookwood</Filter>
@@ -951,6 +969,9 @@
     <ClCompile Include="..\private\TestPathPlaybackObject.cpp">
       <Filter>GameObject\Terrain\PathPlaybackTest</Filter>
     </ClCompile>
+    <ClCompile Include="..\private\LuaTestObject.cpp">
+      <Filter>GameObject\Terrain\LuaTest</Filter>
+    </ClCompile>
     <ClCompile Include="..\private\NvClothCape.cpp">
       <Filter>GameObject\Terrain\NvClothCape</Filter>
     </ClCompile>
@@ -1108,6 +1129,9 @@
     </ClCompile>
     <ClCompile Include="..\private\EdgBreath.cpp">
       <Filter>GameObject\Monster\EnderDragon\Skill\Bress</Filter>
+    </ClCompile>
+    <ClCompile Include="..\private\EdgPulse.cpp">
+      <Filter>GameObject\Monster\EnderDragon\Skill\Pulse</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

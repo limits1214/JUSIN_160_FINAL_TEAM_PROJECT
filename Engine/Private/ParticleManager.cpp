@@ -581,10 +581,14 @@ void CParticleManager::UpdateGUI()
 		ImGui::InputText("VIBuffer2  if CPUTEX", szViBuffer2, IM_ARRAYSIZE(szViBuffer2));
 	}
 	static bool bShrinkWidth = true;
+	static int iTrailBehaviorMode = 1;
+	const char* trailBehaviorModeNames[] = { "Legacy", "Stabilized" };
 
 	if (particleTypeStr == "TRAIL_CPU")
 	{
 		ImGui::Checkbox("Shrink Width", &bShrinkWidth);
+		ImGui::Combo("Trail Behavior", &iTrailBehaviorMode,
+			trailBehaviorModeNames, IM_ARRAYSIZE(trailBehaviorModeNames));
 
 		ImGui::DragFloat("MaxDuration", &fMaxDuration, 0.01f);
 
@@ -767,7 +771,7 @@ void CParticleManager::UpdateGUI()
 						slotEmpty.selectedPath.empty() ? "" : slotEmpty.szTextureID1,
 						slotEmpty.selectedPath.empty() ? "" : slotEmpty.szTextureID2,
 						slotEmpty.selectedPath.empty() ? "" : slotEmpty.selectedPath,
-						iSelectedBlend, bShrinkWidth);
+						iSelectedBlend, bShrinkWidth, fMaxDuration, iTrailBehaviorMode);
 				}
 			}
 
@@ -1433,7 +1437,7 @@ void CParticleManager::UpdateGUI()
 
 		int countInput = (int)pendingStandard.count;
 		ImGui::InputInt("Count", &countInput);
-		pendingStandard.count = (uint32_t)std::clamp(countInput, 1, (int)MAX_SPAWN_PER_CALL);
+		pendingStandard.count = static_cast<uint32_t>(std::max(countInput, 1));
 
 		ImGui::Checkbox("RandomPos?", &pendingStandard.bRandomPos);
 		if (pendingStandard.bRandomPos) {
@@ -1803,7 +1807,8 @@ HRESULT CParticleManager::Save_Binary_Json(std::string outpath,
 	const std::string& AnyTexID1,
 	const std::string& AnyTexID2,
 	const std::string& AnyTexPath,
-	int iSelectedBlend, _bool bShrinkWidth ,_float fMaxduration)
+	int iSelectedBlend, _bool bShrinkWidth, _float fMaxduration,
+	int iTrailBehaviorMode)
 {
 	if (outpath.empty() || FullPath.empty())
 		return E_FAIL;
@@ -1892,6 +1897,7 @@ HRESULT CParticleManager::Save_Binary_Json(std::string outpath,
 		if (particleType == "TRAIL_CPU") {
 			newEntry["ShrinkWidth"] = bShrinkWidth;
 			newEntry["MaxDuration"] = fMaxduration;
+			newEntry["TrailBehaviorMode"] = iTrailBehaviorMode;
 		} 
 	}
 	else if (whatKind == "MESH")
@@ -2638,6 +2644,10 @@ HRESULT CParticleManager::LoadParticleJson(const std::string& strJsonPath)
 				desc.TexColumns = ColCount;
 				desc.bShrinkWidth = entry.value("ShrinkWidth", true);
 				desc.fMaxDuration = entry.value("MaxDuration", 0.f);
+				const int iTrailBehaviorMode = entry.value("TrailBehaviorMode", 1);
+				desc.eBehaviorMode = iTrailBehaviorMode == 0
+					? CTrail_CPU::TRAIL_BEHAVIOR_MODE::LEGACY
+					: CTrail_CPU::TRAIL_BEHAVIOR_MODE::STABILIZED;
 				particle = CTrail_CPU::Create(&desc);
 
 
@@ -3543,6 +3553,8 @@ std::vector<PARTICLE_SPAWN_DATA> CParticleManager::BuildSpawnData(const PatternP
 				return ParticlePattern::MakeSmoke(param);
 			else if constexpr (std::is_same_v<T, SLightning>)
 				return ParticlePattern::MakeLightning(param);
+			else if constexpr (std::is_same_v<T, SConeParam>)
+				return ParticlePattern::MakeCone(param);
 			else
 			{
 				static_assert(!sizeof(T*), "BuildSpawnData: unhandled PatternParamVariant type");
@@ -3611,6 +3623,10 @@ void CParticleManager::ApplyWorldMatToPattern(PatternParamVariant& pv, FXMMATRIX
 				XMStoreFloat3(&p.vCenter, vWorldOrigin);
 			}
 			else if constexpr (std::is_same_v<T, SLightning>)
+			{
+				XMStoreFloat3(&p.vCenter, vWorldOrigin);
+			}
+			else if constexpr (std::is_same_v<T, SConeParam>)
 			{
 				XMStoreFloat3(&p.vCenter, vWorldOrigin);
 			}

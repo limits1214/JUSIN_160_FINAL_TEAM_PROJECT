@@ -19,6 +19,7 @@
 #include "ComPxRigidBody.h"
 #include "OilBarrel.h"
 #include "TestPathPlaybackObject.h"
+#include "LuaTestObject.h"
 #include "TombBossBullet.h"
 #include "RagdollTest.h"
 #include "NvClothCape.h"
@@ -86,6 +87,19 @@ HRESULT CLevelTerrain::Initialize()
 
 	if (FAILED(InitializePathPlaybackTests()))
 		return E_FAIL;
+
+	{
+		CGameObject::GAMEOBJECT_DESC Desc{};
+		Desc.sObjectTag = "LuaTestObject";
+		if (!CGameInstance::Get().AddGameObjectToLayer(
+			LEVEL::TERRAIN,
+			PROTO_GAMEOBJECT::Prototype_GameObject_LuaTest,
+			"00_LuaTest",
+			&Desc))
+		{
+			return E_FAIL;
+		}
+	}
 
 	if (FAILED(InitializeOilBarrelPool()))
 		return E_FAIL;
@@ -760,16 +774,16 @@ HRESULT CLevelTerrain::SpawnMonster(const std::optional<CHandle>& hPlayer)
 		TmbGurdianDesc.LevelTag = MagicEnumToStringView(LEVEL::TERRAIN);
 		XMStoreFloat3(&TmbGurdianDesc.vPos, XMVectorSet(44.f, 15.f, 65.f, 1.f));
 		TmbGurdianDesc.ReSourceTag = "Model_Resource_TMBGurdian";
-
+	
 		TmbGurdianDesc.resBeHaviorMajor = "BTJSON";
 		TmbGurdianDesc.resBeHaviorMinor = "TOMB_BT_GURDIAN3";
 		TmbGurdianDesc.WeaponProtoName = MagicEnumToStringView(PROTO_GAMEOBJECT::Prototype_GameObject_Mace);
 		TmbGurdianDesc.WeaponResourceName = "Model_Resource_Mace";
 		TmbGurdianDesc.MonType = MONSTER_TYPE::NORMAL;
-
+	
 		XMStoreFloat3(&TmbGurdianDesc.vScale, XMVectorSet(2.f, 2.f, 2.f, 1));
 		auto BossTmb = E::CGameInstance::Get().AddGameObjectToLayer(LEVEL::TERRAIN, PROTO_GAMEOBJECT::Prototype_GameObject_TMBGurdian, "02_TmbGurdian", &TmbGurdianDesc);
-
+	
 		if (!BossTmb)
 		{
 			MSG_BOX("Create TmbGurdian Failed in Terrain");
@@ -787,9 +801,9 @@ HRESULT CLevelTerrain::SpawnMonster(const std::optional<CHandle>& hPlayer)
 		Dragon.resBeHaviorMajor = "BTJSON";
 		Dragon.resBeHaviorMinor = "ENDERDRAGON";
 		Dragon.MonType = MONSTER_TYPE::BOSS;
-
+	
 		auto pDragon = E::CGameInstance::Get().AddGameObjectToLayer(LEVEL::TERRAIN, PROTO_GAMEOBJECT::Prototype_GameObject_Dragon, "02_Dragon", &Dragon);
-
+	
 		if (!pDragon)
 		{
 			MSG_BOX("Create Dragon Failed in Terrain");
@@ -803,7 +817,7 @@ HRESULT CLevelTerrain::SpawnMonster(const std::optional<CHandle>& hPlayer)
 		CLightPlacementObject::DESC desc{};
 		desc.sObjectTag = "TerrainLightPlacement";
 		desc.sLightFileName = "Level_Terrain";
-
+	
 		if (!CGameInstance::Get().AddGameObjectToLayer(
 			ES_EngineProtoMajorType::PERMANENT,
 			ES_EngineProtoGameObject::

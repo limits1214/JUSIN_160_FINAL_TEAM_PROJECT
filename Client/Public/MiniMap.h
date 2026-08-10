@@ -93,6 +93,7 @@ private:
 	void UpdateFogMovementOffset(const _float3& playerPosition);
 	void UpdateBattleZones(const _float3& playerPosition);
 	void UpdateObjectiveMarkers(
+		_float fTimeDelta,
 		const _float3& playerPosition,
 		E::CCameraObject* camera);
 	void HideObjectiveMarkers();
@@ -100,10 +101,12 @@ private:
 		_float distanceSq) const;
 	void SetObjectiveMarkerVisible(E::CUIObject* marker, _bool visible);
 	void SetObjectivePhaseVisible(
-		OBJECTIVE_VISUAL_PHASE& phase, _bool visible);
+		OBJECTIVE_VISUAL_PHASE& phase, _bool visible,
+		_float fTimeDelta);
 	void SetScreenObjectivePhaseVisible(
-		OBJECTIVE_VISUAL_PHASE& phase, _bool visible);
-	_bool UpdateScreenObjectiveMarkerPosition(
+		OBJECTIVE_VISUAL_PHASE& phase, _float targetAlpha,
+		_float fTimeDelta);
+	_float UpdateScreenObjectiveMarkerPosition(
 		OBJECTIVE_VISUAL_PHASE& phase,
 		const _float3& worldPosition,
 		E::CCameraObject* camera);

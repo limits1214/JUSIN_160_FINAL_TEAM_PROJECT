@@ -72,8 +72,8 @@ void CEdgBreath::Active(const _string& SkillName)
 	auto pDest = pSrc->Get_Target();
 	if (nullptr == pDest) return;
 
-	const _float4x4* pBoneMatrix = Get_BoneMatrix();
-	_matrix matBone = XMLoadFloat4x4(pBoneMatrix);
+	 _float4x4 BoneMatrix = Get_BoneMatrix(m_iBoneIndex);
+	_matrix matBone = XMLoadFloat4x4(&BoneMatrix); 
 	_vector vDestPos = XMLoadFloat3(&pDest->GetTransform().GetPosition());
 
 
@@ -98,26 +98,37 @@ void CEdgBreath::Cancle()
 
 void CEdgBreath::MoveBreath(_float fTimeDelta)
 {
-	const _float4x4* pBoneMatrix = Get_BoneMatrix();
-	_matrix matBone = XMLoadFloat4x4(pBoneMatrix);
+	 _float4x4 BoneMatrix = Get_BoneMatrix(m_iBoneIndex);
+	_matrix matBone = XMLoadFloat4x4(&BoneMatrix);
 	_vector vQuat = XMQuaternionRotationMatrix(matBone);
 
 	m_fBreathTick += fTimeDelta;
 
-	_float t = m_fBreathTick / 3.f;
-	if (t >= 1.f)
-		t = 1.f;
-	_vector vLerpDir = XMVector3Normalize(XMVectorLerp(XMLoadFloat3(&m_vDir), XMLoadFloat3(&m_vTargetDir), t));
-	if (MoveSweep(matBone.r[3], vLerpDir))
+	_float t = std::min(m_fBreathTick / 3.f, 1.f);
+	_vector vForward = XMVector3Normalize(XMVectorLerp(XMLoadFloat3(&m_vDir), XMLoadFloat3(&m_vTargetDir), t));
+	_vector vUp = XMVector3Normalize(matBone.r[1]);
+
+	if (fabsf(XMVectorGetX(XMVector3Dot(vForward, vUp))) > 0.98f)
+		vUp = XMVectorSet(0.f, 1.f, 0.f, 0.f);
+
+	_vector vRight = XMVector3Normalize(XMVector3Cross(vUp, vForward));
+	vUp = XMVector3Normalize(XMVector3Cross(vForward, vRight));
+
+	_matrix breathWorld = XMMatrixIdentity();
+	breathWorld.r[0] = XMVectorSetW(vRight, 0.f);
+	breathWorld.r[1] = XMVectorSetW(vUp, 0.f);
+	breathWorld.r[2] = XMVectorSetW(vForward, 0.f);
+	breathWorld.r[3] = XMVectorSetW(matBone.r[3], 1.f);
+
+	if (MoveSweep(matBone.r[3], vForward))
 	{
-		if (m_iBoneIndex != INVALID_EFFECT_INSTANCE_ID)
-			CGameInstance::Get().SetEffectWorldMatrix(m_iBoneIndex, *GetTransform().GetWorldMatrix());
+		if (m_iSkillEffID != INVALID_EFFECT_INSTANCE_ID)
+			CGameInstance::Get().SetEffectWorldMatrix(m_iSkillEffID, *GetTransform().GetWorldMatrix());
 		GetTransform().SetPosition(matBone.r[3]);
 		GetTransform().SetQuaternion(vQuat);
 		GetTransform().Update();
 	
 	}
-	
 	
 }
 

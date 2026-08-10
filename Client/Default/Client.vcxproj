@@ -212,6 +212,7 @@
     <ClInclude Include="..\public\DragonSkill.h" />
     <ClInclude Include="..\public\EdgBreath.h" />
     <ClInclude Include="..\public\EdgFireBall.h" />
+    <ClInclude Include="..\public\EdgPulse.h" />
     <ClInclude Include="..\public\Edg_Combat.h" />
     <ClInclude Include="..\public\Edg_Hit.h" />
     <ClInclude Include="..\public\Edg_Phase.h" />
@@ -279,6 +280,7 @@
     <ClInclude Include="..\Public\Level_Defines.h" />
     <ClInclude Include="..\Public\MainApp.h" />
     <ClInclude Include="..\public\MainAppLoader.h" />
+    <ClInclude Include="..\public\ClientLuaBindings.h" />
     <ClInclude Include="..\Public\Client_Resources.h" />
     <ClInclude Include="..\public\MonEffectBall.h" />
     <ClInclude Include="..\Public\Monster.h" />
@@ -290,6 +292,7 @@
     <ClInclude Include="..\Public\Player_RepairoSkill_State.h" />
     <ClInclude Include="..\public\RagdollTest.h" />
     <ClInclude Include="..\public\TestPathPlaybackObject.h" />
+    <ClInclude Include="..\public\LuaTestObject.h" />
     <ClInclude Include="..\Public\MiniMap.h" />
     <ClInclude Include="..\Public\Player.h" />
     <ClInclude Include="..\Public\PlayerRagdollController.h" />
@@ -347,6 +350,7 @@
     <ClCompile Include="..\Private\BackGround.cpp" />
     <ClCompile Include="..\private\EdgBreath.cpp" />
     <ClCompile Include="..\private\EdgFireBall.cpp" />
+    <ClCompile Include="..\private\EdgPulse.cpp" />
     <ClCompile Include="..\private\LevelLastBossRanrok.cpp" />
     <ClCompile Include="..\private\LevelLastBossRanrokLoader.cpp" />
     <ClCompile Include="..\private\BTDecEdgPatroll.cpp" />
@@ -414,6 +418,7 @@
     <ClCompile Include="..\Private\LevelUIEditorLoader.cpp" />
     <ClCompile Include="..\Private\MainApp.cpp" />
     <ClCompile Include="..\private\MainAppLoader.cpp" />
+    <ClCompile Include="..\private\ClientLuaBindings.cpp" />
     <ClCompile Include="..\Private\MiniMap.cpp" />
     <ClCompile Include="..\private\MonEffectBall.cpp" />
     <ClCompile Include="..\Private\Monster.cpp" />
@@ -425,6 +430,7 @@
     <ClCompile Include="..\Private\Player_RepairoSkill_State.cpp" />
     <ClCompile Include="..\private\RagdollTest.cpp" />
     <ClCompile Include="..\private\TestPathPlaybackObject.cpp" />
+    <ClCompile Include="..\private\LuaTestObject.cpp" />
     <ClCompile Include="..\Private\Player.cpp" />
     <ClCompile Include="..\Private\PlayerRagdollController.cpp" />
     <ClCompile Include="..\Private\PlayerThirdPersonCamera.cpp" />

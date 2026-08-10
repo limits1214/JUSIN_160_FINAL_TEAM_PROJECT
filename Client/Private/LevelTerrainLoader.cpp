@@ -6,6 +6,7 @@
 #include "Client_Resources.h"
 #include "OilBarrel.h"
 #include "TestPathPlaybackObject.h"
+#include "LuaTestObject.h"
 #include "RagdollTest.h"
 #include "TombBossBullet.h"
 #include "NvClothCape.h"
@@ -25,6 +26,7 @@
 #include "EnderDragon_State.h"
 #include "EdgFireBall.h"
 #include "EdgBreath.h"
+#include "EdgPulse.h"
 // UI
 #include "UIController.h"
 #include "EffectUI.h"
@@ -91,6 +93,15 @@ std::future<bool> CLevelTerrainLoader::Load()
 				CTestPathPlaybackObject::Create())))
 			{
 				MSG_BOX("TERRAIN Failed Prototype_GameObject_TestPathPlayback");
+				return false;
+			}
+
+			if (FAILED(E::CGameInstance::Get().AddPrototype(
+				LEVEL::TERRAIN,
+				PROTO_GAMEOBJECT::Prototype_GameObject_LuaTest,
+				CLuaTestObject::Create())))
+			{
+				MSG_BOX("TERRAIN Failed Prototype_GameObject_LuaTest");
 				return false;
 			}
 
@@ -483,7 +494,7 @@ HRESULT CLevelTerrainLoader::MonsterLoad_InWorker()
 			CResModel::Create("./Resources/SampleClient/Models/Skeleton/Dragon/SK_Dragon.bin"))) {
 		
 			E::CResModel::DESC pDesc{};
-			pDesc.PreTransformMatrix = XMMatrixScaling(3.f, 3.f, 3.f) * XMMatrixRotationY(XMConvertToRadians(180.f));
+			pDesc.PreTransformMatrix = XMMatrixScaling(2.f, 2.f, 2.f) * XMMatrixRotationY(XMConvertToRadians(180.f));
 		
 			if (FAILED(res->Load(pDesc)))
 			{
@@ -499,6 +510,7 @@ HRESULT CLevelTerrainLoader::MonsterLoad_InWorker()
 		if (FAILED(CGameInstance::Get().AddPrototype(LEVEL::TERRAIN, "Prototype_Component_Dragon_FSM",CEnderDragon_State::Create()))) return E_FAIL;
 		if (FAILED(CGameInstance::Get().AddPrototype(LEVEL::TERRAIN, PROTO_GAMEOBJECT::Prototype_GameObject_Dragon_FireBall, CEdgFireBall::Create()))) return E_FAIL;
 		if (FAILED(CGameInstance::Get().AddPrototype(LEVEL::TERRAIN, PROTO_GAMEOBJECT::Prototype_GameObject_Dragon_Breath, CEdgBreath::Create()))) return E_FAIL;
+		if (FAILED(CGameInstance::Get().AddPrototype(LEVEL::TERRAIN, PROTO_GAMEOBJECT::Prototype_GameObject_Dragon_Pulse, CEdgPulse::Create()))) return E_FAIL;
 
 	}
 

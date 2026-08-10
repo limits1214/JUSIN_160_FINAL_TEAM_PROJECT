@@ -19,8 +19,6 @@
 #include "MyMagicSquareStep.h"
 #include "MyMagicSquareStepController.h"
 
-#include "MyMagicSquareStepController.h"
-
 #include "BridgeCRW.h"
 #include "TmbGurdian.h"
 #include "LightPlacementObject.h"

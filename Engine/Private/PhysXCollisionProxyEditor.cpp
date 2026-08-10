@@ -32,6 +32,8 @@ namespace
 		"Level_CharlesRookwood",
 		"Level_CharlesRookwood_Trigger",
 		"Level_BossCharlesRookwood",
+		"Level_LastBossRanrok",
+		"Level_HogwartWorld",
 	};
 	_bool IsUnitCylinderConvexPath(const std::string& path)
 	{

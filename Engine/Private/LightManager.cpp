@@ -484,7 +484,7 @@ HRESULT CLightManager::Render_ObjectShadow() {
 		LightBuffer.AffectedLight[LightCount].LightIntensity	= LightOBJ->Get_LightIntensity();
 		LightBuffer.AffectedLight[LightCount].LightRange		= LightOBJ->Get_LightRange();
 		LightBuffer.AffectedLight[LightCount].Position			= LightOBJ->Get_LightPosition();
-
+		LightBuffer.AffectedLight[LightCount].VolumetricIntensity = LightOBJ->Get_VolumetricIntensity();
 		if (bIsPointLight) {
 			LightBuffer.AffectedLight[LightCount].InnerAttanuation = LightOBJ->Get_PointLightInnerAttenuation();
 			LightBuffer.AffectedLight[LightCount].OuterAttanuation = LightOBJ->Get_PointLightOuterAttenuation();
@@ -612,7 +612,7 @@ HRESULT CLightManager::Render_ObjectNonShadow(){
 			LightBuffer.AffectedLight[LightCount].OuterAttanuation = cosf(XMConvertToRadians(LightOBJ->Get_LightOuterAttenuation()));
 		}
 		LightBuffer.AffectedLight[LightCount].ShadowSlot = -1;
-
+		LightBuffer.AffectedLight[LightCount].VolumetricIntensity = LightOBJ->Get_VolumetricIntensity();
 		LightCount++;
 	}
 	LightBuffer.LightCount = LightCount;
@@ -984,6 +984,24 @@ HRESULT CLightManager::Copy_StaticShadowToFinal(LIGHT_TYPE _LightType, uint32_t 
 	}
 
 	return S_OK;
+}
+
+VOID CLightManager::Bind_VolumetricLocalLightResources() {
+	m_pContext->CSSetConstantBuffers(static_cast<uint32_t>(B_SLOTNUMBER::LIGHT), 1, m_pNormalLightConstantBuffer->GetCBuffer().GetAddressOf());
+
+	m_pContext->CSSetShaderResources(10, 1, m_pDynamicDirectionalShadowList.SRV.GetAddressOf());
+	m_pContext->CSSetShaderResources(12, 1, m_pDynamicPointShadowList.SRV.GetAddressOf());
+}
+
+VOID CLightManager::UnBind_VolumetricLocalLightResources() {
+	ID3D11ShaderResourceView* pNullSRV[1] = { nullptr };
+
+	m_pContext->CSSetShaderResources(10, 1, pNullSRV);
+	m_pContext->CSSetShaderResources(12, 1, pNullSRV);
+
+	ID3D11Buffer* pNullBuffer[1] = {nullptr};
+
+	m_pContext->CSSetConstantBuffers(static_cast<uint32_t>(B_SLOTNUMBER::LIGHT), 1, pNullBuffer);
 }
 
 #pragma region EFFECT_LIGHT
@@ -1520,6 +1538,7 @@ VOID	CLightManager::Update_LightData() {
 				m_pLightConstantVariable.AffectedLight[i].OuterAttanuation = cosf(XMConvertToRadians(LightOBJ->Get_LightOuterAttenuation()));
 			}
 			m_pLightConstantVariable.AffectedLight[i].ShadowSlot			= LightOBJ->Get_ShadowSlotNumb();
+			m_pLightConstantVariable.AffectedLight[i].VolumetricIntensity   = LightOBJ->Get_VolumetricIntensity();
 		}
 	}
 	{

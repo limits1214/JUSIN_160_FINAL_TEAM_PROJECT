@@ -140,10 +140,11 @@ public:
 	virtual _string				Get_SkillName(ATTMON SkillNode) { return ""; };
 	virtual void				Set_AttTable(ATTMON eType, _float2 fSkillRatio) {};
 	void						Get_SoundKey(_string& CursoundName);
-	const _float4x4*					Get_CombineBoneMatrix(int32_t iBoneIndex);
+	const _float4x4*			Get_CombineBoneMatrix(int32_t iBoneIndex);
 	CComAnimator*				Get_Animator();
 	CComCharacterMoveIntent*	Get_MoveIntent();
 	CBTBlackBoard*				Get_BlackBoard();
+	int32_t						Find_AnimIndex(const _string& AnimName);
 protected:
 	uint32_t					Find_SkillNum(ATTMON eType);
 	 _bool						Check_Flag(uint32_t iFlag);

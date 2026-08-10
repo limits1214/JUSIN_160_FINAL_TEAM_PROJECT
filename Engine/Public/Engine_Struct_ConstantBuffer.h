@@ -135,7 +135,7 @@ namespace Engine
 	{
 		uint32_t    g_iSpawnCount;
 		_float3     pad;
-		PARTICLE_SPAWN_DATA  g_SpawnData[MAX_SPAWN_PER_CALL];
+		PARTICLE_SPAWN_DATA  g_SpawnData[1000];
 	}CB_RIBBON_PARTICLE;
 	static_assert(sizeof(CB_RIBBON_PARTICLE) % 16 == 0);
 
@@ -203,14 +203,15 @@ namespace Engine
 	struct CB_FROXEL
 	{
 		_float3	g_fFroxelGridSize;
-		_float	g_fNearZ;
+		_float	g_fSliceDepthRatio;
 
-		_float	g_fFarZ;
-		_float2	g_fScreenResolution;
-		_float  g_fSliceDepthRatio;
-
+		_float2	g_fFullScreenResolution;
 		_float2	g_fHalfScreenResolution;
-		_float2	FroxelPadding1;
+
+		_float	g_fNearZ;
+		_float	g_fFarZ;
+		_float  g_fAnalyticBlendStart;
+		_float  g_fAnalyticBlendEnd;
 	};
 	static_assert(sizeof(CB_FROXEL) % 16 == 0);
 
@@ -248,6 +249,16 @@ namespace Engine
 		_float2 g_fShadowBias;
 	};
 	static_assert(sizeof(CB_CSM) % 16 == 0);
+
+	struct CB_VLTEMPORAL
+	{
+		_matrix	 g_mPrevViewProj;
+		uint32_t g_iFrameIndex;
+		_float   g_fHistoryWeight;
+		uint32_t g_iHistoryValid;
+		_float   Padding;
+	};
+	static_assert(sizeof(CB_VLTEMPORAL) % 16 == 0);
 
 	struct CB_LENSFLARE
 	{

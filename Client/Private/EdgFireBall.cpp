@@ -39,7 +39,8 @@ void CEdgFireBall::PriorityUpdate(E::_float fTimeDelta)
 
 	if (!m_bActive) return;
 
-	Life_Check(fTimeDelta);
+	if (Life_Check(fTimeDelta))
+		SetPendingDestroy();
 }
 
 void CEdgFireBall::FixedUpdate(E::_float fTimeDelta)
@@ -66,17 +67,18 @@ void CEdgFireBall::LateUpdate(E::_float fTimeDelta)
 
 void CEdgFireBall::Active(const _string& SkillName)
 {
-	const _float4x4* pBoneMatrix = Get_BoneMatrix();
+	_float4x4 matB = Get_BoneMatrix(m_iBoneIndex);
+	_float4x4 matOffB = Get_BoneMatrix(m_iOffsetBoneIdex);
+	_matrix matBone = XMLoadFloat4x4(&matB);
+	_matrix matOffset = XMLoadFloat4x4(&matOffB);
 
-	if (nullptr == pBoneMatrix) return;
-
-	_matrix matBone = XMLoadFloat4x4(pBoneMatrix);
 	_vector vQuat = XMQuaternionRotationMatrix(matBone);
 	
 	GetTransform().SetPosition(matBone.r[3]);
 	GetTransform().SetQuaternion(vQuat);
 	GetTransform().Update();
-	Set_TargetDir(matBone.r[3]);
+	//Set_TargetDir(matBone.r[3]);
+	XMStoreFloat3(&m_vTargetDir, XMVector3Normalize(matOffset.r[3] - matBone.r[3]));
 	m_bActive = true;
 	m_bHit = false;
 	m_fLife = 0.f;

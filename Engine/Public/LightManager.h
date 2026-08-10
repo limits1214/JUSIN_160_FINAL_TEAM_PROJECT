@@ -84,6 +84,9 @@ public:
 	VOID	Build_StaticShadowCasterList(std::optional<CHandle> _LightHandle);	
 	VOID	Notify_StaticShadowSceneChanged(const BoundingBox& ChangedBounds);
 
+	VOID	Bind_VolumetricLocalLightResources();
+	VOID	UnBind_VolumetricLocalLightResources();
+
 	XMMATRIX	Get_CascadeShadowViewProj(uint32_t _Index);
 	XMFLOAT4	Get_CascadeShadowSplits();
 	CSM_DATA&	Get_MainDirectionalLightData() { return m_pMainDirectionalLight; }
@@ -127,7 +130,6 @@ private:
 	_bool	IsInFrustum(CLight* _LightOBJ);
 
 	HRESULT Copy_StaticShadowToFinal(LIGHT_TYPE _LightType, uint32_t _ShadowSlot);
-
 
 
 private:

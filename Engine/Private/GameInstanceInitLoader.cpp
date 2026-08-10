@@ -45,7 +45,6 @@
 #include "ComCharacterMotor.h"
 #include "ComSound.h"
 #include "ComPathPlayback.h"
-#include "ComLuaScript.h"
 #include "StateMachine.h"
 
 #include "ParticleManager.h"
@@ -512,15 +511,6 @@ HRESULT CGameInstanceInitLoader::LoadPrototypeComponent()
 	}
 
 	// 루아
-	{
-		if (CGameInstance::Get().AddPrototype(ES_EngineProtoMajorType::LUA, ES_EngineProtoComponent::Prototype_Component_ComLuaScript, CComLuaScript::Create()))
-		{
-			return E_FAIL;
-		}
-	}
-
-
-
 	if (CGameInstance::Get().AddPrototype(ES_EngineProtoMajorType::UI, "Prototype_Component_ButtonUI", CButtonComponent::Create()))
 	{
 		return E_FAIL;
@@ -1408,7 +1398,7 @@ HRESULT CGameInstanceInitLoader::LoadTexture()
 
 HRESULT CGameInstanceInitLoader::LoadLua()
 {
-	if (!E::CGameInstance::Get().AddResource(ES_EngineResMajorType::PERMANENT_LUA, ES_EngineResLuaScript::LUA_TEST, CResLuaScript::CreateAndLoad("./LuaFiles/SomeFolder/Hi.lua")))
+	if (!E::CGameInstance::Get().AddResource(ES_EngineResMajorType::PERMANENT_LUA, ES_EngineResLuaScript::LUA_TEST, CResLuaScript::CreateAndLoad("./LuaFiles/Test.lua")))
 	{
 		return E_FAIL;
 	}
