@@ -1731,12 +1731,12 @@ void CPlayer::LateUpdate(E::_float fTimeDelta)
 
 void CPlayer::UpdateAttachedEffects()
 {
-	if (m_iDashBodyEffectID == INVALID_EFFECT_INSTANCE_ID)
-		return;
-
-	CGameInstance::Get().SetEffectWorldMatrix(
-		m_iDashBodyEffectID,
-		*GetTransform().GetWorldMatrix());
+	if (m_iDashBodyEffectID != INVALID_EFFECT_INSTANCE_ID)
+	{
+		CGameInstance::Get().SetEffectWorldMatrix(
+			m_iDashBodyEffectID,
+			*GetTransform().GetWorldMatrix());
+	}
 	
 
 	// 캐릭터의 이동과 회전이 모두 확정된 LateUpdate 시점에 보호막을 붙인다.
