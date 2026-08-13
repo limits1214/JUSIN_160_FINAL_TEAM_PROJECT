@@ -3493,34 +3493,6 @@ uint32_t CParticleManager::Spawn(const std::vector<SPAWN_COMMAND>& templateComma
 
 		
 
-			if (p.bInheritWorldRotation)
-			{
-				XMVECTOR worldScale{};
-				XMVECTOR worldRotation{};
-				XMVECTOR worldTranslation{};
-				if (XMMatrixDecompose(&worldScale, &worldRotation, &worldTranslation, matWorld))
-				{
-					const XMVECTOR localRotation = XMQuaternionRotationRollPitchYaw(
-						p.rotation.x, p.rotation.y, p.rotation.z);
-					_float4 combined{};
-					XMStoreFloat4(&combined, XMQuaternionNormalize(
-						XMQuaternionMultiply(localRotation, worldRotation)));
-
-					const _float sinX = 2.f * (combined.w * combined.x + combined.y * combined.z);
-					const _float cosX = 1.f - 2.f * (combined.x * combined.x + combined.y * combined.y);
-					const _float sinY = std::clamp(
-						2.f * (combined.w * combined.y - combined.z * combined.x), -1.f, 1.f);
-					const _float sinZ = 2.f * (combined.w * combined.z + combined.x * combined.y);
-					const _float cosZ = 1.f - 2.f * (combined.y * combined.y + combined.z * combined.z);
-					p.rotation = {
-						XMConvertToDegrees(atan2f(sinX, cosX)),
-						XMConvertToDegrees(asinf(sinY)),
-						XMConvertToDegrees(atan2f(sinZ, cosZ)),
-						0.f
-					};
-				}
-			}
-
 			// rotMin/rotMax는 변환하지 않음
 			break;
 		}

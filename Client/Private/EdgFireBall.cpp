@@ -32,14 +32,7 @@ HRESULT CEdgFireBall::Initialize(void* pArg)
 	m_fMaxLife = 3.f;
 
 
-	if (m_eType == DRAGON_SKILL::FIREBALL) {
-		m_iEffectID = CGameInstance::Get().PlayEffect("DragonSpit", *m_pComTransform->GetWorldMatrix());
-	}
-	else if (m_eType == DRAGON_SKILL::BLACKBALL || m_eType == DRAGON_SKILL::THREEBALL) {
-		m_iEffectID = CGameInstance::Get().PlayEffect("DragonProj2", *m_pComTransform->GetWorldMatrix());
 
-
-	}
 
 
 
@@ -91,22 +84,54 @@ void CEdgFireBall::Active(EDG_ACSKT_DESC& SkillTable, _vector vOffsetPos)
 	_float4x4 matOffB = Get_BoneMatrix(m_iOffsetBoneIdex);
 	_matrix matBone = XMLoadFloat4x4(&matB);
 	_matrix matOffset = XMLoadFloat4x4(&matOffB);
-
-	_vector vQuat = XMQuaternionRotationMatrix(matBone);
 	
 	GetTransform().SetPosition(matBone.r[3]);
-	GetTransform().SetQuaternion(vQuat);
-	GetTransform().Update();
 
 	if(m_eType == DRAGON_SKILL::FIREBALL || m_eType == DRAGON_SKILL::BLACKBALL)
 		Set_TargetDir(matBone.r[3]);
 	else if (m_eType == DRAGON_SKILL::THREEBALL)
 		XMStoreFloat3(&m_vTargetDir, XMVector3Normalize(matOffset.r[3] - matBone.r[3]));
+
+	_vector vDir = XMLoadFloat3(&m_vTargetDir);
+	if (XMVectorGetX(XMVector3LengthSq(vDir)) <= FLT_EPSILON)
+		vDir = XMVector3Normalize(matBone.r[2]);
+	else
+		vDir = XMVector3Normalize(vDir);
+
+	XMStoreFloat3(&m_vTargetDir, vDir);
+
+	_vector vWorldUp = XMVectorSet(0.f, 1.f, 0.f, 0.f);
+	if (fabsf(XMVectorGetX(XMVector3Dot(vDir, vWorldUp))) > 0.999f)
+		vWorldUp = XMVectorSet(0.f, 0.f, 1.f, 0.f);
+
+	_vector vRight = XMVector3Normalize(XMVector3Cross(vWorldUp, vDir));
+	_vector vUp = XMVector3Normalize(XMVector3Cross(vDir, vRight));
+
+	_matrix matRotation = XMMatrixIdentity();
+	matRotation.r[0] = XMVectorSetW(vRight, 0.f);
+	matRotation.r[1] = XMVectorSetW(vUp, 0.f);
+	matRotation.r[2] = XMVectorSetW(vDir, 0.f);
+
+	_float4x4 spawnWorld{};
+	XMStoreFloat4x4(&spawnWorld, XMMatrixTranslationFromVector(matBone.r[3]));
 	
+	if (m_eType == DRAGON_SKILL::FIREBALL) {
+		m_iEffectID = CGameInstance::Get().PlayEffect("DragonSpit", spawnWorld);
+	}
+	else if (m_eType == DRAGON_SKILL::BLACKBALL || m_eType == DRAGON_SKILL::THREEBALL) {
+		m_iEffectID = CGameInstance::Get().PlayEffect("DragonProj2", spawnWorld);
+	}
+
+	GetTransform().SetQuaternion(XMQuaternionNormalize(XMQuaternionRotationMatrix(matRotation)));
+	GetTransform().Update();
+
+	if (m_iEffectID != INVALID_EFFECT_INSTANCE_ID)
+		CGameInstance::Get().SetEffectWorldMatrix(m_iEffectID, *GetTransform().GetWorldMatrix());
+
 	m_bActive = true;
 	m_bHit = false;
 	m_fLife = 0.f;
-	Spawn_Skill_Effect(SkillTable.SkillName);
+	//Spawn_Skill_Effect(SkillTable.SkillName);
 }
 
 void CEdgFireBall::Cancle()
